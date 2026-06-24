@@ -75,6 +75,10 @@ RE_BOT_DEFAULTS: dict[str, Any] = {
     "totalLossSlPct": "3",
     "totalLossSlCap": "0.5",
     "positionLossSlBps": "550",
+    "exchangeStopEnabled": False,
+    "exchangeStopBps": "650",
+    "exchangeStopTriggerPxType": "mark",
+    "exchangeStopRepriceBps": "5",
     "missedTpOrdType": "limit",
     "missedTpSlippageBps": "20",
     "hardStopOrdType": "market",
@@ -128,6 +132,10 @@ BOT_RUNTIME_KEYS = {
     "totalLossSlPct",
     "totalLossSlCap",
     "positionLossSlBps",
+    "exchangeStopEnabled",
+    "exchangeStopBps",
+    "exchangeStopTriggerPxType",
+    "exchangeStopRepriceBps",
     "minTpBps",
     "missedTpOrdType",
     "missedTpSlippageBps",
@@ -180,6 +188,10 @@ class StrategyParams:
     total_loss_sl_pct: Decimal = Decimal("3")
     total_loss_sl_cap: Decimal = Decimal("0.5")
     position_loss_sl_bps: Decimal = Decimal("550")
+    exchange_stop_enabled: bool = False
+    exchange_stop_bps: Decimal = Decimal("650")
+    exchange_stop_trigger_px_type: str = "mark"
+    exchange_stop_reprice_bps: Decimal = Decimal("5")
     min_tp_bps: Decimal = Decimal("200")
     trend_filter: str = "auto"
     trend_lookback: int = 8
@@ -793,7 +805,19 @@ def risk_targets(params: StrategyParams, balance: dict[str, Any]) -> dict[str, A
         "lossTarget": str(loss_target),
         "lossNote": loss_note,
         "positionLossSlBps": str(params.position_loss_sl_bps),
+        "exchangeStop": exchange_stop_preview(params),
         "minTpBps": str(params.min_tp_bps),
+    }
+
+
+def exchange_stop_preview(params: StrategyParams) -> dict[str, Any]:
+    price_bps = params.exchange_stop_bps / params.leverage if params.leverage > 0 else Decimal("0")
+    return {
+        "enabled": params.exchange_stop_enabled,
+        "bps": str(params.exchange_stop_bps),
+        "priceBps": str(price_bps),
+        "triggerPxType": params.exchange_stop_trigger_px_type,
+        "repriceBps": str(params.exchange_stop_reprice_bps),
     }
 
 
@@ -1352,6 +1376,12 @@ def build_grid_bot_args(
         str(payload.get("totalLossSlCap", "0")),
         "--position-loss-sl-bps",
         str(payload.get("positionLossSlBps", "550")),
+        "--exchange-stop-bps",
+        str(payload.get("exchangeStopBps", "650")),
+        "--exchange-stop-trigger-px-type",
+        str(payload.get("exchangeStopTriggerPxType", "mark")),
+        "--exchange-stop-reprice-bps",
+        str(payload.get("exchangeStopRepriceBps", "5")),
         "--min-tp-bps",
         str(payload.get("minTpBps", "200")),
         "--missed-tp-ord-type",
@@ -1391,6 +1421,8 @@ def build_grid_bot_args(
         args.append("--set-leverage")
     if payload.get("cancelOnStop"):
         args.append("--cancel-on-stop")
+    if payload.get("exchangeStopEnabled"):
+        args.append("--exchange-stop-enabled")
     if once:
         args.append("--once")
     if use_live:
@@ -1905,6 +1937,10 @@ def parse_params(query: str) -> StrategyParams:
         total_loss_sl_pct=dec(values.get("totalLossSlPct", ["3"])[0], Decimal("3")),
         total_loss_sl_cap=dec(values.get("totalLossSlCap", ["0.5"])[0], Decimal("0.5")),
         position_loss_sl_bps=dec(values.get("positionLossSlBps", ["550"])[0], Decimal("550")),
+        exchange_stop_enabled=values.get("exchangeStopEnabled", ["false"])[0].lower() == "true",
+        exchange_stop_bps=dec(values.get("exchangeStopBps", ["650"])[0], Decimal("650")),
+        exchange_stop_trigger_px_type=values.get("exchangeStopTriggerPxType", ["mark"])[0],
+        exchange_stop_reprice_bps=dec(values.get("exchangeStopRepriceBps", ["5"])[0], Decimal("5")),
         min_tp_bps=dec(values.get("minTpBps", ["200"])[0], Decimal("200")),
         trend_filter=values.get("trendFilter", ["auto"])[0],
         trend_lookback=max(1, int(dec(values.get("trendLookback", ["8"])[0], Decimal("8")))),
@@ -1950,6 +1986,10 @@ def serialize_params(params: StrategyParams) -> dict[str, Any]:
         "totalLossSlPct": str(params.total_loss_sl_pct),
         "totalLossSlCap": str(params.total_loss_sl_cap),
         "positionLossSlBps": str(params.position_loss_sl_bps),
+        "exchangeStopEnabled": params.exchange_stop_enabled,
+        "exchangeStopBps": str(params.exchange_stop_bps),
+        "exchangeStopTriggerPxType": params.exchange_stop_trigger_px_type,
+        "exchangeStopRepriceBps": str(params.exchange_stop_reprice_bps),
         "minTpBps": str(params.min_tp_bps),
         "trendFilter": params.trend_filter,
         "trendLookback": str(params.trend_lookback),

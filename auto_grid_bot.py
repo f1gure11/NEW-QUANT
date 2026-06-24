@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
 from pathlib import Path
@@ -58,6 +58,10 @@ class BotConfig:
     total_loss_sl_pct: Decimal
     total_loss_sl_cap: Decimal
     position_loss_sl_bps: Decimal
+    exchange_stop_enabled: bool
+    exchange_stop_bps: Decimal
+    exchange_stop_trigger_px_type: str
+    exchange_stop_reprice_bps: Decimal
     min_tp_bps: Decimal
     missed_tp_ord_type: str
     missed_tp_slippage_bps: Decimal
@@ -84,6 +88,7 @@ class BotConfig:
     regime_pending_state: str = ""
     regime_pending_count: int = 0
     regime_last_ts: int = 0
+    exchange_stop_triggers: dict[str, Decimal] = field(default_factory=dict)
 
 
 def main() -> None:
@@ -132,6 +137,10 @@ def main() -> None:
         total_loss_sl_pct=Decimal(args.total_loss_sl_pct),
         total_loss_sl_cap=Decimal(args.total_loss_sl_cap),
         position_loss_sl_bps=Decimal(args.position_loss_sl_bps),
+        exchange_stop_enabled=args.exchange_stop_enabled,
+        exchange_stop_bps=Decimal(args.exchange_stop_bps),
+        exchange_stop_trigger_px_type=args.exchange_stop_trigger_px_type,
+        exchange_stop_reprice_bps=Decimal(args.exchange_stop_reprice_bps),
         min_tp_bps=Decimal(args.min_tp_bps),
         missed_tp_ord_type=args.missed_tp_ord_type,
         missed_tp_slippage_bps=Decimal(args.missed_tp_slippage_bps),
@@ -219,6 +228,22 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
     stop_state = classify_stop(mark_px, effective_lower, effective_upper, soft_lower, soft_upper, hard_lower, hard_upper)
     print_cycle_header(mark_px, ticker, step, stop_state, state, effective_lower, effective_upper, range_note)
 
+    triggered_exchange_stop = detect_triggered_exchange_stop(config, state)
+    if triggered_exchange_stop:
+        print(
+            f"Exchange protection stop likely triggered: {triggered_exchange_stop['posSide']} "
+            f"trigger={triggered_exchange_stop['triggerPx']} fill_pnl={triggered_exchange_stop['fillPnl']}. "
+            "Canceling bot orders and entering cooldown."
+        )
+        try:
+            cancel_all_bot_orders(client, config, bot_orders, reason=f"exchange_stop_{triggered_exchange_stop['posSide']}")
+        except Exception as exc:
+            log_event("risk_cancel_error", {"reason": "exchange_stop_triggered", "error": str(exc)})
+            print(f"Exchange protection stop: cancel failed: {exc}")
+        log_event("exchange_stop_triggered", {"live": config.live, **triggered_exchange_stop})
+        enter_risk_cooldown(config, f"exchange_stop_{triggered_exchange_stop['posSide']}")
+        return False
+
     pnl = pnl_breakdown(state, config.bot_started_ms)
     estimated_total = pnl["estimatedTotal"]
     profit_threshold, profit_note = pnl_threshold(
@@ -296,6 +321,10 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
             enter_risk_cooldown(config, stop_state)
         else:
             print(f"Price hard stop {stop_state} close was not confirmed; retrying next cycle without cooldown.")
+        return False
+
+    exchange_stop_actions = sync_exchange_protection_stops(client, config, state, tick, lot)
+    if exchange_stop_actions:
         return False
 
     ct_val = dec(meta.get("ctVal"), Decimal("0"))
@@ -454,6 +483,7 @@ def fetch_state(client: OkxRestClient, config: BotConfig) -> dict[str, Any]:
                 "limit": str(max(80, config.regime_long_ma + config.regime_confirm_bars + 10)),
             },
         ).get("data", [])
+    pending_algos = client.get_pending_algo_orders(ord_type="conditional", inst_id=config.inst_id, inst_type="SWAP").get("data", [])
     return {
         "account": one(client.get_account_config()),
         "meta": one(client.request("GET", "/api/v5/public/instruments", params={"instType": "SWAP", "instId": config.inst_id})),
@@ -463,6 +493,7 @@ def fetch_state(client: OkxRestClient, config: BotConfig) -> dict[str, Any]:
         "balance": one(client.get_balance()),
         "positions": [item for item in client.get_positions("SWAP").get("data", []) if item.get("instId") == config.inst_id],
         "pending": client.get_pending_orders(config.inst_id).get("data", []),
+        "pendingAlgos": pending_algos,
         "fills": client.get_fills(inst_id=config.inst_id, inst_type="SWAP", limit="100").get("data", []),
         "candles": client.request("GET", "/api/v5/market/candles", params={"instId": config.inst_id, "bar": "1m", "limit": "60"}).get("data", []),
         "regimeCandles": regime_candles,
@@ -509,6 +540,7 @@ def desired_orders(
                 "long",
                 tp_price(config, "long", avg, step, tick, size, ct_val, edge),
                 size,
+                tick,
                 close=True,
             )
         )
@@ -522,6 +554,7 @@ def desired_orders(
                 "short",
                 tp_price(config, "short", avg, step, tick, size, ct_val, edge),
                 size,
+                tick,
                 close=True,
             )
         )
@@ -541,7 +574,7 @@ def desired_orders(
             open_sz = min(order_sz, remaining)
             if open_sz <= 0:
                 break
-            desired.append(make_order(config, "buy", "long", price, open_sz, close=False))
+            desired.append(make_order(config, "buy", "long", price, open_sz, tick, close=False))
             remaining -= open_sz
 
     if "short" in open_sides and positions["short"] + open_pending["short"] < max_position:
@@ -554,7 +587,7 @@ def desired_orders(
             open_sz = min(order_sz, remaining)
             if open_sz <= 0:
                 break
-            desired.append(make_order(config, "sell", "short", price, open_sz, close=False))
+            desired.append(make_order(config, "sell", "short", price, open_sz, tick, close=False))
             remaining -= open_sz
 
     return valid_desired_orders(desired, lower, upper)
@@ -849,6 +882,7 @@ def make_order(
     pos_side: str,
     price: Decimal,
     size: Decimal,
+    tick: Decimal,
     *,
     close: bool,
 ) -> dict[str, Any]:
@@ -865,6 +899,8 @@ def make_order(
     }
     if close:
         order["reduce_only"] = True
+    elif config.exchange_stop_enabled and config.exchange_stop_bps > 0 and config.leverage > 0:
+        order["attach_algo_ords"] = [attached_stop_order(config, pos_side, price, tick)]
     return order
 
 
@@ -877,6 +913,16 @@ def place_one(client: OkxRestClient, config: BotConfig, order: dict[str, Any]) -
         response = {"dryRun": True, "data": [payload]}
         print(f"DRY place {order['tag']} {order['side']} {order['pos_side']} {order['sz']} @ {order.get('px', 'MKT')}")
     log_event("place", {"live": config.live, "order": order, "response": response})
+
+
+def attached_stop_order(config: BotConfig, pos_side: str, entry_px: Decimal, tick: Decimal) -> dict[str, Any]:
+    trigger_px = exchange_stop_trigger_price(config, pos_side, entry_px, tick)
+    return {
+        "attachAlgoClOrdId": exchange_stop_client_id(config, pos_side, trigger_px),
+        "slTriggerPx": plain(trigger_px),
+        "slOrdPx": "-1",
+        "slTriggerPxType": config.exchange_stop_trigger_px_type,
+    }
 
 
 def cancel_orders(client: OkxRestClient, config: BotConfig, orders: list[dict[str, Any]], *, reason: str) -> None:
@@ -932,6 +978,223 @@ def set_leverage(client: OkxRestClient, config: BotConfig) -> None:
         log_event("set_leverage", {"live": config.live, "payload": payload, "response": response})
 
 
+def sync_exchange_protection_stops(
+    client: OkxRestClient,
+    config: BotConfig,
+    state: dict[str, Any],
+    tick: Decimal,
+    lot: Decimal,
+) -> int:
+    existing = [order for order in state.get("pendingAlgos", []) if is_bot_algo_stop(order)]
+    desired = desired_exchange_stops(config, state.get("positions", []), tick, lot)
+    stale = stale_exchange_stops(existing, desired, config.exchange_stop_reprice_bps)
+    missing = missing_exchange_stops(existing, desired, config.exchange_stop_reprice_bps)
+    config.exchange_stop_triggers = {
+        str(order["pos_side"]): dec(order.get("sl_trigger_px"), Decimal("0"))
+        for order in desired
+        if dec(order.get("sl_trigger_px"), Decimal("0")) > 0
+    }
+
+    if not existing and not desired:
+        return 0
+    print(f"exchange_stop desired={len(desired)} existing={len(existing)} missing={len(missing)} stale={len(stale)}")
+
+    actions = 0
+    if stale:
+        orders = [{"instId": config.inst_id, "algoId": str(order.get("algoId"))} for order in stale if order.get("algoId")]
+        if orders:
+            if config.live:
+                response = client.cancel_algo_orders(orders)
+                print(f"LIVE cancel_exchange_stop count={len(orders)} -> {response.get('data')}")
+            else:
+                response = {"dryRun": True, "data": orders}
+                print(f"DRY cancel_exchange_stop count={len(orders)}")
+            log_event("cancel_exchange_stop", {"live": config.live, "orders": stale, "response": response})
+            actions += len(orders)
+
+    for order in missing[: max(0, config.max_actions_per_cycle - actions)]:
+        if config.live:
+            response = client.place_algo_order(**{key: value for key, value in order.items() if key != "tag"})
+            print(
+                f"LIVE place_exchange_stop {order['pos_side']} {order['sz']} "
+                f"trigger={order['sl_trigger_px']} type={order['sl_trigger_px_type']} -> {response.get('data')}"
+            )
+        else:
+            response = {"dryRun": True, "data": [order]}
+            print(f"DRY place_exchange_stop {order['pos_side']} {order['sz']} trigger={order['sl_trigger_px']}")
+        log_event("place_exchange_stop", {"live": config.live, "order": order, "response": response})
+        actions += 1
+
+    return actions
+
+
+def desired_exchange_stops(
+    config: BotConfig,
+    positions: list[dict[str, Any]],
+    tick: Decimal,
+    lot: Decimal,
+) -> list[dict[str, Any]]:
+    if not config.exchange_stop_enabled or config.exchange_stop_bps <= 0 or config.leverage <= 0:
+        return []
+
+    desired: list[dict[str, Any]] = []
+    for item in positions:
+        pos_side = str(item.get("posSide", ""))
+        if pos_side not in {"long", "short"}:
+            continue
+        size = round_size(abs(dec(item.get("pos"), Decimal("0"))), lot)
+        avg_px = dec(item.get("avgPx"), Decimal("0"))
+        if size <= 0 or avg_px <= 0:
+            continue
+        trigger_px = exchange_stop_trigger_price(config, pos_side, avg_px, tick)
+        side = "sell" if pos_side == "long" else "buy"
+        desired.append(
+            {
+                "inst_id": config.inst_id,
+                "td_mode": "cross",
+                "side": side,
+                "pos_side": pos_side,
+                "ord_type": "conditional",
+                "sz": plain(size),
+                "algo_cl_ord_id": exchange_stop_client_id(config, pos_side, trigger_px),
+                "sl_trigger_px": plain(trigger_px),
+                "sl_ord_px": "-1",
+                "sl_trigger_px_type": config.exchange_stop_trigger_px_type,
+                "reduce_only": True,
+                "cxl_on_close_pos": True,
+                "tag": "exchange_stop",
+            }
+        )
+    return desired
+
+
+def exchange_stop_trigger_price(config: BotConfig, pos_side: str, avg_px: Decimal, tick: Decimal) -> Decimal:
+    price_bps = config.exchange_stop_bps / config.leverage
+    gap = price_bps / Decimal("10000")
+    raw = avg_px * (Decimal("1") - gap) if pos_side == "long" else avg_px * (Decimal("1") + gap)
+    return round_to_tick(raw, tick)
+
+
+def detect_triggered_exchange_stop(config: BotConfig, state: dict[str, Any]) -> dict[str, Any] | None:
+    if not config.exchange_stop_triggers:
+        return None
+    positions = position_summary(state.get("positions", []))
+    fills = state.get("fills", [])
+    for pos_side, trigger_px in list(config.exchange_stop_triggers.items()):
+        if pos_side not in {"long", "short"}:
+            continue
+        if positions.get(pos_side, Decimal("0")) > 0:
+            continue
+        fill = latest_loss_close_fill(pos_side, fills, since_ms=config.bot_started_ms)
+        if fill is None:
+            config.exchange_stop_triggers.pop(pos_side, None)
+            continue
+        config.exchange_stop_triggers.pop(pos_side, None)
+        return {
+            "posSide": pos_side,
+            "triggerPx": plain(trigger_px),
+            "fillPnl": fill.get("fillPnl"),
+            "fillPx": fill.get("fillPx"),
+            "fillSz": fill.get("fillSz"),
+            "fillTime": fill_time_ms(fill),
+            "ordId": fill.get("ordId"),
+        }
+    return None
+
+
+def latest_loss_close_fill(pos_side: str, fills: list[dict[str, Any]], *, since_ms: int) -> dict[str, Any] | None:
+    close_side = "sell" if pos_side == "long" else "buy"
+    candidates = []
+    for fill in fills:
+        if fill_time_ms(fill) < since_ms:
+            continue
+        if str(fill.get("side", "")) != close_side:
+            continue
+        if str(fill.get("posSide", "")) != pos_side:
+            continue
+        if dec(fill.get("fillPnl"), Decimal("0")) >= 0:
+            continue
+        candidates.append(fill)
+    if not candidates:
+        return None
+    return max(candidates, key=fill_time_ms)
+
+
+def stale_exchange_stops(
+    existing: list[dict[str, Any]],
+    desired: list[dict[str, Any]],
+    reprice_bps: Decimal,
+) -> list[dict[str, Any]]:
+    stale: list[dict[str, Any]] = []
+    for order in existing:
+        match = desired_exchange_stop_for_existing(order, desired)
+        if match is None or not exchange_stop_matches(order, match, reprice_bps):
+            stale.append(order)
+    return stale
+
+
+def missing_exchange_stops(
+    existing: list[dict[str, Any]],
+    desired: list[dict[str, Any]],
+    reprice_bps: Decimal,
+) -> list[dict[str, Any]]:
+    missing: list[dict[str, Any]] = []
+    for order in desired:
+        matches = [existing_order for existing_order in existing if exchange_stop_same_side(existing_order, order)]
+        if not any(exchange_stop_matches(existing_order, order, reprice_bps) for existing_order in matches):
+            missing.append(order)
+    return missing
+
+
+def desired_exchange_stop_for_existing(order: dict[str, Any], desired: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for item in desired:
+        if exchange_stop_same_side(order, item):
+            return item
+    return None
+
+
+def exchange_stop_same_side(existing: dict[str, Any], desired: dict[str, Any]) -> bool:
+    return (
+        str(existing.get("instId", "")) == str(desired.get("inst_id", ""))
+        and str(existing.get("side", "")) == str(desired.get("side", ""))
+        and str(existing.get("posSide", "")) == str(desired.get("pos_side", ""))
+        and str(existing.get("ordType", "")) == str(desired.get("ord_type", ""))
+    )
+
+
+def exchange_stop_matches(existing: dict[str, Any], desired: dict[str, Any], reprice_bps: Decimal) -> bool:
+    if not exchange_stop_same_side(existing, desired):
+        return False
+    if dec(existing.get("sz"), Decimal("0")) != dec(desired.get("sz"), Decimal("0")):
+        return False
+    if str(existing.get("slOrdPx", "")) not in {str(desired.get("sl_ord_px", "")), ""}:
+        return False
+    trigger_type = str(existing.get("slTriggerPxType", "") or desired.get("sl_trigger_px_type", ""))
+    if trigger_type != str(desired.get("sl_trigger_px_type", "")):
+        return False
+    existing_trigger = dec(existing.get("slTriggerPx"), Decimal("0"))
+    desired_trigger = dec(desired.get("sl_trigger_px"), Decimal("0"))
+    if existing_trigger <= 0 or desired_trigger <= 0:
+        return False
+    if reprice_bps <= 0:
+        return existing_trigger == desired_trigger
+    diff_bps = abs(existing_trigger / desired_trigger - Decimal("1")) * Decimal("10000")
+    return diff_bps <= reprice_bps
+
+
+def is_bot_algo_stop(order: dict[str, Any]) -> bool:
+    return str(order.get("algoClOrdId", "")).startswith(exchange_stop_prefix())
+
+
+def exchange_stop_client_id(config: BotConfig, pos_side: str, trigger_px: Decimal) -> str:
+    normalized = str(trigger_px).replace(".", "")
+    return f"{exchange_stop_prefix()}{pos_side[0]}{normalized}"[:32]
+
+
+def exchange_stop_prefix() -> str:
+    return f"xs{BOT_PREFIX}"
+
+
 def load_runtime_config(config: BotConfig) -> None:
     if not RUNTIME_CONFIG_PATH.exists():
         return
@@ -977,6 +1240,8 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         "totalLossSlPct": "total_loss_sl_pct",
         "totalLossSlCap": "total_loss_sl_cap",
         "positionLossSlBps": "position_loss_sl_bps",
+        "exchangeStopBps": "exchange_stop_bps",
+        "exchangeStopRepriceBps": "exchange_stop_reprice_bps",
         "minTpBps": "min_tp_bps",
         "missedTpSlippageBps": "missed_tp_slippage_bps",
         "hardStopSlippageBps": "hard_stop_slippage_bps",
@@ -1002,6 +1267,7 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         "trendFilter": ("trend_filter", {"off", "auto"}),
         "regimeFilter": ("regime_filter", {"off", "ma_cross"}),
         "regimeBar": ("regime_bar", {"5m", "15m", "30m", "1H"}),
+        "exchangeStopTriggerPxType": ("exchange_stop_trigger_px_type", {"last", "mark", "index"}),
     }
     for key, attr in decimal_fields.items():
         if key in payload:
@@ -1018,6 +1284,8 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         config.risk_cooldown = max(0.0, float(payload["riskCooldown"]))
     if "cancelOnStop" in payload:
         config.cancel_on_stop = bool(payload["cancelOnStop"])
+    if "exchangeStopEnabled" in payload:
+        config.exchange_stop_enabled = bool(payload["exchangeStopEnabled"])
     if "recenterOnCooldown" in payload:
         config.recenter_on_cooldown = bool(payload["recenterOnCooldown"])
     if "oneWayOpen" in payload:
@@ -1739,6 +2007,12 @@ def print_banner(config: BotConfig) -> None:
         f"total_loss_sl={config.total_loss_sl} sl_pct={config.total_loss_sl_pct}% "
         f"sl_cap={config.total_loss_sl_cap} position_loss_sl_bps={config.position_loss_sl_bps}"
     )
+    print(
+        f"exchange_stop_enabled={config.exchange_stop_enabled} "
+        f"exchange_stop_bps={config.exchange_stop_bps} "
+        f"trigger_type={config.exchange_stop_trigger_px_type} "
+        f"reprice_bps={config.exchange_stop_reprice_bps}"
+    )
     print(f"risk_cooldown={config.risk_cooldown}s recenter_on_cooldown={config.recenter_on_cooldown}")
     print(
         f"trend_filter={config.trend_filter} trend_lookback={config.trend_lookback} "
@@ -1849,6 +2123,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--total-loss-sl-pct", default="0", help="Equity percent hard stop; overrides fixed loss target when >0")
     parser.add_argument("--total-loss-sl-cap", default="0", help="USDT cap for percent hard stop; 0 disables cap")
     parser.add_argument("--position-loss-sl-bps", default="550", help="Per-side position loss ratio in bps that closes that side; 0 disables")
+    parser.add_argument("--exchange-stop-enabled", action="store_true", help="Maintain exchange-side reduce-only conditional stop orders")
+    parser.add_argument("--exchange-stop-bps", default="650", help="Exchange-side per-position stop distance in levered bps")
+    parser.add_argument("--exchange-stop-trigger-px-type", choices=("last", "mark", "index"), default="mark")
+    parser.add_argument("--exchange-stop-reprice-bps", default="5", help="Recreate exchange stop when trigger drifts more than this bps")
     parser.add_argument("--min-tp-bps", default="200", help="Minimum take-profit distance from side average price in bps; 0 disables")
     parser.add_argument("--missed-tp-ord-type", choices=("limit", "market"), default="limit")
     parser.add_argument("--missed-tp-slippage-bps", default="20", help="Limit close slippage bps when TP has already been crossed")

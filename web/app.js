@@ -37,6 +37,9 @@ const botFieldMap = {
   interval: "Interval",
   minTpBps: "MinTpBps",
   positionLossSlBps: "PositionLossSlBps",
+  exchangeStopBps: "ExchangeStopBps",
+  exchangeStopTriggerPxType: "ExchangeStopTriggerPxType",
+  exchangeStopRepriceBps: "ExchangeStopRepriceBps",
   regimeFilter: "RegimeFilter",
   regimeBar: "RegimeBar",
   regimeShortMa: "RegimeShortMa",
@@ -90,6 +93,10 @@ const botDefaults = {
     totalLossSlPct: "3",
     totalLossSlCap: "0.5",
     positionLossSlBps: "550",
+    exchangeStopEnabled: false,
+    exchangeStopBps: "650",
+    exchangeStopTriggerPxType: "mark",
+    exchangeStopRepriceBps: "5",
     missedTpOrdType: "limit",
     missedTpSlippageBps: "20",
     hardStopOrdType: "market",
@@ -144,6 +151,10 @@ const botDefaults = {
     totalLossSlPct: "3",
     totalLossSlCap: "0.5",
     positionLossSlBps: "550",
+    exchangeStopEnabled: false,
+    exchangeStopBps: "650",
+    exchangeStopTriggerPxType: "mark",
+    exchangeStopRepriceBps: "5",
     missedTpOrdType: "limit",
     missedTpSlippageBps: "20",
     hardStopOrdType: "market",
@@ -197,7 +208,7 @@ window.addEventListener("DOMContentLoaded", () => {
       .forEach((id) => document.getElementById(id)?.addEventListener("change", saveParams));
     ["beat", "re"].forEach((bot) => {
       Object.values(botFieldMap).forEach((suffix) => document.getElementById(`${bot}${suffix}`)?.addEventListener("change", () => saveBotForm(bot)));
-      ["BotLive", "SetLeverage", "CancelOnStop", "RecenterOnCooldown", "OneWayOpen", "ConfirmLive"].forEach((suffix) =>
+      ["BotLive", "SetLeverage", "CancelOnStop", "ExchangeStopEnabled", "RecenterOnCooldown", "OneWayOpen", "ConfirmLive"].forEach((suffix) =>
         document.getElementById(`${bot}${suffix}`)?.addEventListener("change", () => saveBotForm(bot)),
       );
     });
@@ -312,7 +323,7 @@ function selectedBotKey() {
 function syncMonitorFromBotForm(bot, overwriteInst = true) {
   const payload = buildBotPayload(bot);
   if (overwriteInst) document.getElementById("instId").value = payload.instId;
-  ["lower", "upper", "leverage", "gridBps", "minNetBps", "softBps", "hardBps", "mode", "adaptiveWidthBps", "adaptiveMinWidthBps", "adaptiveMaxWidthBps", "adaptiveVolMultiplier", "rangeDriftMode", "rangeDriftWeightBps", "rangeDriftMaxBps"].forEach((key) => {
+  ["lower", "upper", "leverage", "gridBps", "minNetBps", "softBps", "hardBps", "mode", "adaptiveWidthBps", "adaptiveMinWidthBps", "adaptiveMaxWidthBps", "adaptiveVolMultiplier", "rangeDriftMode", "rangeDriftWeightBps", "rangeDriftMaxBps", "exchangeStopBps", "exchangeStopTriggerPxType", "exchangeStopRepriceBps"].forEach((key) => {
     const el = document.getElementById(key);
     if (el && payload[key] !== undefined) el.value = String(payload[key]);
   });
@@ -321,11 +332,12 @@ function syncMonitorFromBotForm(bot, overwriteInst = true) {
 function snapshotPayload() {
   const bot = selectedBotKey();
   const payload = buildBotPayload(bot);
-  const monitorKeys = ["instId", "lower", "upper", "leverage", "gridBps", "minNetBps", "softBps", "hardBps", "mode", "adaptiveWidthBps", "adaptiveMinWidthBps", "adaptiveMaxWidthBps", "adaptiveVolMultiplier", "rangeDriftMode", "rangeDriftWeightBps", "rangeDriftMaxBps"];
+  const monitorKeys = ["instId", "lower", "upper", "leverage", "gridBps", "minNetBps", "softBps", "hardBps", "mode", "adaptiveWidthBps", "adaptiveMinWidthBps", "adaptiveMaxWidthBps", "adaptiveVolMultiplier", "rangeDriftMode", "rangeDriftWeightBps", "rangeDriftMaxBps", "exchangeStopBps", "exchangeStopTriggerPxType", "exchangeStopRepriceBps"];
   monitorKeys.forEach((key) => {
     const el = document.getElementById(key);
     if (el) payload[key] = el.value;
   });
+  payload.exchangeStopEnabled = Boolean(readBotForm(bot).exchangeStopEnabled);
   return payload;
 }
 
@@ -491,7 +503,11 @@ function renderRiskTargets(risk) {
   text("riskProfitTarget", risk.profitTarget && Number(risk.profitTarget) > 0 ? `${Number(risk.profitTarget).toFixed(4)} USDT` : "--");
   text("riskLossTarget", risk.lossTarget && Number(risk.lossTarget) > 0 ? `-${Number(risk.lossTarget).toFixed(4)} USDT` : "--");
   text("riskProfitNote", risk.profitNote || "--");
-  text("riskLossNote", [risk.lossNote, risk.positionLossSlBps ? `单边 ${Number(risk.positionLossSlBps).toFixed(0)} bps` : ""].filter(Boolean).join(" · ") || "--");
+  const exchangeStop = risk.exchangeStop || {};
+  const exchangeStopNote = exchangeStop.enabled
+    ? `交易所 ${Number(exchangeStop.bps || 0).toFixed(0)}bps/${exchangeStop.triggerPxType || "mark"}`
+    : "";
+  text("riskLossNote", [risk.lossNote, risk.positionLossSlBps ? `单边 ${Number(risk.positionLossSlBps).toFixed(0)} bps` : "", exchangeStopNote].filter(Boolean).join(" · ") || "--");
   const strategy = latestData?.strategy;
   const minTpProfit = Number(strategy?.minTpProfit || 0);
   const minTpBps = Number(strategy?.minTpBps || risk.minTpBps || 0);
@@ -909,6 +925,7 @@ function buildBotPayload(bot = "beat") {
     live: form.live,
     setLeverage: form.setLeverage,
     cancelOnStop: form.cancelOnStop,
+    exchangeStopEnabled: form.exchangeStopEnabled,
     recenterOnCooldown: form.recenterOnCooldown,
     oneWayOpen: form.oneWayOpen,
   };
@@ -924,6 +941,7 @@ function readBotForm(bot) {
   data.live = get("BotLive")?.value === "true";
   data.setLeverage = Boolean(get("SetLeverage")?.checked);
   data.cancelOnStop = Boolean(get("CancelOnStop")?.checked);
+  data.exchangeStopEnabled = Boolean(get("ExchangeStopEnabled")?.checked);
   data.recenterOnCooldown = Boolean(get("RecenterOnCooldown")?.checked);
   data.oneWayOpen = Boolean(get("OneWayOpen")?.checked);
   data.confirmLive = get("ConfirmLive")?.value || "";
@@ -941,6 +959,7 @@ function applyConfigToBotForm(bot, config) {
   const checkboxes = {
     SetLeverage: "setLeverage",
     CancelOnStop: "cancelOnStop",
+    ExchangeStopEnabled: "exchangeStopEnabled",
     RecenterOnCooldown: "recenterOnCooldown",
     OneWayOpen: "oneWayOpen",
   };

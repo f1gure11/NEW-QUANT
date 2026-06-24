@@ -185,8 +185,9 @@ class OkxRestClient:
         pos_side: str | None = None,
         reduce_only: bool | None = None,
         cl_ord_id: str | None = None,
+        attach_algo_ords: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
-        order: dict[str, str] = {
+        order: dict[str, Any] = {
             "instId": inst_id,
             "tdMode": td_mode,
             "side": side,
@@ -201,6 +202,8 @@ class OkxRestClient:
             order["reduceOnly"] = "true" if reduce_only else "false"
         if cl_ord_id is not None:
             order["clOrdId"] = cl_ord_id
+        if attach_algo_ords:
+            order["attachAlgoOrds"] = attach_algo_ords
         return self.request("POST", "/api/v5/trade/order", body=order, private=True)
 
     def cancel_order(
@@ -231,6 +234,70 @@ class OkxRestClient:
     def get_pending_orders(self, inst_id: str | None = None) -> dict[str, Any]:
         params = {"instId": inst_id} if inst_id else None
         return self.request("GET", "/api/v5/trade/orders-pending", params=params, private=True)
+
+    def place_algo_order(
+        self,
+        *,
+        inst_id: str,
+        td_mode: str,
+        side: str,
+        ord_type: str,
+        sz: str | None = None,
+        pos_side: str | None = None,
+        algo_cl_ord_id: str | None = None,
+        sl_trigger_px: str | None = None,
+        sl_ord_px: str | None = None,
+        sl_trigger_px_type: str | None = None,
+        reduce_only: bool | None = None,
+        cxl_on_close_pos: bool | None = None,
+    ) -> dict[str, Any]:
+        order: dict[str, Any] = {
+            "instId": inst_id,
+            "tdMode": td_mode,
+            "side": side,
+            "ordType": ord_type,
+        }
+        if sz is not None:
+            order["sz"] = sz
+        if pos_side is not None:
+            order["posSide"] = pos_side
+        if algo_cl_ord_id is not None:
+            order["algoClOrdId"] = algo_cl_ord_id
+        if sl_trigger_px is not None:
+            order["slTriggerPx"] = sl_trigger_px
+        if sl_ord_px is not None:
+            order["slOrdPx"] = sl_ord_px
+        if sl_trigger_px_type is not None:
+            order["slTriggerPxType"] = sl_trigger_px_type
+        if reduce_only is not None:
+            order["reduceOnly"] = bool(reduce_only)
+        if cxl_on_close_pos is not None:
+            order["cxlOnClosePos"] = bool(cxl_on_close_pos)
+        return self.request("POST", "/api/v5/trade/order-algo", body=order, private=True)
+
+    def get_pending_algo_orders(
+        self,
+        *,
+        ord_type: str = "conditional",
+        inst_id: str | None = None,
+        inst_type: str | None = None,
+        algo_id: str | None = None,
+    ) -> dict[str, Any]:
+        params: dict[str, Any] = {"ordType": ord_type}
+        if inst_id:
+            params["instId"] = inst_id
+        if inst_type:
+            params["instType"] = inst_type
+        if algo_id:
+            params["algoId"] = algo_id
+        return self.request("GET", "/api/v5/trade/orders-algo-pending", params=params, private=True)
+
+    def cancel_algo_orders(self, orders: list[dict[str, str]]) -> dict[str, Any]:
+        body = []
+        for order in orders:
+            item = {"instId": order["instId"], "algoId": order["algoId"]}
+            body.append(item)
+        return self.request("POST", "/api/v5/trade/cancel-algos", body=body, private=True)
 
     def get_fills(
         self,

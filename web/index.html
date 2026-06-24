@@ -182,6 +182,9 @@
                 <label>间隔秒<input id="beatInterval" type="number" step="1" min="3" value="8" /></label>
                 <label>持仓止盈 bps<input id="beatMinTpBps" type="number" step="5" min="0" value="160" /></label>
                 <label>单边止损 bps<input id="beatPositionLossSlBps" type="number" step="10" min="0" value="550" /></label>
+                <label>交易所止损 bps<input id="beatExchangeStopBps" type="number" step="10" min="0" value="650" /></label>
+                <label>止损触发价<select id="beatExchangeStopTriggerPxType"><option value="mark" selected>标记价</option><option value="last">最新价</option><option value="index">指数价</option></select></label>
+                <label>止损重挂 bps<input id="beatExchangeStopRepriceBps" type="number" step="1" min="0" value="5" /></label>
               </div>
               <div class="fieldGrid">
                 <label>行情过滤<select id="beatRegimeFilter"><option value="ma_cross" selected>15m MA5/MA20</option><option value="off">关闭</option></select></label>
@@ -193,6 +196,7 @@
               </div>
               <label class="toggle"><input id="beatSetLeverage" type="checkbox" />启动时设置杠杆</label>
               <label class="toggle"><input id="beatCancelOnStop" type="checkbox" checked />风控撤机器人挂单</label>
+              <label class="toggle"><input id="beatExchangeStopEnabled" type="checkbox" />交易所侧保护止损</label>
               <label class="toggle"><input id="beatRecenterOnCooldown" type="checkbox" checked />冷静期后重算护栏</label>
               <label class="toggle"><input id="beatOneWayOpen" type="checkbox" checked />单向开仓保护</label>
               <label>实盘确认<input id="beatConfirmLive" type="text" placeholder="填 I_UNDERSTAND" /></label>
@@ -230,6 +234,9 @@
                 <label>间隔秒<input id="reInterval" type="number" step="1" min="3" value="8" /></label>
                 <label>持仓止盈 bps<input id="reMinTpBps" type="number" step="5" min="0" value="180" /></label>
                 <label>单边止损 bps<input id="rePositionLossSlBps" type="number" step="10" min="0" value="550" /></label>
+                <label>交易所止损 bps<input id="reExchangeStopBps" type="number" step="10" min="0" value="650" /></label>
+                <label>止损触发价<select id="reExchangeStopTriggerPxType"><option value="mark" selected>标记价</option><option value="last">最新价</option><option value="index">指数价</option></select></label>
+                <label>止损重挂 bps<input id="reExchangeStopRepriceBps" type="number" step="1" min="0" value="5" /></label>
               </div>
               <div class="fieldGrid">
                 <label>行情过滤<select id="reRegimeFilter"><option value="ma_cross" selected>15m MA5/MA20</option><option value="off">关闭</option></select></label>
@@ -241,6 +248,7 @@
               </div>
               <label class="toggle"><input id="reSetLeverage" type="checkbox" />启动时设置杠杆</label>
               <label class="toggle"><input id="reCancelOnStop" type="checkbox" checked />风控撤机器人挂单</label>
+              <label class="toggle"><input id="reExchangeStopEnabled" type="checkbox" />交易所侧保护止损</label>
               <label class="toggle"><input id="reRecenterOnCooldown" type="checkbox" checked />冷静期后重算护栏</label>
               <label class="toggle"><input id="reOneWayOpen" type="checkbox" checked />单向开仓保护</label>
               <label>实盘确认<input id="reConfirmLive" type="text" placeholder="填 I_UNDERSTAND" /></label>
