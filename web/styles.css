@@ -1,0 +1,581 @@
+:root {
+  color-scheme: light;
+  --bg: #f4f6f4;
+  --panel: #ffffff;
+  --ink: #1c2421;
+  --muted: #637069;
+  --line: #d9e0dc;
+  --green: #1d8f61;
+  --red: #c2413b;
+  --amber: #b7791f;
+  --blue: #2563eb;
+  --teal: #16817a;
+  --shadow: 0 14px 36px rgba(23, 39, 32, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 1420px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 760px 1fr;
+  min-height: 100vh;
+}
+
+.side {
+  border-right: 1px solid var(--line);
+  padding: 18px;
+  background: #eef3ef;
+  overflow-x: hidden;
+}
+
+.brand,
+.topbar,
+.chartHeader,
+.actions,
+.bookStats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+h2 {
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+p,
+span,
+dt,
+label {
+  color: var(--muted);
+}
+
+.pill,
+.stateBox {
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: #dfe7e2;
+  color: var(--ink);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.pill.ok,
+.stateBox.ok {
+  color: #0c5f3f;
+  background: #d9f0e4;
+}
+
+.pill.warn,
+.stateBox.warn {
+  color: #7b4d06;
+  background: #faedc9;
+}
+
+.pill.danger,
+.stateBox.danger {
+  color: #8f201b;
+  background: #f8d9d7;
+}
+
+.content {
+  padding: 18px;
+}
+
+.panel,
+.chartPanel,
+.metricGrid article {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.panel {
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.panel h2 {
+  margin-bottom: 14px;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+input,
+select,
+button {
+  width: 100%;
+  height: 38px;
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+input,
+select {
+  padding: 0 10px;
+}
+
+button {
+  width: 104px;
+  border: 0;
+  color: #fff;
+  background: var(--teal);
+  cursor: pointer;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.botControlGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.botConfigCard {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfcfb;
+}
+
+.botConfigCard .fieldGrid {
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.botConfigCard input,
+.botConfigCard select {
+  height: 34px;
+  margin-bottom: 4px;
+}
+
+.botConfigCard .toggle {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+
+.toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.kv {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.kv div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #edf1ee;
+  padding-bottom: 8px;
+}
+
+.kv dt {
+  font-size: 12px;
+}
+
+.kv dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 700;
+}
+
+.dense {
+  grid-template-columns: 1fr 1fr;
+}
+
+.dense div {
+  display: block;
+}
+
+.dense dd {
+  margin-top: 4px;
+  text-align: left;
+}
+
+.topbar {
+  min-height: 54px;
+}
+
+#title {
+  font-size: 24px;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.metricGrid article {
+  padding: 14px;
+}
+
+.pnlGrid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.riskGrid {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.metricGrid span {
+  display: block;
+  font-size: 12px;
+}
+
+.metricGrid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 20px;
+  letter-spacing: 0;
+}
+
+.metricGrid small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.chartPanel {
+  margin-top: 14px;
+  padding: 16px;
+}
+
+.chartHeader {
+  margin-bottom: 10px;
+}
+
+.legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.legend span {
+  width: 22px;
+  height: 3px;
+  display: inline-block;
+}
+
+.legend .range {
+  background: var(--blue);
+}
+
+.legend .soft {
+  background: var(--amber);
+}
+
+.legend .hard {
+  background: var(--red);
+}
+
+canvas {
+  width: 100%;
+  height: 430px;
+  display: block;
+  border: 1px solid #edf1ee;
+  border-radius: 6px;
+  background: #fbfcfb;
+}
+
+.lowerGrid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.25fr 1fr 1fr;
+  gap: 14px;
+}
+
+.fillsPanel {
+  grid-column: span 2;
+}
+
+.bookStats {
+  margin-bottom: 12px;
+}
+
+.bookStats div {
+  width: 50%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.bookStats span {
+  display: block;
+  font-size: 12px;
+}
+
+.bookStats strong {
+  display: block;
+  margin-top: 4px;
+}
+
+.book {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.book table,
+.positions table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th,
+td {
+  padding: 6px 4px;
+  border-bottom: 1px solid #edf1ee;
+  text-align: right;
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+
+.ask {
+  color: var(--red);
+}
+
+.bid {
+  color: var(--green);
+}
+
+.positive {
+  color: var(--green);
+}
+
+.negative {
+  color: var(--red);
+}
+
+.empty {
+  color: var(--muted);
+  padding: 18px 0;
+}
+
+.tradePanel select,
+.tradePanel input {
+  margin-bottom: 10px;
+}
+
+.tradeActions {
+  justify-content: flex-start;
+}
+
+.compactActions {
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.compactActions button {
+  width: calc(50% - 6px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  background: #c9d0cc;
+  color: #6b7570;
+}
+
+.secondaryBtn {
+  border: 1px solid var(--line);
+  background: #eef3ef;
+  color: var(--ink);
+}
+
+.secondaryBtn:disabled {
+  color: #6b7570;
+  background: #dce3df;
+}
+
+.dangerBtn {
+  background: var(--red);
+}
+
+.dangerBtn:disabled {
+  cursor: not-allowed;
+  background: #c9d0cc;
+  color: #6b7570;
+}
+
+.tradeResult {
+  min-height: 78px;
+  max-height: 160px;
+  overflow: auto;
+  margin: 12px 0 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+  background: #f8faf8;
+  color: var(--ink);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.botConfigCard .tradeResult {
+  max-height: 190px;
+}
+
+.botStateCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #f8faf8;
+}
+
+.botStateCard strong {
+  display: block;
+  font-size: 14px;
+}
+
+.botStateCard p {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.botStateDot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  border-radius: 999px;
+  background: #9aa5a0;
+}
+
+.botStateCard.running {
+  border-color: #9ed8b9;
+  background: #edf9f2;
+}
+
+.botStateCard.running .botStateDot {
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(29, 143, 97, 0.12);
+}
+
+.botStateCard.starting,
+.botStateCard.stopping {
+  border-color: #efd28d;
+  background: #fff8e5;
+}
+
+.botStateCard.starting .botStateDot,
+.botStateCard.stopping .botStateDot {
+  background: var(--amber);
+  box-shadow: 0 0 0 4px rgba(183, 121, 31, 0.12);
+}
+
+.botStateCard.error {
+  border-color: #efaaa6;
+  background: #fff0ef;
+}
+
+.botStateCard.error .botStateDot {
+  background: var(--red);
+  box-shadow: 0 0 0 4px rgba(194, 65, 59, 0.12);
+}
+
+.sectionDivider {
+  height: 1px;
+  margin: 16px 0 14px;
+  background: var(--line);
+}
+
+.botSubhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.botSubhead h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.botSubhead span {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1240px) {
+  body {
+    min-width: 980px;
+  }
+
+  .app {
+    grid-template-columns: 300px 1fr;
+  }
+
+  .metricGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .lowerGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,42 @@
+[Unit]
+Description=OKX BEAT-USDT-SWAP Grid Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=okxbot
+Group=okxbot
+WorkingDirectory=/opt/okx-quant
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/okx-quant/.venv/bin/python -u /opt/okx-quant/auto_grid_bot.py \
+  --inst-id BEAT-USDT-SWAP \
+  --runtime-config /opt/okx-quant/data/okx/grid_bot_runtime_config.json \
+  --log-path /opt/okx-quant/data/okx/grid_bot_actions.jsonl \
+  --bot-prefix gb \
+  --lower 2.10 --upper 2.30 --leverage 3 \
+  --grid-bps 25 --min-net-bps 5 --soft-bps 45 --hard-bps 80 \
+  --order-sz 0.1 --max-position 0.6 \
+  --max-open-orders-per-side 2 --max-actions-per-cycle 4 --interval 6 \
+  --ord-type post_only --mode adaptive \
+  --adaptive-width-bps 520 --adaptive-min-width-bps 320 --adaptive-max-width-bps 1000 --adaptive-vol-multiplier 12 \
+  --range-drift-mode cooldown --range-drift-weight-bps 5000 --range-drift-max-bps 500 \
+  --sizing-mode margin_pct --order-margin-pct 30 --max-margin-pct 55 \
+  --total-profit-tp 0 --total-profit-tp-pct 6 --total-profit-tp-cap 0.7 --total-profit-action checkpoint \
+  --min-tp-profit 0.01 --total-loss-sl 0 --total-loss-sl-pct 3 --total-loss-sl-cap 0.5 \
+  --position-loss-sl-bps 550 --min-tp-bps 160 \
+  --missed-tp-ord-type limit --missed-tp-slippage-bps 20 \
+  --hard-stop-ord-type market --hard-stop-slippage-bps 50 \
+  --risk-cooldown 60 \
+  --trend-filter off --trend-lookback 8 --trend-threshold-bps 90 \
+  --regime-filter ma_cross --regime-bar 15m --regime-short-ma 5 --regime-long-ma 20 --regime-diff-bps 50 --regime-confirm-bars 3 \
+  --set-leverage --cancel-on-stop --live --confirm-live I_UNDERSTAND
+Restart=on-failure
+RestartSec=15
+StandardOutput=append:/opt/okx-quant/data/okx/grid_bot_stdout.log
+StandardError=append:/opt/okx-quant/data/okx/grid_bot_stdout.log
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

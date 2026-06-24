@@ -1,0 +1,19 @@
+[Unit]
+Description=OKX Quant Dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=okxbot
+Group=okxbot
+WorkingDirectory=/opt/okx-quant
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/okx-quant/.venv/bin/python /opt/okx-quant/dashboard_server.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

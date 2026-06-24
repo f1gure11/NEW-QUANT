@@ -1,0 +1,15 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+data/okx/*
+!data/okx/.gitkeep
+
+*.log
+*.pid
+*.jsonl
+
+.DS_Store
+Thumbs.db
