@@ -3,18 +3,30 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, ROUND_UP
 from pathlib import Path
 from typing import Any
 
-from okx_client import OkxRestClient
+from okx_client import OkxApiError, OkxRestClient
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data" / "backtest"
 REPORT_DIR = PROJECT_ROOT / "reports" / "backtests"
+BAR_MS = {
+    "1m": 60_000,
+    "3m": 180_000,
+    "5m": 300_000,
+    "15m": 900_000,
+    "30m": 1_800_000,
+    "1H": 3_600_000,
+    "2H": 7_200_000,
+    "4H": 14_400_000,
+    "1D": 86_400_000,
+}
 
 
 @dataclass(slots=True)
@@ -65,9 +77,11 @@ class GridBacktestConfig:
     position_loss_sl_bps: Decimal = Decimal("550")
     risk_cooldown_bars: int = 10
     regime_filter: str = "ma_cross"
+    regime_bar: str = "15m"
     regime_short_ma: int = 5
     regime_long_ma: int = 20
     regime_diff_bps: Decimal = Decimal("50")
+    regime_confirm_bars: int = 3
     trend_filter: str = "off"
     trend_lookback: int = 8
     trend_threshold_bps: Decimal = Decimal("90")
@@ -141,6 +155,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--inst-id", default="BEAT-USDT-SWAP")
     parser.add_argument("--bar", default="1m", choices=["1m", "3m", "5m", "15m", "30m", "1H", "2H", "4H", "1D"])
     parser.add_argument("--limit", type=int, default=300, help="Number of candles to fetch or read from cache.")
+    parser.add_argument("--pages", type=int, default=1, help="Number of historical candle pages to fetch. Each page uses --limit.")
     parser.add_argument("--refresh", action="store_true", help="Fetch fresh public OKX candles instead of cache.")
     parser.add_argument("--input-csv", default="", help="Use a local candle CSV instead of OKX public candles.")
     parser.add_argument("--output-dir", default="", help="Optional output directory under reports/backtests.")
@@ -180,9 +195,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--position-loss-sl-bps", default="550")
     parser.add_argument("--risk-cooldown-bars", type=int, default=10)
     parser.add_argument("--regime-filter", choices=["off", "ma_cross"], default="ma_cross")
+    parser.add_argument("--regime-bar", choices=["1m", "3m", "5m", "15m", "30m", "1H", "2H", "4H"], default="15m")
     parser.add_argument("--regime-short-ma", type=int, default=5)
     parser.add_argument("--regime-long-ma", type=int, default=20)
     parser.add_argument("--regime-diff-bps", default="50")
+    parser.add_argument("--regime-confirm-bars", type=int, default=3)
     parser.add_argument("--trend-filter", choices=["off", "auto"], default="off")
     parser.add_argument("--trend-lookback", type=int, default=8)
     parser.add_argument("--trend-threshold-bps", default="90")
@@ -203,6 +220,7 @@ def config_from_args(args: argparse.Namespace) -> GridBacktestConfig:
             "orderSz": "order_sz",
             "maxPosition": "max_position",
             "maxOpenOrdersPerSide": "max_open_orders_per_side",
+            "maxActionsPerCycle": "max_actions_per_bar",
             "mode": "mode",
             "adaptiveWidthBps": "adaptive_width_bps",
             "adaptiveMinWidthBps": "adaptive_min_width_bps",
@@ -210,15 +228,18 @@ def config_from_args(args: argparse.Namespace) -> GridBacktestConfig:
             "adaptiveVolMultiplier": "adaptive_vol_multiplier",
             "rangeDriftWeightBps": "range_drift_weight_bps",
             "rangeDriftMaxBps": "range_drift_max_bps",
+            "rangeDriftMode": "range_drift_mode",
             "oneWayOpen": "one_way_open",
             "minTpBps": "min_tp_bps",
             "totalLossSlPct": "total_loss_sl_pct",
             "totalLossSlCap": "total_loss_sl_cap",
             "positionLossSlBps": "position_loss_sl_bps",
             "regimeFilter": "regime_filter",
+            "regimeBar": "regime_bar",
             "regimeShortMa": "regime_short_ma",
             "regimeLongMa": "regime_long_ma",
             "regimeDiffBps": "regime_diff_bps",
+            "regimeConfirmBars": "regime_confirm_bars",
             "trendFilter": "trend_filter",
             "trendLookback": "trend_lookback",
             "trendThresholdBps": "trend_threshold_bps",
@@ -227,6 +248,8 @@ def config_from_args(args: argparse.Namespace) -> GridBacktestConfig:
             if source_key in payload:
                 values[target_key] = payload[source_key]
         values["inst_id"] = payload.get("instId", values.get("inst_id"))
+        if "riskCooldown" in payload:
+            values["risk_cooldown_bars"] = cooldown_seconds_to_bars(dec(payload["riskCooldown"]), str(values["bar"]))
 
     return GridBacktestConfig(
         inst_id=str(values["inst_id"]),
@@ -247,6 +270,7 @@ def config_from_args(args: argparse.Namespace) -> GridBacktestConfig:
         adaptive_min_width_bps=dec(values["adaptive_min_width_bps"]),
         adaptive_max_width_bps=dec(values["adaptive_max_width_bps"]),
         adaptive_vol_multiplier=dec(values["adaptive_vol_multiplier"]),
+        range_drift_mode=str(values["range_drift_mode"]),
         range_drift_weight_bps=dec(values["range_drift_weight_bps"]),
         range_drift_max_bps=dec(values["range_drift_max_bps"]),
         one_way_open=bool(values["one_way_open"]),
@@ -264,9 +288,11 @@ def config_from_args(args: argparse.Namespace) -> GridBacktestConfig:
         position_loss_sl_bps=dec(values["position_loss_sl_bps"]),
         risk_cooldown_bars=int(values["risk_cooldown_bars"]),
         regime_filter=str(values["regime_filter"]),
+        regime_bar=str(values["regime_bar"]),
         regime_short_ma=int(values["regime_short_ma"]),
         regime_long_ma=int(values["regime_long_ma"]),
         regime_diff_bps=dec(values["regime_diff_bps"]),
+        regime_confirm_bars=int(values["regime_confirm_bars"]),
         trend_filter=str(values["trend_filter"]),
         trend_lookback=int(values["trend_lookback"]),
         trend_threshold_bps=dec(values["trend_threshold_bps"]),
@@ -278,27 +304,58 @@ def load_or_fetch_candles(args: argparse.Namespace, config: GridBacktestConfig) 
         return read_candles_csv(Path(args.input_csv))
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    cache_path = DATA_DIR / f"{config.inst_id}_{config.bar}_{config.limit}.csv"
+    page_suffix = "" if args.pages <= 1 else f"x{args.pages}"
+    cache_path = DATA_DIR / f"{config.inst_id}_{config.bar}_{config.limit}{page_suffix}.csv"
     if cache_path.exists() and not args.refresh:
         return read_candles_csv(cache_path)
 
     client = OkxRestClient()
-    response = client.request(
-        "GET",
-        "/api/v5/market/history-candles",
-        params={"instId": config.inst_id, "bar": config.bar, "limit": str(config.limit)},
-    )
-    rows = response.get("data", [])
-    if not rows:
-        response = client.request(
-            "GET",
-            "/api/v5/market/candles",
-            params={"instId": config.inst_id, "bar": config.bar, "limit": str(config.limit)},
-        )
-        rows = response.get("data", [])
+    rows = fetch_okx_candle_rows(client, config.inst_id, config.bar, config.limit, max(1, args.pages))
     candles = parse_okx_candles(rows)
     write_candles_csv(cache_path, candles)
     return candles
+
+
+def fetch_okx_candle_rows(client: OkxRestClient, inst_id: str, bar: str, limit: int, pages: int) -> list[list[str]]:
+    rows: list[list[str]] = []
+    seen_ts: set[str] = set()
+    after = ""
+    for _ in range(pages):
+        params = {"instId": inst_id, "bar": bar, "limit": str(limit)}
+        if after:
+            params["after"] = after
+        response = okx_public_request_with_retry(client, "/api/v5/market/history-candles", params)
+        page_rows = response.get("data", [])
+        if not page_rows and not rows:
+            response = okx_public_request_with_retry(client, "/api/v5/market/candles", params)
+            page_rows = response.get("data", [])
+        if not page_rows:
+            break
+        for row in page_rows:
+            if row and row[0] not in seen_ts:
+                rows.append(row)
+                seen_ts.add(row[0])
+        oldest_ts = page_rows[-1][0] if page_rows[-1] else ""
+        if not oldest_ts or oldest_ts == after:
+            break
+        after = oldest_ts
+        time.sleep(0.25)
+    return rows
+
+
+def okx_public_request_with_retry(client: OkxRestClient, path: str, params: dict[str, str]) -> dict[str, Any]:
+    last_exc: OkxApiError | None = None
+    for attempt in range(5):
+        try:
+            return client.request("GET", path, params=params)
+        except OkxApiError as exc:
+            last_exc = exc
+            if exc.status != 429 and exc.okx_code != "50011":
+                raise
+            time.sleep(1.0 + attempt)
+    if last_exc:
+        raise last_exc
+    return {}
 
 
 def parse_okx_candles(rows: list[list[str]]) -> list[Candle]:
@@ -638,6 +695,7 @@ def allowed_open_sides(
     midpoint: Decimal,
 ) -> set[str]:
     regime = regime_state(config, candles)
+    trend = trend_state(config, candles)
     if config.regime_filter == "ma_cross" and regime in {"up", "down"}:
         sides = {"long"} if regime == "up" else {"short"}
     elif mark_px < midpoint:
@@ -645,12 +703,11 @@ def allowed_open_sides(
     else:
         sides = {"short"}
 
-    if config.trend_filter == "auto":
-        trend = trend_state(config, candles)
-        if trend == "up":
-            sides = {"long"}
-        elif trend == "down":
-            sides = {"short"}
+    if config.trend_filter == "auto" and trend in {"up", "down"}:
+        trend_sides = {"long"} if trend == "up" else {"short"}
+        if config.regime_filter == "ma_cross" and regime in {"up", "down"} and not sides & trend_sides:
+            return set()
+        sides = trend_sides
 
     if config.one_way_open:
         if short_pos.size > 0 and "long" in sides:
@@ -663,6 +720,19 @@ def allowed_open_sides(
 def regime_state(config: GridBacktestConfig, candles: list[Candle]) -> str:
     if config.regime_filter != "ma_cross":
         return "off"
+    regime_candles = aggregate_candles(candles, config.regime_bar, config.bar)
+    if len(regime_candles) < config.regime_long_ma:
+        return "range"
+    states = [
+        ma_regime_state(config, regime_candles[: len(regime_candles) - offset])
+        for offset in range(max(1, config.regime_confirm_bars))
+    ]
+    if states and all(state == states[0] for state in states):
+        return states[0]
+    return "range"
+
+
+def ma_regime_state(config: GridBacktestConfig, candles: list[Candle]) -> str:
     if len(candles) < config.regime_long_ma:
         return "range"
     closes = [candle.close for candle in candles]
@@ -674,6 +744,36 @@ def regime_state(config: GridBacktestConfig, candles: list[Candle]) -> str:
     if diff_bps <= -config.regime_diff_bps:
         return "down"
     return "range"
+
+
+def aggregate_candles(candles: list[Candle], target_bar: str, source_bar: str) -> list[Candle]:
+    target_ms = BAR_MS.get(target_bar, BAR_MS["15m"])
+    source_ms = BAR_MS.get(source_bar, BAR_MS["1m"])
+    if target_ms <= source_ms:
+        return candles
+    if not candles:
+        return []
+    latest_close_ms = candles[-1].ts + source_ms
+    buckets: dict[int, list[Candle]] = {}
+    for candle in candles:
+        bucket = candle.ts - (candle.ts % target_ms)
+        if bucket + target_ms > latest_close_ms:
+            continue
+        buckets.setdefault(bucket, []).append(candle)
+    aggregated = []
+    for bucket in sorted(buckets):
+        items = buckets[bucket]
+        aggregated.append(
+            Candle(
+                ts=bucket,
+                open=items[0].open,
+                high=max(item.high for item in items),
+                low=min(item.low for item in items),
+                close=items[-1].close,
+                volume=sum((item.volume for item in items), Decimal("0")),
+            )
+        )
+    return aggregated
 
 
 def trend_state(config: GridBacktestConfig, candles: list[Candle]) -> str:
@@ -920,6 +1020,13 @@ def dec(value: Any, default: Decimal = Decimal("0")) -> Decimal:
         return Decimal(str(value))
     except Exception:
         return default
+
+
+def cooldown_seconds_to_bars(seconds: Decimal, bar: str) -> int:
+    if seconds <= 0:
+        return 0
+    bar_seconds = Decimal(BAR_MS.get(bar, BAR_MS["1m"])) / Decimal("1000")
+    return max(1, int((seconds / bar_seconds).to_integral_value(rounding=ROUND_UP)))
 
 
 def plain(value: Decimal) -> str:

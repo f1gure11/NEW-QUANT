@@ -8,6 +8,7 @@ from backtest.okx_grid_backtest import (
     GridBacktestConfig,
     Position,
     SimOrder,
+    allowed_open_sides,
     execute_orders,
     reconcile_sim_orders,
     resolve_output_dir,
@@ -87,6 +88,39 @@ class GridBacktestTest(unittest.TestCase):
         output_dir = resolve_output_dir("smoke-run", "20260624T000000Z")
 
         self.assertTrue(str(output_dir).endswith("reports/backtests/smoke-run"))
+
+    def test_fast_trend_can_block_stale_regime_side(self) -> None:
+        candles = []
+        for index in range(360):
+            if index < 352:
+                close = Decimal("100") - Decimal(index) / Decimal("20")
+            else:
+                close = Decimal("82.4") + Decimal(index - 352) / Decimal("5")
+            candles.append(
+                Candle(
+                    ts=1_800_000_000_000 + index * 60_000,
+                    open=close,
+                    high=close + Decimal("0.05"),
+                    low=close - Decimal("0.05"),
+                    close=close,
+                    volume=Decimal("1000"),
+                )
+            )
+        config = GridBacktestConfig(
+            regime_filter="ma_cross",
+            regime_bar="15m",
+            regime_short_ma=2,
+            regime_long_ma=4,
+            regime_diff_bps=Decimal("5"),
+            regime_confirm_bars=1,
+            trend_filter="auto",
+            trend_lookback=8,
+            trend_threshold_bps=Decimal("50"),
+        )
+
+        sides = allowed_open_sides(config, candles, Position(), Position(), candles[-1].close, Decimal("100"))
+
+        self.assertEqual(sides, set())
 
 
 if __name__ == "__main__":
