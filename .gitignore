@@ -6,6 +6,10 @@ __pycache__/
 
 data/okx/*
 !data/okx/.gitkeep
+data/backtest/*
+!data/backtest/.gitkeep
+reports/backtests/*
+!reports/backtests/.gitkeep
 
 *.log
 *.pid
