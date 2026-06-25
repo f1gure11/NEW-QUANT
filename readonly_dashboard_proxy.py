@@ -126,11 +126,11 @@ class ReadonlyProxyHandler(BaseHTTPRequestHandler):
 
     def request_auth(self) -> None:
         self.send_response(401)
-        self.send_header("WWW-Authenticate", 'Basic realm="OKX Quant Readonly"')
+        self.send_header("WWW-Authenticate", 'Basic realm="Doubao Quant Readonly"')
         self.send_header("Content-Type", "text/plain; charset=utf-8")
         self.send_security_headers()
         self.end_headers()
-        self.wfile.write(b"Authentication required.\n")
+        self.wfile.write("豆包 Quant authentication required.\n".encode("utf-8"))
 
     def forward_headers(self) -> dict[str, str]:
         headers: dict[str, str] = {}
@@ -165,7 +165,7 @@ def readonly_upstream_path(raw_path: str) -> str:
 def main() -> None:
     server = ThreadingHTTPServer((LISTEN_HOST, LISTEN_PORT), ReadonlyProxyHandler)
     print(
-        f"OKX readonly dashboard proxy running at http://{LISTEN_HOST}:{LISTEN_PORT} "
+        f"豆包 Quant readonly dashboard proxy running at http://{LISTEN_HOST}:{LISTEN_PORT} "
         f"-> http://{TARGET_HOST}:{TARGET_PORT}"
     )
     server.serve_forever()

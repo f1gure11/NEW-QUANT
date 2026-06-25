@@ -86,10 +86,10 @@ class AuthProxyHandler(BaseHTTPRequestHandler):
 
     def request_auth(self) -> None:
         self.send_response(401)
-        self.send_header("WWW-Authenticate", 'Basic realm="OKX Quant Dashboard"')
+        self.send_header("WWW-Authenticate", 'Basic realm="Doubao Quant Dashboard"')
         self.send_header("Content-Type", "text/plain; charset=utf-8")
         self.end_headers()
-        self.wfile.write(b"Authentication required.\n")
+        self.wfile.write("豆包 Quant authentication required.\n".encode("utf-8"))
 
     def read_body(self) -> bytes | None:
         length = self.headers.get("Content-Length")
@@ -120,7 +120,7 @@ class AuthProxyHandler(BaseHTTPRequestHandler):
 def main() -> None:
     server = ThreadingHTTPServer((LISTEN_HOST, LISTEN_PORT), AuthProxyHandler)
     print(
-        f"OKX dashboard auth proxy running at http://{LISTEN_HOST}:{LISTEN_PORT} "
+        f"豆包 Quant dashboard auth proxy running at http://{LISTEN_HOST}:{LISTEN_PORT} "
         f"-> http://{TARGET_HOST}:{TARGET_PORT}"
     )
     server.serve_forever()

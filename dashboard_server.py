@@ -503,6 +503,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
         content = file_path.read_bytes()
         self.send_response(200)
         self.send_header("Content-Type", content_type)
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
         self.send_header("Content-Length", str(len(content)))
         self.end_headers()
         self.wfile.write(content)
@@ -3143,7 +3146,7 @@ def plain(value: Decimal) -> str:
 def main() -> None:
     APP_DIR.mkdir(exist_ok=True)
     httpd = ThreadingHTTPServer((HOST, PORT), DashboardHandler)
-    print(f"OKX quant dashboard running at http://{HOST}:{PORT}")
+    print(f"豆包 Quant dashboard running at http://{HOST}:{PORT}")
     httpd.serve_forever()
 
 
