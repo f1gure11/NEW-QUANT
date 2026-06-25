@@ -84,6 +84,18 @@ ssh -L 8765:127.0.0.1:8765 root@154.222.31.222 -p 22
 http://127.0.0.1:8765
 ```
 
+如需用域名查看，只暴露只读面板，不要把完整 dashboard 暴露到公网。步骤见：
+
+```text
+READONLY_DOMAIN.md
+```
+
+只读入口默认是：
+
+```text
+https://你的域名/view
+```
+
 ## 7. 启动/停止机器人
 
 默认由 dashboard 启动和托管 BEAT/RE 机器人。此模式下 `okx-dashboard.service`

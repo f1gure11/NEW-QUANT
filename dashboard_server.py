@@ -7,15 +7,20 @@ import re
 import signal
 import subprocess
 import sys
+import threading
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from doubao_quant import quant_metadata
 from okx_client import OkxApiError, OkxRestClient, load_env
+from portfolio_live_plan import write_live_plan as write_portfolio_live_plan
+from portfolio_preflight import run_preflight as run_portfolio_preflight
+from portfolio_preflight import write_preflight_report as write_portfolio_preflight_report
 
 
 APP_DIR = Path(__file__).parent / "web"
@@ -30,6 +35,11 @@ RE_BOT_ACTION_LOG = Path(__file__).parent / "data" / "okx" / "re_grid_bot_action
 RE_BOT_STDOUT_LOG = Path(__file__).parent / "data" / "okx" / "re_grid_bot_stdout.log"
 RE_BOT_RUNTIME_CONFIG = Path(__file__).parent / "data" / "okx" / "re_grid_bot_runtime_config.json"
 RE_BOT_PID_FILE = Path(__file__).parent / "data" / "okx" / "re_grid_bot.pid"
+ETH_BOT_INST_ID = "ETH-USDT-SWAP"
+ETH_BOT_PREFIX = "ethg"
+ETH_BOT_ACTION_LOG = Path(__file__).parent / "data" / "okx" / "eth_rolling_actions.jsonl"
+ETH_BOT_STDOUT_LOG = Path(__file__).parent / "data" / "okx" / "eth_rolling_stdout.log"
+ETH_BOT_RUNTIME_CONFIG = Path(__file__).parent / "data" / "okx" / "eth_rolling_runtime_config.json"
 HOST = "127.0.0.1"
 PORT = 8765
 BOT_PROCESS: subprocess.Popen | None = None
@@ -38,6 +48,16 @@ BOT_COMMAND: list[str] | None = None
 RE_BOT_PROCESS: subprocess.Popen | None = None
 RE_BOT_STARTED_AT: str | None = None
 RE_BOT_COMMAND: list[str] | None = None
+PORTFOLIO_BACKTEST_PROCESS: subprocess.Popen | None = None
+PORTFOLIO_BACKTEST_STARTED_AT: str | None = None
+PORTFOLIO_BACKTEST_LOG = Path(__file__).parent / "data" / "okx" / "portfolio_backtest_stdout.log"
+PORTFOLIO_REPORT_DIR = Path(__file__).parent / "reports" / "portfolio"
+REGIME_REPORT_DIR = Path(__file__).parent / "reports" / "regime_model"
+PORTFOLIO_BOT_PROCESSES: dict[str, subprocess.Popen] = {}
+PORTFOLIO_BOT_STARTED_AT: dict[str, str] = {}
+PORTFOLIO_BOT_COMMANDS: dict[str, list[str]] = {}
+PORTFOLIO_ACCOUNT_CACHE: dict[str, Any] = {}
+PORTFOLIO_ACCOUNT_CACHE_TTL_SECONDS = 20.0
 
 RE_BOT_DEFAULTS: dict[str, Any] = {
     "instId": RE_BOT_INST_ID,
@@ -99,6 +119,7 @@ RE_BOT_DEFAULTS: dict[str, Any] = {
 }
 
 BOT_RUNTIME_KEYS = {
+    "instId",
     "lower",
     "upper",
     "leverage",
@@ -123,6 +144,7 @@ BOT_RUNTIME_KEYS = {
     "sizingMode",
     "orderMarginPct",
     "maxMarginPct",
+    "cashReservePct",
     "totalProfitTp",
     "totalProfitTpPct",
     "totalProfitTpCap",
@@ -225,6 +247,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/re-bot/config":
             self.handle_re_bot_config_get()
             return
+        if parsed.path == "/api/eth-bot/status":
+            self.handle_eth_bot_status()
+            return
+        if parsed.path == "/api/portfolio/latest":
+            self.handle_portfolio_latest()
+            return
         self.handle_static(parsed.path)
 
     def do_POST(self) -> None:
@@ -261,6 +289,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/re-bot/config":
             self.handle_re_bot_config_update()
+            return
+        if parsed.path == "/api/portfolio/backtest/start":
+            self.handle_portfolio_backtest_start()
+            return
+        if parsed.path == "/api/portfolio/live/start":
+            self.handle_portfolio_live_start()
+            return
+        if parsed.path == "/api/portfolio/live/stop":
+            self.handle_portfolio_live_stop()
             return
         self.send_error(404)
 
@@ -420,9 +457,38 @@ class DashboardHandler(BaseHTTPRequestHandler):
         except Exception as exc:
             self.send_json({"ok": False, "error": str(exc)}, status=400)
 
+    def handle_eth_bot_status(self) -> None:
+        self.send_json({"ok": True, "data": eth_bot_status()})
+
+    def handle_portfolio_latest(self) -> None:
+        self.send_json({"ok": True, "data": portfolio_status()})
+
+    def handle_portfolio_backtest_start(self) -> None:
+        try:
+            payload = self.read_json()
+            self.send_json({"ok": True, "data": start_portfolio_backtest(payload)})
+        except Exception as exc:
+            self.send_json({"ok": False, "error": str(exc)}, status=400)
+
+    def handle_portfolio_live_start(self) -> None:
+        try:
+            payload = self.read_json()
+            self.send_json({"ok": True, "data": start_portfolio_live(payload)})
+        except Exception as exc:
+            self.send_json({"ok": False, "error": str(exc)}, status=400)
+
+    def handle_portfolio_live_stop(self) -> None:
+        try:
+            payload = self.read_json()
+            self.send_json({"ok": True, "data": stop_portfolio_live(payload)})
+        except Exception as exc:
+            self.send_json({"ok": False, "error": str(exc)}, status=400)
+
     def handle_static(self, request_path: str) -> None:
         if request_path in ("", "/"):
             file_path = APP_DIR / "index.html"
+        elif request_path in ("/view", "/view/"):
+            file_path = APP_DIR / "view.html"
         else:
             file_path = (APP_DIR / request_path.lstrip("/")).resolve()
             if APP_DIR.resolve() not in file_path.parents and file_path != APP_DIR.resolve():
@@ -1157,6 +1223,10 @@ def bot_prefix_for_inst_id(inst_id: str) -> str:
     return RE_BOT_PREFIX if inst_id == RE_BOT_INST_ID else "gb"
 
 
+def safe_name(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_") or "portfolio"
+
+
 def is_reduce_only_pending_order(order: dict[str, Any]) -> bool:
     return str(order.get("reduceOnly", "")).lower() == "true"
 
@@ -1203,6 +1273,29 @@ def compute_pnl(positions: list[dict[str, Any]], fills: list[dict[str, Any]]) ->
         "buyVolume": str(buy_volume),
         "sellVolume": str(sell_volume),
     }
+
+
+def recent_fill_pnl(fills: list[dict[str, Any]], *, hours: int) -> tuple[Decimal, int]:
+    since_ms = int((datetime.now(timezone.utc) - timedelta(hours=hours)).timestamp() * 1000)
+    recent = [fill for fill in fills if fill_time_ms(fill) >= since_ms]
+    pnl = sum((dec(fill.get("fillPnl"), Decimal("0")) + dec(fill.get("fee"), Decimal("0")) for fill in recent), Decimal("0"))
+    return pnl, len(recent)
+
+
+def compute_account_pnl(positions: list[dict[str, Any]], fills: list[dict[str, Any]]) -> dict[str, Any]:
+    pnl = compute_pnl(positions, fills)
+    recent_5h, recent_5h_count = recent_fill_pnl(fills, hours=5)
+    recent_24h, recent_24h_count = recent_fill_pnl(fills, hours=24)
+    pnl.update(
+        {
+            "recent5h": plain(recent_5h),
+            "recent5hFillCount": recent_5h_count,
+            "recent24h": plain(recent_24h),
+            "recent24hFillCount": recent_24h_count,
+            "scope": "recent fills plus current unrealized PnL",
+        }
+    )
+    return pnl
 
 
 def build_order_plan(payload: dict[str, Any]) -> dict[str, Any]:
@@ -1358,6 +1451,8 @@ def build_grid_bot_args(
         str(payload.get("orderMarginPct", "35")),
         "--max-margin-pct",
         str(payload.get("maxMarginPct", "70")),
+        "--cash-reserve-pct",
+        str(payload.get("cashReservePct", "10")),
         "--total-profit-tp",
         str(payload.get("totalProfitTp", "0")),
         "--total-profit-tp-pct",
@@ -1497,11 +1592,15 @@ def stop_bot() -> dict[str, Any]:
 
 def read_bot_runtime_config() -> dict[str, Any]:
     if not BOT_RUNTIME_CONFIG.exists():
-        return {}
+        return {"instId": "BEAT-USDT-SWAP"}
     try:
-        return json.loads(BOT_RUNTIME_CONFIG.read_text(encoding="utf-8"))
+        payload = json.loads(BOT_RUNTIME_CONFIG.read_text(encoding="utf-8"))
+        if isinstance(payload, dict):
+            payload.setdefault("instId", "BEAT-USDT-SWAP")
+            return payload
+        return {"instId": "BEAT-USDT-SWAP"}
     except Exception:
-        return {}
+        return {"instId": "BEAT-USDT-SWAP"}
 
 
 def write_bot_runtime_config(payload: dict[str, Any]) -> dict[str, Any]:
@@ -1509,6 +1608,7 @@ def write_bot_runtime_config(payload: dict[str, Any]) -> dict[str, Any]:
     for key in BOT_RUNTIME_KEYS:
         if key in payload:
             current[key] = payload[key]
+    current["instId"] = str(payload.get("instId", current.get("instId", "BEAT-USDT-SWAP")))
     current["updatedAt"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     BOT_RUNTIME_CONFIG.parent.mkdir(parents=True, exist_ok=True)
     BOT_RUNTIME_CONFIG.write_text(json.dumps(current, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -1671,6 +1771,28 @@ def re_bot_status() -> dict[str, Any]:
     }
 
 
+def eth_bot_status() -> dict[str, Any]:
+    pid = find_process_pid(["auto_grid_bot.py", str(ETH_BOT_RUNTIME_CONFIG)])
+    running = bool(pid and is_process_running(pid, str(ETH_BOT_RUNTIME_CONFIG)))
+    log_lines = tail_lines(ETH_BOT_STDOUT_LOG, 260)
+    runtime_config = read_json_file(ETH_BOT_RUNTIME_CONFIG)
+    runtime_config.setdefault("instId", ETH_BOT_INST_ID)
+    return {
+        "running": running,
+        "pid": pid if running else None,
+        "returnCode": None,
+        "startedAt": None,
+        "command": process_command(pid) if pid else "",
+        "runtimeConfig": runtime_config,
+        "diagnostics": parse_bot_diagnostics(log_lines, running),
+        "logPath": str(ETH_BOT_STDOUT_LOG),
+        "actionLogPath": str(ETH_BOT_ACTION_LOG),
+        "botPrefix": ETH_BOT_PREFIX,
+        "readOnly": True,
+        "logTail": "\n".join(log_lines[-80:]),
+    }
+
+
 def bot_pid_from_file() -> int | None:
     if not BOT_PID_FILE.exists():
         return None
@@ -1683,8 +1805,8 @@ def bot_pid_from_file() -> int | None:
 def is_process_running(pid: int, command_hint: str = "") -> bool:
     if os.name != "nt":
         try:
-            cmdline = (Path("/proc") / str(pid) / "cmdline").read_text(encoding="utf-8", errors="replace")
-            return bool(cmdline) and command_hint in cmdline.replace("\x00", " ")
+            parts = read_process_cmdline_parts(Path("/proc") / str(pid))
+            return bool(parts) and command_parts_match_hints(parts, [command_hint])
         except Exception:
             return False
 
@@ -1730,12 +1852,43 @@ def find_process_pid(command_hints: list[str]) -> int | None:
         if not item.name.isdigit():
             continue
         try:
-            cmdline = (item / "cmdline").read_text(encoding="utf-8", errors="replace").replace("\x00", " ")
+            parts = read_process_cmdline_parts(item)
         except Exception:
             continue
-        if cmdline and all(hint in cmdline for hint in command_hints):
+        if command_parts_match_hints(parts, command_hints):
             return int(item.name)
     return None
+
+
+def read_process_cmdline_parts(proc_dir: Path) -> list[str]:
+    raw = (proc_dir / "cmdline").read_bytes()
+    return [part.decode("utf-8", errors="replace") for part in raw.split(b"\0") if part]
+
+
+def command_parts_match_hints(parts: list[str], command_hints: list[str]) -> bool:
+    if not parts:
+        return False
+    command_text = " ".join(parts)
+    for hint in command_hints:
+        if not hint:
+            continue
+        if hint.endswith(".py"):
+            hint_name = Path(hint).name
+            if not any(Path(part).name == hint_name for part in parts):
+                return False
+            continue
+        if hint not in command_text:
+            return False
+    return True
+
+
+def process_command(pid: int | None) -> str:
+    if not pid or os.name == "nt":
+        return ""
+    try:
+        return (Path("/proc") / str(pid) / "cmdline").read_text(encoding="utf-8", errors="replace").replace("\x00", " ").strip()
+    except Exception:
+        return ""
 
 
 def bot_status() -> dict[str, Any]:
@@ -1771,10 +1924,917 @@ def tail_text(path: Path, lines: int) -> str:
     return "\n".join(tail_lines(path, lines))
 
 
+def file_mtime_iso(path: Path) -> str:
+    try:
+        return datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat(timespec="seconds")
+    except Exception:
+        return ""
+
+
+def portfolio_status() -> dict[str, Any]:
+    account = portfolio_account_summary()
+    live = portfolio_live_status(include_pnl=False)
+    if account.get("ok"):
+        live["balance"] = account.get("balance", {})
+        live["pnl"] = account.get("pnl", {})
+    latest_report = latest_portfolio_report_payload(live=live)
+    return {
+        "backtest": portfolio_backtest_status(),
+        "account": account,
+        "live": live,
+        "latestReport": latest_report,
+        "regimeResearch": latest_regime_research_payload(),
+    }
+
+
+def portfolio_account_summary() -> dict[str, Any]:
+    now = datetime.now(timezone.utc)
+    cached = PORTFOLIO_ACCOUNT_CACHE.get("payload")
+    cached_at = PORTFOLIO_ACCOUNT_CACHE.get("capturedAt")
+    if cached and isinstance(cached_at, datetime):
+        age = (now - cached_at).total_seconds()
+        if age < PORTFOLIO_ACCOUNT_CACHE_TTL_SECONDS:
+            return {**cached, "cache": {"hit": True, "ageSeconds": round(age, 3), "stale": False}}
+    try:
+        load_env()
+        client = OkxRestClient.from_env()
+        try:
+            client.timeout = float(os.getenv("OKX_DASHBOARD_TIMEOUT", "4"))
+        except ValueError:
+            client.timeout = 4.0
+        account = one(client.get_account_config())
+        balance = one(client.get_balance())
+        positions = client.get_positions("SWAP").get("data", [])
+        fills = client.get_fills(inst_type="SWAP", limit="100").get("data", [])
+        payload = {
+            "ok": True,
+            "capturedAt": now.isoformat(timespec="seconds"),
+            "account": sanitize_account(account),
+            "balance": sanitize_balance(balance),
+            "pnl": compute_account_pnl(positions, fills),
+        }
+        PORTFOLIO_ACCOUNT_CACHE["payload"] = payload
+        PORTFOLIO_ACCOUNT_CACHE["capturedAt"] = now
+        return {**payload, "cache": {"hit": False, "ageSeconds": 0, "stale": False}}
+    except Exception as exc:
+        if cached and isinstance(cached_at, datetime):
+            age = (now - cached_at).total_seconds()
+            return {
+                **cached,
+                "ok": True,
+                "warning": str(exc),
+                "cache": {"hit": True, "ageSeconds": round(age, 3), "stale": True},
+            }
+        return {
+            "ok": False,
+            "capturedAt": now.isoformat(timespec="seconds"),
+            "error": str(exc),
+            "account": {},
+            "balance": {},
+            "pnl": {},
+            "cache": {"hit": False, "ageSeconds": 0, "stale": False},
+        }
+
+
+def portfolio_backtest_status() -> dict[str, Any]:
+    process_running = PORTFOLIO_BACKTEST_PROCESS is not None and PORTFOLIO_BACKTEST_PROCESS.poll() is None
+    external_pid = find_process_pid([str(Path(__file__).parent / "portfolio_backtest.py")])
+    running = process_running or bool(external_pid)
+    pid = PORTFOLIO_BACKTEST_PROCESS.pid if process_running and PORTFOLIO_BACKTEST_PROCESS else external_pid
+    log_status = parse_portfolio_backtest_log()
+    report_dir = latest_portfolio_report_dir()
+    report_mtime = file_mtime_iso(report_dir / "summary.md") if report_dir else ""
+    return_code = None
+    if not running:
+        if PORTFOLIO_BACKTEST_PROCESS:
+            return_code = PORTFOLIO_BACKTEST_PROCESS.poll()
+        elif log_status.get("returnCode") is not None:
+            return_code = log_status.get("returnCode")
+    return {
+        "running": running,
+        "state": "running" if running else log_status.get("state", "idle"),
+        "pid": pid if running else None,
+        "returnCode": return_code,
+        "startedAt": PORTFOLIO_BACKTEST_STARTED_AT or log_status.get("startedAt"),
+        "command": log_status.get("command", ""),
+        "logPath": str(PORTFOLIO_BACKTEST_LOG),
+        "lastLogAt": file_mtime_iso(PORTFOLIO_BACKTEST_LOG),
+        "lastReportDir": str(report_dir) if report_dir else "",
+        "lastReportAt": report_mtime,
+        "latestReportPath": log_status.get("reportPath", ""),
+        "logTail": tail_text(PORTFOLIO_BACKTEST_LOG, 80),
+    }
+
+
+def parse_portfolio_backtest_log() -> dict[str, Any]:
+    if not PORTFOLIO_BACKTEST_LOG.exists():
+        return {"state": "idle", "returnCode": None}
+    text_value = PORTFOLIO_BACKTEST_LOG.read_text(encoding="utf-8", errors="replace")
+    marker = "\n--- portfolio backtest start "
+    parts = text_value.split(marker)
+    last = parts[-1] if len(parts) > 1 else text_value
+    lines = last.splitlines()
+    started_at = ""
+    if len(parts) > 1 and lines:
+        started_at = lines[0].replace(" ---", "").strip()
+    command = next((line.removeprefix("command=").strip() for line in lines if line.startswith("command=")), "")
+    report_path = next((line.removeprefix("portfolio_report=").strip() for line in lines if line.startswith("portfolio_report=")), "")
+    if report_path:
+        state = "completed"
+        return_code: int | None = 0
+    elif "Traceback (most recent call last):" in last or "PermissionError:" in last:
+        state = "failed"
+        return_code = 1
+    else:
+        state = "unknown" if text_value.strip() else "idle"
+        return_code = None
+    return {
+        "state": state,
+        "returnCode": return_code,
+        "startedAt": started_at,
+        "command": command,
+        "reportPath": report_path,
+    }
+
+
+def start_portfolio_backtest(payload: dict[str, Any]) -> dict[str, Any]:
+    global PORTFOLIO_BACKTEST_PROCESS, PORTFOLIO_BACKTEST_STARTED_AT
+    if PORTFOLIO_BACKTEST_PROCESS and PORTFOLIO_BACKTEST_PROCESS.poll() is None:
+        raise RuntimeError("Portfolio backtest is already running.")
+
+    args = build_portfolio_backtest_args(payload)
+    PORTFOLIO_BACKTEST_LOG.parent.mkdir(parents=True, exist_ok=True)
+    PORTFOLIO_BACKTEST_STARTED_AT = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    with PORTFOLIO_BACKTEST_LOG.open("a", encoding="utf-8") as log:
+        log.write(f"\n--- portfolio backtest start {PORTFOLIO_BACKTEST_STARTED_AT} ---\n")
+        log.write("command=" + " ".join(args) + "\n")
+        log.flush()
+        PORTFOLIO_BACKTEST_PROCESS = subprocess.Popen(
+            args,
+            cwd=Path(__file__).parent,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+    threading.Thread(target=wait_portfolio_backtest, daemon=True).start()
+    return portfolio_status()
+
+
+def wait_portfolio_backtest() -> None:
+    if not PORTFOLIO_BACKTEST_PROCESS:
+        return
+    PORTFOLIO_BACKTEST_PROCESS.wait()
+
+
+def start_portfolio_live(payload: dict[str, Any]) -> dict[str, Any]:
+    require_live_enabled()
+    report_dir = latest_portfolio_report_dir()
+    if not report_dir:
+        raise RuntimeError("No portfolio report found. Run a portfolio backtest first.")
+    require_portfolio_live_report(report_dir)
+
+    requested = set(str(item) for item in payload.get("instIds", []) if item)
+    preflight_checks = run_portfolio_preflight(report_dir, include_account=True)
+    if requested:
+        preflight_checks = [check for check in preflight_checks if not check.inst_id or check.inst_id in requested]
+    preflight_path = write_portfolio_preflight_report(report_dir, preflight_checks, include_account=True)
+    preflight_blocked = any(check.severity == "block" for check in preflight_checks)
+    if preflight_blocked and not payload.get("allowBlocked"):
+        status = portfolio_status()
+        status["liveStartResult"] = {
+            "started": [],
+            "skipped": [],
+            "reduce": [],
+            "preflightPath": str(preflight_path),
+            "preflightStatus": "blocked",
+            "mode": "live",
+        }
+        raise RuntimeError(f"Portfolio live preflight blocked. Review {preflight_path}.")
+
+    live_plan_items = write_portfolio_live_plan(
+        report_dir,
+        requested or None,
+        allow_blocked_preflight=bool(payload.get("allowBlocked")),
+    )
+    live_plan_by_inst = {item.inst_id: item for item in live_plan_items if item.inst_id}
+    execution = read_json_file(report_dir / "execution_intents.json")
+    intents = execution.get("intents", []) if isinstance(execution.get("intents", []), list) else []
+    runnable = [
+        item for item in intents
+        if item.get("status") == "runtime_config_ready"
+        and item.get("runtime_config_path")
+        and item.get("action") in {"enter", "increase", "decrease", "hold"}
+    ]
+    reduce_intents = [
+        item for item in intents
+        if item.get("status") == "rebalance_reduce_ready"
+        and item.get("action") in {"decrease", "exit"}
+    ]
+    if not runnable and not reduce_intents:
+        raise RuntimeError("No runtime-ready portfolio targets found.")
+
+    reduce_results = []
+    if payload.get("executeRebalance", True):
+        reduce_results = run_portfolio_reduce_intents(reduce_intents, requested=requested)
+    started = []
+    skipped = []
+    for intent in runnable:
+        inst_id = str(intent.get("inst_id", ""))
+        if requested and inst_id not in requested:
+            skipped.append({"instId": inst_id, "reason": "not requested"})
+            continue
+        live_plan_item = live_plan_by_inst.get(inst_id)
+        if not live_plan_item or live_plan_item.status != "ready":
+            skipped.append({"instId": inst_id, "reason": "live plan not ready"})
+            continue
+        status = portfolio_bot_status_for_intent(intent)
+        if status.get("running"):
+            skipped.append({"instId": inst_id, "reason": "already running", "pid": status.get("pid")})
+            continue
+        command = live_command_from_dry_run(live_plan_item.live_command, remove_once=True)
+        if not command:
+            skipped.append({"instId": inst_id, "reason": "empty command"})
+            continue
+        stdout_log = Path(str(intent.get("stdout_log_path") or Path(__file__).parent / "data" / "okx" / f"portfolio_{safe_name(inst_id)}_stdout.log"))
+        stdout_log.parent.mkdir(parents=True, exist_ok=True)
+        started_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with stdout_log.open("a", encoding="utf-8") as log:
+            log.write(f"\n--- portfolio live bot start {started_at} {inst_id} ---\n")
+            log.write("command=" + " ".join(command) + "\n")
+            log.flush()
+            process = subprocess.Popen(
+                command,
+                cwd=Path(__file__).parent,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+        PORTFOLIO_BOT_PROCESSES[inst_id] = process
+        PORTFOLIO_BOT_STARTED_AT[inst_id] = started_at
+        PORTFOLIO_BOT_COMMANDS[inst_id] = command
+        started.append({"instId": inst_id, "pid": process.pid})
+    status = portfolio_status()
+    status["liveStartResult"] = {
+        "started": started,
+        "skipped": skipped,
+        "reduce": reduce_results,
+        "preflightPath": str(preflight_path),
+        "preflightStatus": "pass" if not preflight_blocked else "blocked_allowed",
+        "livePlanStatus": "ready" if all(item.status == "ready" for item in live_plan_items if item.inst_id) else "partial",
+        "mode": "live",
+    }
+    return status
+
+
+def require_portfolio_live_report(report_dir: Path) -> None:
+    rebalance = read_json_file(report_dir / "rebalance_plan.json")
+    execution = read_json_file(report_dir / "execution_intents.json")
+    execution_config = execution.get("execution", {}) if isinstance(execution.get("execution", {}), dict) else {}
+    trading_mode = normalize_portfolio_trading_mode(
+        rebalance.get("tradingMode")
+        or execution.get("tradingMode")
+        or execution_config.get("trading_mode")
+        or execution.get("mode")
+    )
+    if trading_mode != "live":
+        raise PermissionError(
+            "Latest portfolio report is not a live candidate. "
+            "Run portfolio backtest with trading mode=live before starting portfolio live bots."
+        )
+
+
+def stop_portfolio_live(payload: dict[str, Any]) -> dict[str, Any]:
+    requested = set(str(item) for item in payload.get("instIds", []) if item)
+    stopped = []
+    live = portfolio_live_status()
+    for bot in live.get("bots", []):
+        inst_id = str(bot.get("instId", ""))
+        if requested and inst_id not in requested:
+            continue
+        pid = bot.get("pid")
+        process = PORTFOLIO_BOT_PROCESSES.get(inst_id)
+        if process and process.poll() is None:
+            terminate_process(process)
+            stopped.append({"instId": inst_id, "pid": process.pid})
+        elif pid:
+            terminate_pid(int(pid))
+            stopped.append({"instId": inst_id, "pid": pid})
+        PORTFOLIO_BOT_PROCESSES.pop(inst_id, None)
+    status = portfolio_status()
+    status["liveStopResult"] = {"stopped": stopped}
+    return status
+
+
+def terminate_process(process: subprocess.Popen) -> None:
+    process.terminate()
+    try:
+        process.wait(timeout=8)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=5)
+
+
+def terminate_pid(pid: int) -> None:
+    try:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/PID", str(pid), "/F"], check=False, capture_output=True, text=True)
+        else:
+            os.kill(pid, signal.SIGTERM)
+    except Exception:
+        pass
+
+
+def run_portfolio_reduce_intents(reduce_intents: list[dict[str, Any]], *, requested: set[str]) -> list[dict[str, Any]]:
+    results = []
+    log_path = Path(__file__).parent / "data" / "okx" / "portfolio_rebalancer_stdout.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    for intent in reduce_intents:
+        inst_id = str(intent.get("inst_id", ""))
+        if requested and inst_id not in requested:
+            results.append({"instId": inst_id, "status": "skipped", "reason": "not requested"})
+            continue
+        command = live_command_from_dry_run(str(intent.get("dry_run_command", "")), remove_once=False, set_leverage=False)
+        if not command:
+            results.append({"instId": inst_id, "status": "skipped", "reason": "empty command"})
+            continue
+        started_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with log_path.open("a", encoding="utf-8") as log:
+            log.write(f"\n--- portfolio reduce live once {started_at} {inst_id} ---\n")
+            log.write("command=" + " ".join(command) + "\n")
+            log.flush()
+            completed = subprocess.run(
+                command,
+                cwd=Path(__file__).parent,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                text=True,
+                timeout=90,
+            )
+        results.append({"instId": inst_id, "status": "done", "returnCode": completed.returncode, "logPath": str(log_path)})
+    return results
+
+
+def live_command_from_dry_run(dry_run_command: str, *, remove_once: bool, set_leverage: bool = True) -> list[str]:
+    if not dry_run_command:
+        return []
+    parts = shlex_split_portable(dry_run_command)
+    if parts and "=" in parts[0] and parts[0].startswith("PYTHONPATH"):
+        parts = parts[1:]
+    if parts and parts[0].endswith("python"):
+        parts[0] = sys.executable
+    elif parts and parts[0].endswith("python3"):
+        parts[0] = sys.executable
+    if remove_once:
+        parts = [part for part in parts if part != "--once"]
+    if set_leverage and "--set-leverage" not in parts:
+        parts.append("--set-leverage")
+    if "--live" not in parts:
+        parts.append("--live")
+    if "--confirm-live" not in parts:
+        parts.extend(["--confirm-live", "I_UNDERSTAND"])
+    return parts
+
+
+def shlex_split_portable(command: str) -> list[str]:
+    import shlex
+
+    return shlex.split(command)
+
+
+def portfolio_live_status(*, include_pnl: bool = True) -> dict[str, Any]:
+    report_dir = latest_portfolio_report_dir()
+    intents = []
+    if report_dir:
+        execution = read_json_file(report_dir / "execution_intents.json")
+        raw_intents = execution.get("intents", []) if isinstance(execution.get("intents", []), list) else []
+        intents = [item for item in raw_intents if item.get("status") == "runtime_config_ready"]
+    bots = [portfolio_bot_status_for_intent(intent) for intent in intents]
+    running = [bot for bot in bots if bot.get("running")]
+    preflight = read_json_file(report_dir / "preflight_report.json") if report_dir else {}
+    live_plan = read_json_file(report_dir / "live_plan.json") if report_dir else {}
+    return {
+        "enabled": is_live_enabled(),
+        "mode": "live" if is_live_enabled() else "locked",
+        "readOnlyMirror": True,
+        "reportDir": str(report_dir) if report_dir else "",
+        "runningCount": len(running),
+        "targetCount": len(bots),
+        "paperCount": len(intents),
+        "preflightStatus": preflight.get("status", ""),
+        "preflightIncludeAccount": preflight.get("includeAccount", False),
+        "livePlanStatus": live_plan.get("status", ""),
+        "bots": bots,
+        "pnl": portfolio_live_pnl_summary() if include_pnl else {"estimatedTotal": "0", "recent5h": "0", "recent5hFillCount": 0},
+    }
+
+
+def portfolio_bot_status_for_intent(intent: dict[str, Any]) -> dict[str, Any]:
+    inst_id = str(intent.get("inst_id", ""))
+    bot_prefix = str(intent.get("bot_prefix", ""))
+    runtime_path = str(intent.get("runtime_config_path", ""))
+    stdout_log = Path(str(intent.get("stdout_log_path") or Path(__file__).parent / "data" / "okx" / f"portfolio_{safe_name(inst_id)}_stdout.log"))
+    process = PORTFOLIO_BOT_PROCESSES.get(inst_id)
+    running = bool(process and process.poll() is None)
+    pid = process.pid if running and process else None
+    if not pid and runtime_path:
+        pid = find_process_pid(["auto_grid_bot.py", runtime_path])
+    if not pid and inst_id:
+        pid = find_process_pid(["auto_grid_bot.py", inst_id])
+    command = process_command(pid) if pid else ""
+    if not running and pid:
+        running = bool(command and "auto_grid_bot.py" in command and (not inst_id or inst_id in command))
+    log_lines = tail_lines(stdout_log, 220)
+    diagnostics = parse_bot_diagnostics(log_lines, running)
+    runtime_config = read_json_file(Path(runtime_path)) if runtime_path else {}
+    return {
+        "instId": inst_id,
+        "action": intent.get("action", ""),
+        "role": runtime_config.get("portfolioRole") or "",
+        "running": running,
+        "pid": pid if running else None,
+        "returnCode": process.poll() if process and not running else None,
+        "startedAt": PORTFOLIO_BOT_STARTED_AT.get(inst_id),
+        "command": PORTFOLIO_BOT_COMMANDS.get(inst_id) or command,
+        "runtimeConfigPath": runtime_path,
+        "runtimeConfig": runtime_config,
+        "botPrefix": bot_prefix,
+        "logPath": str(stdout_log),
+        "diagnostics": diagnostics,
+        "logTail": "\n".join(log_lines[-80:]),
+        "status": "实盘运行中" if running else "未运行",
+    }
+
+
+def portfolio_live_pnl_summary() -> dict[str, Any]:
+    snapshot = latest_local_snapshot()
+    pnl = snapshot.get("pnl", {}) if snapshot else {}
+    fills = snapshot.get("fills", []) if snapshot else []
+    recent_pnl, recent_count = recent_fill_pnl(fills, hours=5)
+    return {
+        "estimatedTotal": pnl.get("estimatedTotal", "0"),
+        "recent5h": plain(recent_pnl),
+        "recent5hFillCount": recent_count,
+    }
+
+
+def latest_local_snapshot() -> dict[str, Any]:
+    try:
+        return build_snapshot(StrategyParams(inst_id=ETH_BOT_INST_ID))
+    except Exception:
+        return {}
+
+
+def fill_time_ms(fill: dict[str, Any]) -> int:
+    value = fill.get("fillTime") or fill.get("ts") or "0"
+    try:
+        return int(value)
+    except Exception:
+        return 0
+
+
+def build_portfolio_backtest_args(payload: dict[str, Any]) -> list[str]:
+    top_n = bounded_int(payload.get("topN"), default=12, lower=1, upper=50)
+    target_symbols = bounded_int(payload.get("targetSymbols"), default=6, lower=1, upper=20)
+    pages = bounded_int(payload.get("backtestPages"), default=2, lower=1, upper=8)
+    limit = bounded_int(payload.get("backtestLimit"), default=300, lower=80, upper=300)
+    trading_mode = str(payload.get("tradingMode") or payload.get("mode") or "backtest")
+    if trading_mode not in {"backtest", "paper", "live"}:
+        trading_mode = "backtest"
+    args = [
+        sys.executable,
+        str(Path(__file__).parent / "portfolio_backtest.py"),
+        "--top-n",
+        str(top_n),
+        "--target-symbols",
+        str(target_symbols),
+        "--backtest-pages",
+        str(pages),
+        "--backtest-limit",
+        str(limit),
+        "--min-quote-volume",
+        safe_decimal_arg(payload.get("minQuoteVolume"), "5000000"),
+        "--max-spread-bps",
+        safe_decimal_arg(payload.get("maxSpreadBps"), "20"),
+        "--starting-equity",
+        safe_decimal_arg(payload.get("startingEquity"), "100"),
+        "--cash-reserve-pct",
+        safe_decimal_arg(payload.get("cashReservePct"), "10"),
+        "--core-symbols",
+        str(bounded_int(payload.get("coreSymbols"), default=2, lower=1, upper=10)),
+        "--core-weight-share-pct",
+        safe_decimal_arg(payload.get("coreWeightSharePct"), "70"),
+        "--satellite-max-weight-pct",
+        safe_decimal_arg(payload.get("satelliteMaxWeightPct"), "12"),
+        "--satellite-min-weight-pct",
+        safe_decimal_arg(payload.get("satelliteMinWeightPct"), "3"),
+        "--trend-filter",
+        str(payload.get("trendFilter") or "compare"),
+        "--market-regime-filter",
+        str(payload.get("marketRegimeFilter") or "auto"),
+        "--market-regime-min-confidence",
+        safe_decimal_arg(payload.get("marketRegimeMinConfidence"), "0.52"),
+        "--trading-mode",
+        trading_mode,
+    ]
+    if payload.get("marketRegimeModelPath"):
+        args.extend(["--market-regime-model-path", str(payload.get("marketRegimeModelPath"))])
+    if payload.get("includeAccount") or trading_mode == "live":
+        args.append("--include-account")
+    if payload.get("refresh"):
+        args.append("--refresh")
+    return args
+
+
+def latest_portfolio_report_payload(*, live: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    report_dir = latest_portfolio_report_dir()
+    if not report_dir:
+        return None
+    candidates = read_json_file(report_dir / "candidates.json")
+    rebalance = read_json_file(report_dir / "rebalance_plan.json")
+    execution = read_json_file(report_dir / "execution_intents.json")
+    live_plan = read_json_file(report_dir / "live_plan.json")
+    preflight = read_json_file(report_dir / "preflight_report.json")
+    scores = read_csv_file(report_dir / "scores.csv", limit=50)
+    runtime_configs = read_portfolio_runtime_configs(report_dir)
+    live = live or portfolio_live_status(include_pnl=False)
+    annotate_rebalance_actions(rebalance)
+    return {
+        "reportDir": str(report_dir),
+        "name": report_dir.name,
+        "generatedAt": rebalance.get("generatedAt") or candidates.get("generatedAt") or "",
+        "product": rebalance.get("product") or candidates.get("product") or quant_metadata(),
+        "summary": portfolio_report_summary(scores, rebalance, execution, runtime_configs, live),
+        "candidates": candidates,
+        "scores": scores,
+        "rebalance": rebalance,
+        "execution": execution,
+        "preflight": preflight,
+        "livePlan": live_plan,
+        "runtimeConfigs": runtime_configs,
+        "live": live,
+        "summaryMarkdown": (report_dir / "summary.md").read_text(encoding="utf-8", errors="replace") if (report_dir / "summary.md").exists() else "",
+    }
+
+
+def annotate_rebalance_actions(rebalance: dict[str, Any]) -> None:
+    actions = rebalance.get("actions")
+    if not isinstance(actions, list):
+        return
+    generated_at = str(rebalance.get("generatedAt") or "")
+    allocation = rebalance.get("allocation", {}) if isinstance(rebalance.get("allocation", {}), dict) else {}
+    threshold = allocation.get("rebalance_threshold_pct", "2")
+    for action in actions:
+        if not isinstance(action, dict):
+            continue
+        action.setdefault("generated_at", generated_at)
+        action.setdefault("rebalance_threshold_pct", threshold)
+        action.setdefault("reason", rebalance_action_reason(action, threshold))
+
+
+def rebalance_action_reason(action: dict[str, Any], threshold: Any = "2") -> str:
+    note = str(action.get("note") or "")
+    action_name = str(action.get("action") or "")
+    delta = dec(action.get("delta_weight_pct"), Decimal("0"))
+    threshold_text = plain(dec(threshold, Decimal("0")))
+    if not note:
+        note = {
+            "enter": "new target allocation",
+            "increase": "below target allocation",
+            "decrease": "above target allocation",
+            "exit": "not selected by target portfolio",
+            "hold": "within threshold",
+        }.get(action_name, "")
+    note_text = {
+        "new target allocation": "目标组合新增该合约",
+        "below target allocation": "当前权重低于目标权重",
+        "above target allocation": "当前权重高于目标权重",
+        "close missing target": "该合约不在目标组合内",
+        "not selected by target portfolio": "该合约不在目标组合内",
+        "within threshold": "偏离未超过调仓阈值",
+    }.get(note, note or "组合权重偏离检查")
+    if action_name == "hold":
+        return f"{note_text}，偏离 {plain(abs(delta))}% 未达到 {threshold_text}% 阈值。"
+    return f"{note_text}，偏离 {plain(abs(delta))}% 达到 {threshold_text}% 调仓阈值。"
+
+
+def latest_portfolio_report_dir() -> Path | None:
+    if not PORTFOLIO_REPORT_DIR.exists():
+        return None
+    dirs = [path for path in PORTFOLIO_REPORT_DIR.iterdir() if path.is_dir()]
+    if not dirs:
+        return None
+    dirs.sort(key=lambda path: path.stat().st_mtime, reverse=True)
+    return dirs[0]
+
+
+def latest_regime_research_payload() -> dict[str, Any] | None:
+    report_dir = latest_regime_research_dir()
+    if not report_dir:
+        return None
+    scores = read_csv_file(report_dir / "scores.csv", limit=500)
+    metrics = read_json_file(report_dir / "model_metrics.json")
+    config = read_json_file(report_dir / "config.json")
+    summary_markdown = (report_dir / "summary.md").read_text(encoding="utf-8", errors="replace") if (report_dir / "summary.md").exists() else ""
+    variant_rows = regime_variant_summary(scores)
+    best_variant = best_regime_variant(variant_rows)
+    return {
+        "reportDir": str(report_dir),
+        "name": report_dir.name,
+        "generatedAt": metrics.get("generatedAt") or file_mtime_iso(report_dir),
+        "bestVariant": best_variant,
+        "variantSummary": variant_rows,
+        "topRows": regime_top_rows(scores),
+        "models": {
+            "rf": regime_model_summary(metrics.get("rf", {})),
+            "hmm": regime_model_summary(metrics.get("hmm", {})),
+        },
+        "config": config,
+        "summaryMarkdown": summary_markdown,
+        "quantDinger": {
+            "source": "github.com/brokermr810/QuantDinger",
+            "commit": "b3b3c5c",
+            "license": "Apache-2.0",
+            "integration": "signal/execution standard and monitoring-report shape only; no live execution code vendored",
+        },
+    }
+
+
+def latest_regime_research_dir() -> Path | None:
+    if not REGIME_REPORT_DIR.exists():
+        return None
+    dirs = [path for path in REGIME_REPORT_DIR.iterdir() if path.is_dir() and (path / "scores.csv").exists()]
+    if not dirs:
+        return None
+    dirs.sort(key=lambda path: path.stat().st_mtime, reverse=True)
+    return dirs[0]
+
+
+def regime_variant_summary(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    variants: dict[str, list[dict[str, str]]] = {}
+    for row in rows:
+        if row.get("error"):
+            continue
+        variant = str(row.get("variant") or "")
+        if variant:
+            variants.setdefault(variant, []).append(row)
+    output: list[dict[str, Any]] = []
+    for variant, items in sorted(variants.items()):
+        if not items:
+            continue
+        count = Decimal(len(items))
+        output.append(
+            {
+                "variant": variant,
+                "symbols": len(items),
+                "avgReturnPct": plain(sum((dec(row.get("total_return_pct"), Decimal("0")) for row in items), Decimal("0")) / count),
+                "avgMaxDrawdownPct": plain(sum((dec(row.get("max_drawdown_pct"), Decimal("0")) for row in items), Decimal("0")) / count),
+                "avgScore": plain(sum((dec(row.get("score"), Decimal("0")) for row in items), Decimal("0")) / count),
+                "totalFills": sum(int(dec(row.get("fills"), Decimal("0"))) for row in items),
+                "totalRiskEvents": sum(int(dec(row.get("risk_events"), Decimal("0"))) for row in items),
+                "positiveSymbols": sum(1 for row in items if dec(row.get("total_return_pct"), Decimal("0")) > 0),
+            }
+        )
+    return output
+
+
+def best_regime_variant(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    candidates = [row for row in rows if row.get("variant") != "baseline"]
+    if not candidates:
+        return {}
+    best = max(candidates, key=lambda row: dec(row.get("avgScore"), Decimal("-999999")))
+    baseline = next((row for row in rows if row.get("variant") == "baseline"), {})
+    return {
+        **best,
+        "scoreDeltaVsBaseline": plain(dec(best.get("avgScore"), Decimal("0")) - dec(baseline.get("avgScore"), Decimal("0"))) if baseline else "",
+        "returnDeltaVsBaseline": plain(dec(best.get("avgReturnPct"), Decimal("0")) - dec(baseline.get("avgReturnPct"), Decimal("0"))) if baseline else "",
+        "drawdownDeltaVsBaseline": plain(dec(best.get("avgMaxDrawdownPct"), Decimal("0")) - dec(baseline.get("avgMaxDrawdownPct"), Decimal("0"))) if baseline else "",
+        "riskEventDeltaVsBaseline": int(best.get("totalRiskEvents") or 0) - int(baseline.get("totalRiskEvents") or 0) if baseline else "",
+        "recommendation": "research_only_gate_not_live_default",
+    }
+
+
+def regime_top_rows(rows: list[dict[str, str]], *, per_variant: int = 6) -> list[dict[str, Any]]:
+    ok_rows = [row for row in rows if not row.get("error")]
+    output = []
+    for variant in sorted({str(row.get("variant") or "") for row in ok_rows}):
+        items = [row for row in ok_rows if row.get("variant") == variant]
+        items.sort(key=lambda row: int(dec(row.get("rank"), Decimal("999999"))))
+        for row in items[:per_variant]:
+            output.append(
+                {
+                    "variant": row.get("variant", ""),
+                    "rank": row.get("rank", ""),
+                    "instId": row.get("inst_id", ""),
+                    "score": row.get("score", ""),
+                    "totalReturnPct": row.get("total_return_pct", ""),
+                    "maxDrawdownPct": row.get("max_drawdown_pct", ""),
+                    "fills": row.get("fills", ""),
+                    "riskEvents": row.get("risk_events", ""),
+                    "latestSignal": row.get("latest_signal", ""),
+                    "latestConfidence": row.get("latest_confidence", ""),
+                    "latestAllowedSides": row.get("latest_allowed_sides", ""),
+                }
+            )
+    return output
+
+
+def regime_model_summary(payload: Any) -> dict[str, Any]:
+    if not isinstance(payload, dict):
+        return {}
+    return {
+        "samples": payload.get("samples", 0),
+        "classes": payload.get("classes", []),
+        "labelCounts": payload.get("label_counts", {}),
+        "accuracy": payload.get("accuracy"),
+        "states": payload.get("states"),
+        "stateMap": payload.get("state_map", {}),
+        "stateConfidence": payload.get("state_confidence", {}),
+        "accuracyVsWeakLabels": payload.get("accuracy_vs_weak_labels"),
+    }
+
+
+def portfolio_report_summary(
+    scores: list[dict[str, str]],
+    rebalance: dict[str, Any],
+    execution: dict[str, Any],
+    runtime_configs: list[dict[str, Any]],
+    live: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    targets = rebalance.get("targets", []) if isinstance(rebalance.get("targets", []), list) else []
+    actions = rebalance.get("actions", []) if isinstance(rebalance.get("actions", []), list) else []
+    exposures = rebalance.get("currentExposures", []) if isinstance(rebalance.get("currentExposures", []), list) else []
+    intents = execution.get("intents", []) if isinstance(execution.get("intents", []), list) else []
+    ok_scores = [row for row in scores if row.get("status") == "ok"]
+    satellites = [target for target in targets if target.get("role") == "satellite"]
+    core = [target for target in targets if target.get("role") == "core"]
+    runtime_by_inst = {item.get("instId"): item for item in runtime_configs}
+    trend_checked = [row for row in ok_scores if str(row.get("trend_filter_checked", "")).lower() in {"true", "1", "yes"}]
+    trend_auto = [row for row in ok_scores if row.get("selected_trend_filter") == "auto"]
+    market_regime_rows = [row for row in ok_scores if row.get("market_regime_filter") and row.get("market_regime_filter") != "off"]
+    live = live or {}
+    trading_mode = normalize_portfolio_trading_mode(rebalance.get("tradingMode") or execution.get("mode") or "backtest")
+    return {
+        "tradingMode": trading_mode,
+        "paperMode": trading_mode in {"backtest", "paper"},
+        "liveCandidateMode": trading_mode == "live",
+        "scoreCount": len(scores),
+        "okScoreCount": len(ok_scores),
+        "targetCount": len(targets),
+        "coreCount": len(core),
+        "satelliteCount": len(satellites),
+        "actionCount": len(actions),
+        "currentExposureCount": len(exposures),
+        "executionReadyCount": sum(1 for item in intents if item.get("status") == "runtime_config_ready"),
+        "targetWeightPct": sum_decimal(target.get("weight_pct") for target in targets),
+        "satelliteWeightPct": sum_decimal(target.get("weight_pct") for target in satellites),
+        "currentMarginPct": sum_decimal(exposure.get("margin_estimate") for exposure in exposures),
+        "currentGrossNotional": sum_decimal(exposure.get("gross_notional") for exposure in exposures),
+        "liveRunningCount": live.get("runningCount", 0),
+        "liveTargetCount": live.get("targetCount", 0),
+        "liveEnabled": live.get("enabled", False),
+        "liveMode": live.get("mode", "locked"),
+        "estimatedTotalPnl": (live.get("pnl") or {}).get("estimatedTotal", "0"),
+        "recent5hPnl": (live.get("pnl") or {}).get("recent5h", "0"),
+        "recent5hFillCount": (live.get("pnl") or {}).get("recent5hFillCount", 0),
+        "trendCheckedCount": len(trend_checked),
+        "trendAutoSelectedCount": len(trend_auto),
+        "trendOffSelectedCount": len([row for row in ok_scores if row.get("selected_trend_filter") == "off"]),
+        "marketRegimeActiveCount": len(market_regime_rows),
+        "marketRegimeModes": sorted({row.get("market_regime_filter") for row in market_regime_rows if row.get("market_regime_filter")}),
+        "marketRegimeSignals": count_by_key(market_regime_rows, "market_regime_signal"),
+        "mlScoreDeltaVsBaseline": first_nonempty((row.get("ml_score_delta_vs_baseline") for row in ok_scores), ""),
+        "mlReturnDeltaVsBaseline": first_nonempty((row.get("ml_return_delta_vs_baseline") for row in ok_scores), ""),
+        "mlDrawdownDeltaVsBaseline": first_nonempty((row.get("ml_drawdown_delta_vs_baseline") for row in ok_scores), ""),
+        "mlRiskEventDeltaVsBaseline": first_nonempty((row.get("ml_risk_event_delta_vs_baseline") for row in ok_scores), ""),
+        "actionsByType": count_by_key(actions, "action"),
+        "intentsByStatus": count_by_key(intents, "status"),
+        "adaptivePreview": [
+            {
+                "instId": target.get("inst_id"),
+                "role": target.get("role"),
+                "weightPct": target.get("weight_pct"),
+                "poolAvgAbsBps": target.get("pool_avg_abs_bps"),
+                "poolShockBps": target.get("pool_shock_bps"),
+                "poolTrendBps": target.get("pool_trend_bps"),
+                "leverage": runtime_by_inst.get(target.get("inst_id"), {}).get("leverage"),
+                "gridBps": runtime_by_inst.get(target.get("inst_id"), {}).get("gridBps"),
+                "minTpBps": runtime_by_inst.get(target.get("inst_id"), {}).get("minTpBps"),
+                "positionLossSlBps": runtime_by_inst.get(target.get("inst_id"), {}).get("positionLossSlBps"),
+                "exchangeStopBps": runtime_by_inst.get(target.get("inst_id"), {}).get("exchangeStopBps"),
+                "totalProfitTpPct": runtime_by_inst.get(target.get("inst_id"), {}).get("totalProfitTpPct"),
+                "totalLossSlPct": runtime_by_inst.get(target.get("inst_id"), {}).get("totalLossSlPct"),
+                "backtestTotalReturnPct": runtime_by_inst.get(target.get("inst_id"), {}).get("backtestTotalReturnPct"),
+                "backtestMaxDrawdownPct": runtime_by_inst.get(target.get("inst_id"), {}).get("backtestMaxDrawdownPct"),
+                "backtestProfitFactor": runtime_by_inst.get(target.get("inst_id"), {}).get("backtestProfitFactor"),
+                "backtestFills": runtime_by_inst.get(target.get("inst_id"), {}).get("backtestFills"),
+                "backtestRiskEvents": runtime_by_inst.get(target.get("inst_id"), {}).get("backtestRiskEvents"),
+                "backtestRiskRewardScore": runtime_by_inst.get(target.get("inst_id"), {}).get("backtestRiskRewardScore"),
+                "backtestTargetSlRatio": runtime_by_inst.get(target.get("inst_id"), {}).get("backtestTargetSlRatio"),
+                "backtestRiskRewardNote": runtime_by_inst.get(target.get("inst_id"), {}).get("backtestRiskRewardNote"),
+                "riskScore": runtime_by_inst.get(target.get("inst_id"), {}).get("poolAdaptiveRiskScore"),
+                "trendFilter": runtime_by_inst.get(target.get("inst_id"), {}).get("trendFilter"),
+                "trendFilterChecked": runtime_by_inst.get(target.get("inst_id"), {}).get("trendFilterChecked"),
+                "trendScoreDelta": runtime_by_inst.get(target.get("inst_id"), {}).get("trendScoreDelta"),
+                "marketRegimeFilter": runtime_by_inst.get(target.get("inst_id"), {}).get("marketRegimeFilter"),
+                "marketRegimeSignal": runtime_by_inst.get(target.get("inst_id"), {}).get("marketRegimeSignal"),
+                "marketRegimeConfidence": runtime_by_inst.get(target.get("inst_id"), {}).get("marketRegimeConfidence"),
+                "marketRegimeAllowedSides": runtime_by_inst.get(target.get("inst_id"), {}).get("marketRegimeAllowedSides"),
+                "mlScoreDeltaVsBaseline": runtime_by_inst.get(target.get("inst_id"), {}).get("mlScoreDeltaVsBaseline"),
+                "mlReturnDeltaVsBaseline": runtime_by_inst.get(target.get("inst_id"), {}).get("mlReturnDeltaVsBaseline"),
+                "mlDrawdownDeltaVsBaseline": runtime_by_inst.get(target.get("inst_id"), {}).get("mlDrawdownDeltaVsBaseline"),
+                "mlRiskEventDeltaVsBaseline": runtime_by_inst.get(target.get("inst_id"), {}).get("mlRiskEventDeltaVsBaseline"),
+                "note": runtime_by_inst.get(target.get("inst_id"), {}).get("poolAdaptiveNote"),
+            }
+            for target in targets
+        ],
+    }
+
+
+def read_portfolio_runtime_configs(report_dir: Path) -> list[dict[str, Any]]:
+    runtime_dir = report_dir / "runtime_configs"
+    if not runtime_dir.exists():
+        return []
+    rows: list[dict[str, Any]] = []
+    for path in sorted(runtime_dir.glob("*.json")):
+        payload = read_json_file(path)
+        if payload:
+            payload["_path"] = str(path)
+            rows.append(payload)
+    return rows
+
+
+def normalize_portfolio_trading_mode(value: Any) -> str:
+    text = str(value or "").strip()
+    if text in {"backtest", "paper", "live"}:
+        return text
+    if text in {"dry_run", "dry_run_execution_bundle", "manual_live_start_draft"}:
+        return "paper"
+    if text in {"live_candidate", "dashboard_live_start_plan"}:
+        return "live"
+    return "backtest"
+
+
+def read_json_file(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return payload if isinstance(payload, dict) else {}
+    except Exception:
+        return {}
+
+
+def read_csv_file(path: Path, *, limit: int = 100) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    import csv
+
+    with path.open("r", encoding="utf-8", newline="") as file:
+        return [row for _, row in zip(range(limit), csv.DictReader(file))]
+
+
+def sum_decimal(values: Any) -> str:
+    total = Decimal("0")
+    for value in values:
+        total += dec(value, Decimal("0"))
+    return plain(total)
+
+
+def count_by_key(rows: list[dict[str, Any]], key: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        value = str(row.get(key, "") or "")
+        counts[value] = counts.get(value, 0) + 1
+    return counts
+
+
+def first_nonempty(values: Any, default: Any = "") -> Any:
+    for value in values:
+        if value not in (None, ""):
+            return value
+    return default
+
+
+def bounded_int(value: Any, *, default: int, lower: int, upper: int) -> int:
+    try:
+        number = int(value)
+    except Exception:
+        number = default
+    return max(lower, min(upper, number))
+
+
+def safe_decimal_arg(value: Any, default: str) -> str:
+    number = dec(value, Decimal(default))
+    return plain(number)
+
+
 def parse_bot_diagnostics(lines: list[str], running: bool) -> dict[str, Any]:
     cycle: dict[str, Any] | None = None
     open_guard: dict[str, Any] | None = None
     order_plan: dict[str, Any] | None = None
+    rolling_adaptive: dict[str, Any] | None = None
+    sizing: dict[str, Any] | None = None
+    edge: dict[str, Any] | None = None
     cooldown: dict[str, Any] = {"active": False}
     last_error: dict[str, Any] | None = None
     last_decision = ""
@@ -1804,6 +2864,19 @@ def parse_bot_diagnostics(lines: list[str], running: bool) -> dict[str, Any]:
     )
     cancel_re = re.compile(r"^(?P<mode>LIVE|DRY) cancel (?P<clientOrderId>\S+)\s+reason=(?P<reason>\S+)")
     cancel_all_re = re.compile(r"^(?P<mode>LIVE|DRY) cancel_all count=(?P<count>\d+)\s+reason=(?P<reason>\S+)")
+    rolling_re = re.compile(
+        r"^rolling_adaptive leverage=(?P<leverage>\S+)x\s+grid=(?P<gridBps>\S+)bps\s+"
+        r"order_margin=(?P<orderMarginPct>\S+)%\s+max_margin=(?P<maxMarginPct>\S+)%\s+"
+        r"tp=(?P<minTpBps>\S+)bps\s+sl=(?P<positionLossSlBps>\S+)bps\s+"
+        r"rolling window=(?P<window>\d+)\s+avg_abs=(?P<avgAbsBps>\S+)bps\s+"
+        r"shock=(?P<shockBps>\S+)bps\s+trend=(?P<trendBps>\S+)bps\s+"
+        r"risk=(?P<riskScore>\S+)\s+min_contract_margin=(?P<minContractMargin>\S+)"
+    )
+    sizing_re = re.compile(r"^sizing order_sz=(?P<orderSz>\S+)\s+max_position=(?P<maxPosition>\S+)\s+(?P<note>.*)$")
+    edge_re = re.compile(
+        r"^edge gross=(?P<grossBps>\S+)bps\s+net_est=(?P<netEstBps>\S+)bps\s+"
+        r"min_net=(?P<minNetBps>\S+)bps\s+fees=(?P<fees>.*)$"
+    )
 
     for index, line in enumerate(lines):
         if match := cycle_re.match(line):
@@ -1824,6 +2897,16 @@ def parse_bot_diagnostics(lines: list[str], running: bool) -> dict[str, Any]:
             continue
         if match := desired_re.match(line):
             order_plan = {key: int(value) for key, value in match.groupdict(default="0").items()}
+            continue
+        if match := rolling_re.match(line):
+            rolling_adaptive = match.groupdict()
+            continue
+        if match := sizing_re.match(line):
+            sizing = match.groupdict()
+            sizing.update(parse_key_values(match.group("note")))
+            continue
+        if match := edge_re.match(line):
+            edge = match.groupdict()
             continue
         if match := cooldown_re.match(line):
             cooldown = {"active": True, "reason": match.group("reason"), "remainingSeconds": int(match.group("remaining"))}
@@ -1866,11 +2949,24 @@ def parse_bot_diagnostics(lines: list[str], running: bool) -> dict[str, Any]:
         "cycle": cycle,
         "openGuard": open_guard,
         "orderPlan": order_plan,
+        "rollingAdaptive": rolling_adaptive,
+        "sizing": sizing,
+        "edge": edge,
         "cooldown": cooldown,
         "lastDecision": last_decision,
         "lastError": last_error,
         "actions": actions[-12:],
     }
+
+
+def parse_key_values(text: str) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for part in text.split():
+        if "=" not in part:
+            continue
+        key, value = part.split("=", 1)
+        values[key] = value
+    return values
 
 
 def summarize_bot_diagnostics(

@@ -1,0 +1,21 @@
+[Unit]
+Description=OKX Quant Dashboard Readonly Proxy
+After=network-online.target okx-dashboard.service
+Wants=network-online.target
+Requires=okx-dashboard.service
+
+[Service]
+Type=simple
+User=okxbot
+Group=okxbot
+WorkingDirectory=/opt/okx-quant
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/okx-dashboard-readonly.env
+ExecStart=/opt/okx-quant/.venv/bin/python /opt/okx-quant/readonly_dashboard_proxy.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

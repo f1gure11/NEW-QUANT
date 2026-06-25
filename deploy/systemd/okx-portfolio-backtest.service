@@ -1,0 +1,15 @@
+[Unit]
+Description=OKX Portfolio Scheduled Hot Contract Backtest
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=okxbot
+Group=okxbot
+WorkingDirectory=/opt/okx-quant
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/okx-portfolio-backtest.env
+ExecStart=/opt/okx-quant/scripts/run_scheduled_portfolio_backtest.sh
+NoNewPrivileges=true
+PrivateTmp=true

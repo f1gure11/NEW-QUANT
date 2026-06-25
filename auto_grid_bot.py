@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import signal
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -11,11 +12,13 @@ from pathlib import Path
 from typing import Any
 
 from okx_client import OkxApiError, OkxRestClient, load_env
+from rolling_adaptive import RollingAdaptiveLimits, calculate_rolling_adaptive, result_to_dict
 
 
 LOG_PATH = Path("data") / "okx" / "grid_bot_actions.jsonl"
 RUNTIME_CONFIG_PATH = Path("data") / "okx" / "grid_bot_runtime_config.json"
 BOT_PREFIX = "gb"
+OPEN_ORDER_MARGIN_SAFETY = Decimal("2.5")
 
 
 @dataclass(slots=True)
@@ -49,6 +52,7 @@ class BotConfig:
     sizing_mode: str
     order_margin_pct: Decimal
     max_margin_pct: Decimal
+    cash_reserve_pct: Decimal
     total_profit_tp: Decimal
     total_profit_tp_pct: Decimal
     total_profit_tp_cap: Decimal
@@ -72,6 +76,9 @@ class BotConfig:
     trend_filter: str
     trend_lookback: int
     trend_threshold_bps: Decimal
+    market_regime_filter: str
+    market_regime_model_path: str
+    market_regime_min_confidence: Decimal
     regime_filter: str
     regime_bar: str
     regime_short_ma: int
@@ -80,6 +87,32 @@ class BotConfig:
     regime_confirm_bars: int
     one_way_open: bool
     bot_started_ms: int
+    rolling_adaptive_enabled: bool
+    rolling_adaptive_window: int
+    rolling_adaptive_low_vol_bps: Decimal
+    rolling_adaptive_high_vol_bps: Decimal
+    rolling_adaptive_min_leverage: Decimal
+    rolling_adaptive_max_leverage: Decimal
+    rolling_adaptive_min_grid_bps: Decimal
+    rolling_adaptive_max_grid_bps: Decimal
+    rolling_adaptive_grid_vol_multiplier: Decimal
+    rolling_adaptive_min_width_bps: Decimal
+    rolling_adaptive_max_width_bps: Decimal
+    rolling_adaptive_width_vol_multiplier: Decimal
+    rolling_adaptive_min_order_margin_pct: Decimal
+    rolling_adaptive_max_order_margin_pct: Decimal
+    rolling_adaptive_min_max_margin_pct: Decimal
+    rolling_adaptive_max_max_margin_pct: Decimal
+    rolling_adaptive_min_stop_bps: Decimal
+    rolling_adaptive_max_stop_bps: Decimal
+    rolling_adaptive_stop_vol_multiplier: Decimal
+    rolling_adaptive_min_tp_bps: Decimal
+    rolling_adaptive_max_tp_bps: Decimal
+    rolling_adaptive_tp_grid_multiplier: Decimal
+    rolling_adaptive_min_total_profit_tp_pct: Decimal
+    rolling_adaptive_max_total_profit_tp_pct: Decimal
+    rolling_adaptive_min_total_loss_sl_pct: Decimal
+    rolling_adaptive_max_total_loss_sl_pct: Decimal
     runtime_config_mtime: float = 0.0
     cooldown_until_ms: int = 0
     cooldown_reason: str = ""
@@ -88,7 +121,12 @@ class BotConfig:
     regime_pending_state: str = ""
     regime_pending_count: int = 0
     regime_last_ts: int = 0
+    rolling_adaptive_last_leverage: Decimal = Decimal("0")
     exchange_stop_triggers: dict[str, Decimal] = field(default_factory=dict)
+    private_cache: dict[str, Any] = field(default_factory=dict)
+    backoff_until_ms: int = 0
+    backoff_seconds: float = 0.0
+    open_backoff_until_ms: int = 0
 
 
 def main() -> None:
@@ -128,6 +166,7 @@ def main() -> None:
         sizing_mode=args.sizing_mode,
         order_margin_pct=Decimal(args.order_margin_pct),
         max_margin_pct=Decimal(args.max_margin_pct),
+        cash_reserve_pct=Decimal(args.cash_reserve_pct),
         total_profit_tp=Decimal(args.total_profit_tp),
         total_profit_tp_pct=Decimal(args.total_profit_tp_pct),
         total_profit_tp_cap=Decimal(args.total_profit_tp_cap),
@@ -151,6 +190,9 @@ def main() -> None:
         trend_filter=args.trend_filter,
         trend_lookback=args.trend_lookback,
         trend_threshold_bps=Decimal(args.trend_threshold_bps),
+        market_regime_filter=args.market_regime_filter,
+        market_regime_model_path=args.market_regime_model_path,
+        market_regime_min_confidence=Decimal(args.market_regime_min_confidence),
         regime_filter=args.regime_filter,
         regime_bar=args.regime_bar,
         regime_short_ma=args.regime_short_ma,
@@ -159,6 +201,32 @@ def main() -> None:
         regime_confirm_bars=args.regime_confirm_bars,
         one_way_open=args.one_way_open,
         bot_started_ms=current_ms(),
+        rolling_adaptive_enabled=args.rolling_adaptive,
+        rolling_adaptive_window=args.rolling_adaptive_window,
+        rolling_adaptive_low_vol_bps=Decimal(args.rolling_adaptive_low_vol_bps),
+        rolling_adaptive_high_vol_bps=Decimal(args.rolling_adaptive_high_vol_bps),
+        rolling_adaptive_min_leverage=Decimal(args.rolling_adaptive_min_leverage),
+        rolling_adaptive_max_leverage=Decimal(args.rolling_adaptive_max_leverage),
+        rolling_adaptive_min_grid_bps=Decimal(args.rolling_adaptive_min_grid_bps),
+        rolling_adaptive_max_grid_bps=Decimal(args.rolling_adaptive_max_grid_bps),
+        rolling_adaptive_grid_vol_multiplier=Decimal(args.rolling_adaptive_grid_vol_multiplier),
+        rolling_adaptive_min_width_bps=Decimal(args.rolling_adaptive_min_width_bps),
+        rolling_adaptive_max_width_bps=Decimal(args.rolling_adaptive_max_width_bps),
+        rolling_adaptive_width_vol_multiplier=Decimal(args.rolling_adaptive_width_vol_multiplier),
+        rolling_adaptive_min_order_margin_pct=Decimal(args.rolling_adaptive_min_order_margin_pct),
+        rolling_adaptive_max_order_margin_pct=Decimal(args.rolling_adaptive_max_order_margin_pct),
+        rolling_adaptive_min_max_margin_pct=Decimal(args.rolling_adaptive_min_max_margin_pct),
+        rolling_adaptive_max_max_margin_pct=Decimal(args.rolling_adaptive_max_max_margin_pct),
+        rolling_adaptive_min_stop_bps=Decimal(args.rolling_adaptive_min_stop_bps),
+        rolling_adaptive_max_stop_bps=Decimal(args.rolling_adaptive_max_stop_bps),
+        rolling_adaptive_stop_vol_multiplier=Decimal(args.rolling_adaptive_stop_vol_multiplier),
+        rolling_adaptive_min_tp_bps=Decimal(args.rolling_adaptive_min_tp_bps),
+        rolling_adaptive_max_tp_bps=Decimal(args.rolling_adaptive_max_tp_bps),
+        rolling_adaptive_tp_grid_multiplier=Decimal(args.rolling_adaptive_tp_grid_multiplier),
+        rolling_adaptive_min_total_profit_tp_pct=Decimal(args.rolling_adaptive_min_total_profit_tp_pct),
+        rolling_adaptive_max_total_profit_tp_pct=Decimal(args.rolling_adaptive_max_total_profit_tp_pct),
+        rolling_adaptive_min_total_loss_sl_pct=Decimal(args.rolling_adaptive_min_total_loss_sl_pct),
+        rolling_adaptive_max_total_loss_sl_pct=Decimal(args.rolling_adaptive_max_total_loss_sl_pct),
     )
 
     if config.live:
@@ -166,8 +234,10 @@ def main() -> None:
 
     client = OkxRestClient.from_env()
     print_banner(config)
+    install_shutdown_handlers(client, config)
     if config.set_leverage:
         set_leverage(client, config)
+        config.rolling_adaptive_last_leverage = config.leverage
 
     while True:
         try:
@@ -175,6 +245,7 @@ def main() -> None:
         except OkxApiError as exc:
             log_event("okx_error", {"error": str(exc), "code": exc.okx_code, "response": exc.response})
             print(f"OKX error: {exc}")
+            register_okx_error_backoff(config, exc)
             should_stop = False
         except Exception as exc:
             log_event("bot_error", {"error": str(exc)})
@@ -183,12 +254,17 @@ def main() -> None:
 
         if config.once or should_stop:
             break
-        time.sleep(config.interval)
+        time.sleep(next_sleep_seconds(config))
 
 
 def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
     load_runtime_config(config)
+    if config.backoff_until_ms > current_ms():
+        remaining = max(1, int((config.backoff_until_ms - current_ms()) / 1000))
+        print(f"OKX request backoff active remaining={remaining}s after rate-limit/network error.")
+        return False
     state = fetch_state(client, config)
+    clear_okx_backoff(config)
     ensure_account_ready(state)
 
     meta = state["meta"]
@@ -198,6 +274,7 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
     lot = Decimal(meta["lotSz"])
     min_sz = Decimal(meta["minSz"])
     now_ms = current_ms()
+    apply_rolling_adaptive_config(client, config, state, mark_px)
     if config.cooldown_until_ms > now_ms:
         remaining = max(0, int((config.cooldown_until_ms - now_ms) / 1000))
         print(f"Risk cooldown active reason={config.cooldown_reason} remaining={remaining}s. No new orders.")
@@ -338,6 +415,7 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
         return False
 
     positions = position_summary(state["positions"])
+    config.private_cache["marketRegimeCandles"] = state.get("candles", [])
     regime = market_regime_signal(config, state.get("regimeCandles", []))
     trend = trend_signal(state.get("candles", []), mark_px, config.trend_lookback, config.trend_threshold_bps)
     trend_side = trend_follow_side(config, trend)
@@ -365,9 +443,28 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
     close_sz = resolve_close_size(config, order_sz, lot, min_sz)
     print(f"sizing order_sz={order_sz} max_position={max_position} {sizing_note}")
     allow_open = True
+    preserve_valid_open = True
     if order_sz <= 0 or max_position <= 0:
         print("Open sizing resolved to zero: close orders will still be maintained.")
         allow_open = False
+    equity, available = balance_summary(state.get("balance", {}))
+    reserve_margin = equity * clamp_pct(config.cash_reserve_pct) / Decimal("100") if equity > 0 else Decimal("0")
+    if reserve_margin > 0 and available < reserve_margin:
+        print(
+            f"Cash reserve guard: available={plain(available)} below reserve={plain(reserve_margin)} "
+            "so no new open orders; stale open orders will be canceled."
+        )
+        log_event(
+            "cash_reserve_guard",
+            {
+                "live": config.live,
+                "available": available,
+                "reserveMargin": reserve_margin,
+                "cashReservePct": config.cash_reserve_pct,
+            },
+        )
+        allow_open = False
+        preserve_valid_open = False
     print(
         f"edge gross={plain(edge['grossBps'])}bps net_est={plain(edge['netBps'])}bps "
         f"min_net={plain(config.min_net_bps)}bps fees=open {plain(edge['openFeeBps'])}bps "
@@ -404,6 +501,13 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
     )
     if not open_sides:
         allow_open = False
+    if config.open_backoff_until_ms > current_ms():
+        remaining = max(1, int((config.open_backoff_until_ms - current_ms()) / 1000))
+        print(
+            f"Open-order backoff active remaining={remaining}s after insufficient margin; "
+            "close orders will still be maintained."
+        )
+        allow_open = False
 
     order_lower = hard_lower if low_guard_zone else effective_lower
     order_upper = hard_upper if high_guard_zone else effective_upper
@@ -438,14 +542,22 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
         upper=order_upper,
         open_sides=open_sides,
         open_capacity=open_capacity,
+        preserve_valid_open=preserve_valid_open,
     )
     if soft_restricted_open and not config.cancel_on_stop:
         stale = [order for order in stale if is_reduce_only_pending_order(order)]
+    missing = fit_missing_orders_to_margin_budget(
+        missing,
+        available=available,
+        reserve_margin=reserve_margin,
+        ct_val=ct_val,
+        leverage=config.leverage,
+    )
 
     print(
         f"desired={len(desired)} existing_bot={len(bot_orders)} matched={matched} "
         f"missing={len(missing)} stale={len(stale)} open_px_tolerance={plain(open_px_tolerance)} "
-        f"preserve_valid_open=true"
+        f"preserve_valid_open={str(preserve_valid_open).lower()}"
     )
     actions_left = config.max_actions_per_cycle
 
@@ -465,8 +577,8 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
     for order in missing:
         if actions_left <= 0:
             break
-        place_one(client, config, order)
-        actions_left -= 1
+        if place_one(client, config, order):
+            actions_left -= 1
     return False
 
 
@@ -484,20 +596,92 @@ def fetch_state(client: OkxRestClient, config: BotConfig) -> dict[str, Any]:
             },
         ).get("data", [])
     pending_algos = client.get_pending_algo_orders(ord_type="conditional", inst_id=config.inst_id, inst_type="SWAP").get("data", [])
+    positions = cached_private_call(
+        config,
+        "positions",
+        ttl_seconds=max(12.0, min(config.interval * 2, 20.0)),
+        loader=lambda: client.get_positions("SWAP").get("data", []),
+    )
     return {
-        "account": one(client.get_account_config()),
-        "meta": one(client.request("GET", "/api/v5/public/instruments", params={"instType": "SWAP", "instId": config.inst_id})),
+        "account": one(cached_private_call(config, "account_config", ttl_seconds=300.0, loader=client.get_account_config)),
+        "meta": one(
+            cached_private_call(
+                config,
+                "instrument_meta",
+                ttl_seconds=1800.0,
+                loader=lambda: client.request(
+                    "GET",
+                    "/api/v5/public/instruments",
+                    params={"instType": "SWAP", "instId": config.inst_id},
+                ),
+            )
+        ),
         "ticker": one(client.request("GET", "/api/v5/market/ticker", params={"instId": config.inst_id})),
         "mark": one(client.request("GET", "/api/v5/public/mark-price", params={"instType": "SWAP", "instId": config.inst_id})),
-        "fee": one(client.request("GET", "/api/v5/account/trade-fee", params={"instType": "SWAP", "instFamily": family}, private=True)),
-        "balance": one(client.get_balance()),
-        "positions": [item for item in client.get_positions("SWAP").get("data", []) if item.get("instId") == config.inst_id],
+        "fee": one(
+            cached_private_call(
+                config,
+                "trade_fee",
+                ttl_seconds=1800.0,
+                loader=lambda: client.request(
+                    "GET",
+                    "/api/v5/account/trade-fee",
+                    params={"instType": "SWAP", "instFamily": family},
+                    private=True,
+                ),
+            )
+        ),
+        "balance": one(
+            cached_private_call(
+                config,
+                "balance",
+                ttl_seconds=max(12.0, min(config.interval * 2, 20.0)),
+                loader=client.get_balance,
+            )
+        ),
+        "positions": [item for item in positions if item.get("instId") == config.inst_id],
         "pending": client.get_pending_orders(config.inst_id).get("data", []),
         "pendingAlgos": pending_algos,
-        "fills": client.get_fills(inst_id=config.inst_id, inst_type="SWAP", limit="100").get("data", []),
+        "fills": cached_private_call(
+            config,
+            "fills",
+            ttl_seconds=20.0,
+            loader=lambda: client.get_fills(inst_id=config.inst_id, inst_type="SWAP", limit="100").get("data", []),
+        ),
         "candles": client.request("GET", "/api/v5/market/candles", params={"instId": config.inst_id, "bar": "1m", "limit": "60"}).get("data", []),
         "regimeCandles": regime_candles,
     }
+
+
+def cached_private_call(config: BotConfig, key: str, *, ttl_seconds: float, loader: Any) -> Any:
+    now_ms = current_ms()
+    cached = config.private_cache.get(key)
+    if cached and now_ms - int(cached.get("ts", 0)) < int(ttl_seconds * 1000):
+        return cached.get("value")
+    value = loader()
+    config.private_cache[key] = {"ts": now_ms, "value": value}
+    return value
+
+
+def register_okx_error_backoff(config: BotConfig, exc: OkxApiError) -> None:
+    if exc.okx_code != "50011" and exc.status != 429:
+        return
+    base = max(config.interval, 8.0)
+    next_seconds = base if config.backoff_seconds <= 0 else min(config.backoff_seconds * 2, 64.0)
+    config.backoff_seconds = next_seconds
+    config.backoff_until_ms = current_ms() + int(next_seconds * 1000)
+    print(f"OKX rate-limit backoff scheduled {next_seconds:.0f}s.")
+
+
+def clear_okx_backoff(config: BotConfig) -> None:
+    config.backoff_seconds = 0.0
+    config.backoff_until_ms = 0
+
+
+def next_sleep_seconds(config: BotConfig) -> float:
+    if config.backoff_until_ms > current_ms():
+        return min(max(1.0, (config.backoff_until_ms - current_ms()) / 1000), 64.0)
+    return config.interval
 
 
 def ensure_account_ready(state: dict[str, Any]) -> None:
@@ -785,6 +969,10 @@ def allowed_open_sides(
     regime: dict[str, Any] | None = None,
 ) -> tuple[set[str], str]:
     regime = regime or {"state": "off", "allowedOpenSides": []}
+    market_sides, market_note = market_regime_open_sides(config, positions, mark_px, midpoint)
+    if market_sides is not None:
+        return market_sides, market_note
+
     regime_sides = set(regime.get("allowedOpenSides") or [])
     if config.regime_filter == "ma_cross" and regime.get("state") in {"up", "down"}:
         if config.one_way_open:
@@ -865,6 +1053,42 @@ def trend_follow_side(config: BotConfig, trend: dict[str, Decimal | str | int]) 
     return None
 
 
+def market_regime_open_sides(
+    config: BotConfig,
+    positions: dict[str, Decimal],
+    mark_px: Decimal,
+    midpoint: Decimal,
+) -> tuple[set[str], str] | tuple[None, str]:
+    if config.market_regime_filter == "off":
+        return None, ""
+    from market_regime import signal_from_candles
+
+    candles = config.private_cache.get("marketRegimeCandles", [])
+    signal = signal_from_candles(
+        candles,
+        mode=config.market_regime_filter,
+        model_path=config.market_regime_model_path,
+        min_confidence=float(config.market_regime_min_confidence),
+    )
+    sides = set(signal.allowed_open_sides)
+    note = (
+        f"market-regime {signal.source} state={signal.state} "
+        f"direction={signal.direction} confidence={signal.confidence:.3f} {signal.note}"
+    )
+    if not sides:
+        return set(), f"{note}; mixed/unknown pauses new opens"
+    if config.one_way_open and sides == {"long", "short"}:
+        sides = {"long"} if mark_px <= midpoint else {"short"}
+        note = f"{note}; one-way range uses price-anchor"
+    if config.one_way_open:
+        if positions["short"] > 0 and "long" in sides:
+            return set(), f"{note}; blocked by active short"
+        if positions["long"] > 0 and "short" in sides:
+            return set(), f"{note}; blocked by active long"
+    log_event("market_regime_signal", {"live": config.live, **signal.__dict__})
+    return sides, note
+
+
 def nearest_grid_prices(start: Decimal, end: Decimal, step: Decimal, tick: Decimal, *, reverse: bool) -> list[Decimal]:
     if start > end:
         return []
@@ -904,15 +1128,42 @@ def make_order(
     return order
 
 
-def place_one(client: OkxRestClient, config: BotConfig, order: dict[str, Any]) -> None:
+def place_one(client: OkxRestClient, config: BotConfig, order: dict[str, Any]) -> bool:
     payload = {key: value for key, value in order.items() if key != "tag"}
     if config.live:
-        response = client.place_order(**payload)
+        try:
+            response = client.place_order(**payload)
+        except OkxApiError as exc:
+            if not order.get("reduce_only") and okx_error_has_subcode(exc, "51008"):
+                seconds = max(config.interval * 3, 24.0)
+                config.open_backoff_until_ms = current_ms() + int(seconds * 1000)
+                log_event(
+                    "open_margin_backoff",
+                    {
+                        "live": config.live,
+                        "seconds": seconds,
+                        "order": order,
+                        "error": str(exc),
+                        "code": exc.okx_code,
+                        "response": exc.response,
+                    },
+                )
+                print(f"Open margin backoff scheduled {seconds:.0f}s after insufficient USDT margin.")
+                return False
+            raise
         print(f"LIVE place {order['tag']} {order['side']} {order['pos_side']} {order['sz']} @ {order.get('px', 'MKT')} -> {response.get('data')}")
     else:
         response = {"dryRun": True, "data": [payload]}
         print(f"DRY place {order['tag']} {order['side']} {order['pos_side']} {order['sz']} @ {order.get('px', 'MKT')}")
     log_event("place", {"live": config.live, "order": order, "response": response})
+    return True
+
+
+def okx_error_has_subcode(exc: OkxApiError, subcode: str) -> bool:
+    data = exc.response.get("data") if isinstance(exc.response, dict) else None
+    if not isinstance(data, list):
+        return False
+    return any(str(item.get("sCode", "")) == subcode for item in data if isinstance(item, dict))
 
 
 def attached_stop_order(config: BotConfig, pos_side: str, entry_px: Decimal, tick: Decimal) -> dict[str, Any]:
@@ -1203,6 +1454,32 @@ def load_runtime_config(config: BotConfig) -> None:
         return
     try:
         payload = json.loads(RUNTIME_CONFIG_PATH.read_text(encoding="utf-8"))
+        runtime_inst_id = str(payload.get("instId", "") or "")
+        if not runtime_inst_id and runtime_config_has_trading_fields(payload):
+            config.runtime_config_mtime = mtime
+            log_event(
+                "runtime_config_missing_inst",
+                {
+                    "path": str(RUNTIME_CONFIG_PATH),
+                    "botInstId": config.inst_id,
+                },
+            )
+            print(f"Runtime config ignored: missing instId for bot instId {config.inst_id}")
+            return
+        if runtime_inst_id and runtime_inst_id != config.inst_id:
+            config.runtime_config_mtime = mtime
+            log_event(
+                "runtime_config_inst_mismatch",
+                {
+                    "path": str(RUNTIME_CONFIG_PATH),
+                    "runtimeInstId": runtime_inst_id,
+                    "botInstId": config.inst_id,
+                },
+            )
+            print(
+                f"Runtime config ignored: instId {runtime_inst_id} does not match bot instId {config.inst_id}"
+            )
+            return
         apply_runtime_config(config, payload)
         config.runtime_config_mtime = mtime
         log_event("runtime_config_loaded", {"path": str(RUNTIME_CONFIG_PATH), "payload": payload})
@@ -1211,6 +1488,132 @@ def load_runtime_config(config: BotConfig) -> None:
         config.runtime_config_mtime = mtime
         log_event("runtime_config_error", {"error": str(exc)})
         print(f"Runtime config ignored: {exc}")
+
+
+def runtime_config_has_trading_fields(payload: dict[str, Any]) -> bool:
+    fields = {
+        "lower",
+        "upper",
+        "leverage",
+        "gridBps",
+        "orderSz",
+        "maxPosition",
+        "orderMarginPct",
+        "maxMarginPct",
+        "sizingMode",
+        "marketRegimeFilter",
+        "marketRegimeModelPath",
+    }
+    return any(field in payload for field in fields)
+
+
+def apply_rolling_adaptive_config(
+    client: OkxRestClient,
+    config: BotConfig,
+    state: dict[str, Any],
+    mark_px: Decimal,
+) -> None:
+    if not config.rolling_adaptive_enabled:
+        return
+    if config.live and not config.set_leverage:
+        raise RuntimeError("Rolling adaptive live mode requires --set-leverage so exchange leverage matches sizing.")
+
+    meta = state.get("meta", {})
+    equity, _available = balance_summary(state.get("balance", {}))
+    limits = rolling_adaptive_limits(config)
+    result = calculate_rolling_adaptive(
+        state.get("candles", []),
+        mark_px=mark_px,
+        equity=equity,
+        ct_val=dec(meta.get("ctVal"), Decimal("0")),
+        min_sz=dec(meta.get("minSz"), Decimal("0")),
+        limits=limits,
+    )
+
+    last_synced_leverage = config.rolling_adaptive_last_leverage
+    old_leverage = config.leverage
+    config.leverage = result.leverage
+    config.grid_bps = result.grid_bps
+    config.adaptive_width_bps = result.adaptive_width_bps
+    config.adaptive_min_width_bps = result.adaptive_min_width_bps
+    config.adaptive_max_width_bps = result.adaptive_max_width_bps
+    config.adaptive_vol_multiplier = limits.width_vol_multiplier
+    config.sizing_mode = "margin_pct"
+    config.order_margin_pct = result.order_margin_pct
+    config.max_margin_pct = result.max_margin_pct
+    config.min_tp_bps = result.min_tp_bps
+    config.position_loss_sl_bps = result.position_loss_sl_bps
+    config.exchange_stop_bps = result.exchange_stop_bps
+    config.total_profit_tp_pct = result.total_profit_tp_pct
+    config.total_loss_sl_pct = result.total_loss_sl_pct
+
+    if result.tradeable_min_contract:
+        note = result.note
+    else:
+        note = f"{result.note} min contract exceeds adaptive max margin cap; open sizing may resolve to zero"
+    print(
+        f"rolling_adaptive leverage={plain(config.leverage)}x grid={plain(config.grid_bps)}bps "
+        f"order_margin={plain(config.order_margin_pct)}% max_margin={plain(config.max_margin_pct)}% "
+        f"tp={plain(config.min_tp_bps)}bps sl={plain(config.position_loss_sl_bps)}bps {note}"
+    )
+    log_event(
+        "rolling_adaptive",
+        {
+            "live": config.live,
+            "oldLeverage": old_leverage,
+            "result": result_to_dict(result),
+        },
+    )
+
+    leverage_needs_sync = config.rolling_adaptive_last_leverage != config.leverage
+    if config.set_leverage and config.live and leverage_needs_sync:
+        try:
+            set_leverage(client, config)
+            config.rolling_adaptive_last_leverage = config.leverage
+        except Exception as exc:
+            log_event(
+                "rolling_adaptive_leverage_error",
+                {
+                    "oldLeverage": old_leverage,
+                    "lastSyncedLeverage": last_synced_leverage,
+                    "newLeverage": config.leverage,
+                    "error": str(exc),
+                },
+            )
+            raise RuntimeError(f"Rolling adaptive leverage sync failed; no orders placed this cycle: {exc}") from exc
+    elif config.set_leverage and not config.live and leverage_needs_sync:
+        set_leverage(client, config)
+        config.rolling_adaptive_last_leverage = config.leverage
+
+
+def rolling_adaptive_limits(config: BotConfig) -> RollingAdaptiveLimits:
+    return RollingAdaptiveLimits(
+        window=config.rolling_adaptive_window,
+        low_vol_bps=config.rolling_adaptive_low_vol_bps,
+        high_vol_bps=config.rolling_adaptive_high_vol_bps,
+        min_leverage=config.rolling_adaptive_min_leverage,
+        max_leverage=config.rolling_adaptive_max_leverage,
+        min_grid_bps=config.rolling_adaptive_min_grid_bps,
+        max_grid_bps=config.rolling_adaptive_max_grid_bps,
+        grid_vol_multiplier=config.rolling_adaptive_grid_vol_multiplier,
+        min_width_bps=config.rolling_adaptive_min_width_bps,
+        max_width_bps=config.rolling_adaptive_max_width_bps,
+        width_vol_multiplier=config.rolling_adaptive_width_vol_multiplier,
+        min_order_margin_pct=config.rolling_adaptive_min_order_margin_pct,
+        max_order_margin_pct=config.rolling_adaptive_max_order_margin_pct,
+        min_max_margin_pct=config.rolling_adaptive_min_max_margin_pct,
+        max_max_margin_pct=config.rolling_adaptive_max_max_margin_pct,
+        min_stop_bps=config.rolling_adaptive_min_stop_bps,
+        max_stop_bps=config.rolling_adaptive_max_stop_bps,
+        stop_vol_multiplier=config.rolling_adaptive_stop_vol_multiplier,
+        min_tp_bps=config.rolling_adaptive_min_tp_bps,
+        max_tp_bps=config.rolling_adaptive_max_tp_bps,
+        tp_grid_multiplier=config.rolling_adaptive_tp_grid_multiplier,
+        min_total_profit_tp_pct=config.rolling_adaptive_min_total_profit_tp_pct,
+        max_total_profit_tp_pct=config.rolling_adaptive_max_total_profit_tp_pct,
+        min_total_loss_sl_pct=config.rolling_adaptive_min_total_loss_sl_pct,
+        max_total_loss_sl_pct=config.rolling_adaptive_max_total_loss_sl_pct,
+    )
 
 
 def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
@@ -1232,6 +1635,7 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         "rangeDriftMaxBps": "range_drift_max_bps",
         "orderMarginPct": "order_margin_pct",
         "maxMarginPct": "max_margin_pct",
+        "cashReservePct": "cash_reserve_pct",
         "totalProfitTp": "total_profit_tp",
         "totalProfitTpPct": "total_profit_tp_pct",
         "totalProfitTpCap": "total_profit_tp_cap",
@@ -1246,7 +1650,32 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         "missedTpSlippageBps": "missed_tp_slippage_bps",
         "hardStopSlippageBps": "hard_stop_slippage_bps",
         "trendThresholdBps": "trend_threshold_bps",
+        "marketRegimeMinConfidence": "market_regime_min_confidence",
         "regimeDiffBps": "regime_diff_bps",
+        "rollingAdaptiveLowVolBps": "rolling_adaptive_low_vol_bps",
+        "rollingAdaptiveHighVolBps": "rolling_adaptive_high_vol_bps",
+        "rollingAdaptiveMinLeverage": "rolling_adaptive_min_leverage",
+        "rollingAdaptiveMaxLeverage": "rolling_adaptive_max_leverage",
+        "rollingAdaptiveMinGridBps": "rolling_adaptive_min_grid_bps",
+        "rollingAdaptiveMaxGridBps": "rolling_adaptive_max_grid_bps",
+        "rollingAdaptiveGridVolMultiplier": "rolling_adaptive_grid_vol_multiplier",
+        "rollingAdaptiveMinWidthBps": "rolling_adaptive_min_width_bps",
+        "rollingAdaptiveMaxWidthBps": "rolling_adaptive_max_width_bps",
+        "rollingAdaptiveWidthVolMultiplier": "rolling_adaptive_width_vol_multiplier",
+        "rollingAdaptiveMinOrderMarginPct": "rolling_adaptive_min_order_margin_pct",
+        "rollingAdaptiveMaxOrderMarginPct": "rolling_adaptive_max_order_margin_pct",
+        "rollingAdaptiveMinMaxMarginPct": "rolling_adaptive_min_max_margin_pct",
+        "rollingAdaptiveMaxMaxMarginPct": "rolling_adaptive_max_max_margin_pct",
+        "rollingAdaptiveMinStopBps": "rolling_adaptive_min_stop_bps",
+        "rollingAdaptiveMaxStopBps": "rolling_adaptive_max_stop_bps",
+        "rollingAdaptiveStopVolMultiplier": "rolling_adaptive_stop_vol_multiplier",
+        "rollingAdaptiveMinTpBps": "rolling_adaptive_min_tp_bps",
+        "rollingAdaptiveMaxTpBps": "rolling_adaptive_max_tp_bps",
+        "rollingAdaptiveTpGridMultiplier": "rolling_adaptive_tp_grid_multiplier",
+        "rollingAdaptiveMinTotalProfitTpPct": "rolling_adaptive_min_total_profit_tp_pct",
+        "rollingAdaptiveMaxTotalProfitTpPct": "rolling_adaptive_max_total_profit_tp_pct",
+        "rollingAdaptiveMinTotalLossSlPct": "rolling_adaptive_min_total_loss_sl_pct",
+        "rollingAdaptiveMaxTotalLossSlPct": "rolling_adaptive_max_total_loss_sl_pct",
     }
     int_fields = {
         "maxOpenOrdersPerSide": "max_open_orders_per_side",
@@ -1255,6 +1684,7 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         "regimeShortMa": "regime_short_ma",
         "regimeLongMa": "regime_long_ma",
         "regimeConfirmBars": "regime_confirm_bars",
+        "rollingAdaptiveWindow": "rolling_adaptive_window",
     }
     enum_fields = {
         "ordType": ("ord_type", {"post_only", "limit"}),
@@ -1265,6 +1695,7 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         "hardStopOrdType": ("hard_stop_ord_type", {"limit", "market"}),
         "totalProfitAction": ("total_profit_action", {"checkpoint", "close"}),
         "trendFilter": ("trend_filter", {"off", "auto"}),
+        "marketRegimeFilter": ("market_regime_filter", {"off", "rules", "rf", "hmm"}),
         "regimeFilter": ("regime_filter", {"off", "ma_cross"}),
         "regimeBar": ("regime_bar", {"5m", "15m", "30m", "1H"}),
         "exchangeStopTriggerPxType": ("exchange_stop_trigger_px_type", {"last", "mark", "index"}),
@@ -1282,6 +1713,8 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         config.interval = max(1.0, float(payload["interval"]))
     if "riskCooldown" in payload:
         config.risk_cooldown = max(0.0, float(payload["riskCooldown"]))
+    if "marketRegimeModelPath" in payload:
+        config.market_regime_model_path = str(payload["marketRegimeModelPath"])
     if "cancelOnStop" in payload:
         config.cancel_on_stop = bool(payload["cancelOnStop"])
     if "exchangeStopEnabled" in payload:
@@ -1290,9 +1723,35 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         config.recenter_on_cooldown = bool(payload["recenterOnCooldown"])
     if "oneWayOpen" in payload:
         config.one_way_open = bool(payload["oneWayOpen"])
+    if "setLeverage" in payload:
+        config.set_leverage = bool(payload["setLeverage"])
+    if "rollingAdaptiveEnabled" in payload:
+        config.rolling_adaptive_enabled = bool(payload["rollingAdaptiveEnabled"])
     config.trend_lookback = max(1, config.trend_lookback)
     config.regime_short_ma = max(1, config.regime_short_ma)
     config.regime_long_ma = max(config.regime_short_ma + 1, config.regime_long_ma)
+    config.rolling_adaptive_window = max(2, config.rolling_adaptive_window)
+    config.rolling_adaptive_min_leverage = max(Decimal("1"), config.rolling_adaptive_min_leverage)
+    config.rolling_adaptive_max_leverage = max(config.rolling_adaptive_min_leverage, config.rolling_adaptive_max_leverage)
+    config.rolling_adaptive_min_grid_bps = max(Decimal("1"), config.rolling_adaptive_min_grid_bps)
+    config.rolling_adaptive_max_grid_bps = max(config.rolling_adaptive_min_grid_bps, config.rolling_adaptive_max_grid_bps)
+    config.rolling_adaptive_min_width_bps = max(Decimal("1"), config.rolling_adaptive_min_width_bps)
+    config.rolling_adaptive_max_width_bps = max(config.rolling_adaptive_min_width_bps, config.rolling_adaptive_max_width_bps)
+    config.rolling_adaptive_min_order_margin_pct = clamp_pct(config.rolling_adaptive_min_order_margin_pct)
+    config.cash_reserve_pct = clamp_pct(config.cash_reserve_pct)
+    config.rolling_adaptive_max_order_margin_pct = max(
+        config.rolling_adaptive_min_order_margin_pct,
+        clamp_pct(config.rolling_adaptive_max_order_margin_pct),
+    )
+    config.rolling_adaptive_min_max_margin_pct = clamp_pct(config.rolling_adaptive_min_max_margin_pct)
+    config.rolling_adaptive_max_max_margin_pct = max(
+        config.rolling_adaptive_min_max_margin_pct,
+        clamp_pct(config.rolling_adaptive_max_max_margin_pct),
+    )
+    config.rolling_adaptive_min_stop_bps = max(Decimal("1"), config.rolling_adaptive_min_stop_bps)
+    config.rolling_adaptive_max_stop_bps = max(config.rolling_adaptive_min_stop_bps, config.rolling_adaptive_max_stop_bps)
+    config.rolling_adaptive_min_tp_bps = max(Decimal("0"), config.rolling_adaptive_min_tp_bps)
+    config.rolling_adaptive_max_tp_bps = max(config.rolling_adaptive_min_tp_bps, config.rolling_adaptive_max_tp_bps)
     config.regime_confirm_bars = max(1, config.regime_confirm_bars)
 
 
@@ -1698,11 +2157,17 @@ def resolve_sizing(
         ct_val=ct_val,
         leverage=config.leverage,
     )
-    effective_available = available + reserved_open_margin
+    reserve_margin = equity * clamp_pct(config.cash_reserve_pct) / Decimal("100") if equity > 0 else Decimal("0")
+    effective_available = max(Decimal("0"), available + reserved_open_margin - reserve_margin)
     basis_margin = min_positive(equity, effective_available)
     min_margin = min_sz * ct_val * mark_px / config.leverage
     if basis_margin <= 0 or basis_margin < min_margin:
-        return Decimal("0"), Decimal("0"), f"margin_pct basis={plain(basis_margin)} min_margin={plain(min_margin)}"
+        return (
+            Decimal("0"),
+            Decimal("0"),
+            f"margin_pct basis={plain(basis_margin)} min_margin={plain(min_margin)} "
+            f"reserve_margin={plain(reserve_margin)}",
+        )
 
     order_margin = basis_margin * clamp_pct(config.order_margin_pct) / Decimal("100")
     raw_order_sz = order_margin * config.leverage / (mark_px * ct_val)
@@ -1721,7 +2186,8 @@ def resolve_sizing(
     note = (
         f"margin_pct basis={plain(basis_margin)} equity={plain(equity)} "
         f"available={plain(available)} reserved_open_margin={plain(reserved_open_margin)} "
-        f"effective_available={plain(effective_available)} order_margin={plain(order_margin)} "
+        f"reserve_margin={plain(reserve_margin)} effective_available={plain(effective_available)} "
+        f"order_margin={plain(order_margin)} "
         f"max_margin={plain(max_margin)}"
     )
     return order_sz, max_position, note
@@ -1773,6 +2239,38 @@ def pending_open_margin(
             continue
         total += px * sz * ct_val / leverage
     return total
+
+
+def fit_missing_orders_to_margin_budget(
+    orders: list[dict[str, Any]],
+    *,
+    available: Decimal,
+    reserve_margin: Decimal,
+    ct_val: Decimal,
+    leverage: Decimal,
+) -> list[dict[str, Any]]:
+    if not orders:
+        return []
+    budget = max(Decimal("0"), (available - reserve_margin) / OPEN_ORDER_MARGIN_SAFETY)
+    if budget <= 0 or ct_val <= 0 or leverage <= 0:
+        return [order for order in orders if order.get("reduce_only")]
+
+    selected: list[dict[str, Any]] = []
+    used = Decimal("0")
+    for order in orders:
+        if order.get("reduce_only"):
+            selected.append(order)
+            continue
+        px = dec(order.get("px"), Decimal("0"))
+        sz = dec(order.get("sz"), Decimal("0"))
+        estimated_margin = px * sz * ct_val / leverage if px > 0 and sz > 0 else Decimal("0")
+        if estimated_margin <= 0:
+            continue
+        if used + estimated_margin > budget:
+            continue
+        selected.append(order)
+        used += estimated_margin
+    return selected
 
 
 def open_pending_by_side(
@@ -1890,6 +2388,7 @@ def reconcile_orders(
     upper: Decimal,
     open_sides: set[str],
     open_capacity: dict[str, Decimal],
+    preserve_valid_open: bool = True,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], int]:
     matched_pending: set[int] = set()
     matched_desired: set[int] = set()
@@ -1905,21 +2404,22 @@ def reconcile_orders(
                 matched_desired.add(desired_index)
                 break
 
-    for pending_index, pending in enumerate(pending_orders):
-        if pending_index in matched_pending or is_reduce_only_pending_order(pending):
-            continue
-        pos_side = str(pending.get("posSide", ""))
-        if pos_side not in {"long", "short"} or pos_side not in open_sides:
-            continue
-        px = dec(pending.get("px"), Decimal("0"))
-        sz = dec(pending.get("sz"), Decimal("0"))
-        if px <= 0 or sz <= 0 or px < lower or px > upper:
-            continue
-        if preserved_open_by_side[pos_side] + sz > open_capacity.get(pos_side, Decimal("0")):
-            continue
-        preserved_open_by_side[pos_side] += sz
-        preserved_open_count_by_side[pos_side] += 1
-        matched_pending.add(pending_index)
+    if preserve_valid_open:
+        for pending_index, pending in enumerate(pending_orders):
+            if pending_index in matched_pending or is_reduce_only_pending_order(pending):
+                continue
+            pos_side = str(pending.get("posSide", ""))
+            if pos_side not in {"long", "short"} or pos_side not in open_sides:
+                continue
+            px = dec(pending.get("px"), Decimal("0"))
+            sz = dec(pending.get("sz"), Decimal("0"))
+            if px <= 0 or sz <= 0 or px < lower or px > upper:
+                continue
+            if preserved_open_by_side[pos_side] + sz > open_capacity.get(pos_side, Decimal("0")):
+                continue
+            preserved_open_by_side[pos_side] += sz
+            preserved_open_count_by_side[pos_side] += 1
+            matched_pending.add(pending_index)
 
     stale = [order for index, order in enumerate(pending_orders) if index not in matched_pending]
     missing = []
@@ -1990,6 +2490,29 @@ def require_live_permission(confirm_live: str) -> None:
         raise SystemExit("Live trading requires --confirm-live I_UNDERSTAND.")
 
 
+def install_shutdown_handlers(client: OkxRestClient, config: BotConfig) -> None:
+    def handle_signal(signum: int, _frame: Any) -> None:
+        signame = signal.Signals(signum).name
+        print(f"Received {signame}: shutting down.")
+        log_event("shutdown_signal", {"signal": signame, "live": config.live})
+        if config.cancel_on_stop:
+            try:
+                orders = client.get_pending_orders(config.inst_id).get("data", [])
+                open_orders = [
+                    order
+                    for order in orders
+                    if is_bot_order(order) and not is_reduce_only_pending_order(order)
+                ]
+                cancel_all_bot_orders(client, config, open_orders, reason=f"shutdown_{signame.lower()}")
+            except Exception as exc:
+                log_event("shutdown_cancel_error", {"signal": signame, "error": str(exc)})
+                print(f"Shutdown cancel failed: {exc}")
+        raise SystemExit(128 + signum)
+
+    signal.signal(signal.SIGTERM, handle_signal)
+    signal.signal(signal.SIGINT, handle_signal)
+
+
 def print_banner(config: BotConfig) -> None:
     mode = "LIVE" if config.live else "DRY-RUN"
     print(f"{mode} grid bot for {config.inst_id}")
@@ -1999,6 +2522,7 @@ def print_banner(config: BotConfig) -> None:
         f"grid_bps={config.grid_bps} min_net_bps={config.min_net_bps} "
         f"interval={config.interval}s ord_type={config.ord_type} "
         f"mode={config.mode} sizing={config.sizing_mode} "
+        f"reserve={config.cash_reserve_pct}% "
         f"range_drift={config.range_drift_mode}/{config.range_drift_weight_bps}bps"
     )
     print(
@@ -2022,6 +2546,13 @@ def print_banner(config: BotConfig) -> None:
         f"regime_filter={config.regime_filter} bar={config.regime_bar} "
         f"ma={config.regime_short_ma}/{config.regime_long_ma} "
         f"diff_bps={config.regime_diff_bps} confirm_bars={config.regime_confirm_bars}"
+    )
+    print(
+        f"rolling_adaptive={config.rolling_adaptive_enabled} window={config.rolling_adaptive_window} "
+        f"lev={config.rolling_adaptive_min_leverage}-{config.rolling_adaptive_max_leverage}x "
+        f"grid={config.rolling_adaptive_min_grid_bps}-{config.rolling_adaptive_max_grid_bps}bps "
+        f"margin={config.rolling_adaptive_min_order_margin_pct}-{config.rolling_adaptive_max_order_margin_pct}%/"
+        f"{config.rolling_adaptive_min_max_margin_pct}-{config.rolling_adaptive_max_max_margin_pct}%"
     )
 
 
@@ -2114,6 +2645,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sizing-mode", choices=("fixed", "margin_pct"), default="fixed")
     parser.add_argument("--order-margin-pct", default="30", help="Percent of available USDT margin per new order")
     parser.add_argument("--max-margin-pct", default="70", help="Percent of equity margin cap per side")
+    parser.add_argument("--cash-reserve-pct", default="10", help="Minimum free margin reserve percent of equity before placing new opens")
     parser.add_argument("--total-profit-tp", default="0", help="Estimated total PnL in USDT that triggers full close; 0 disables")
     parser.add_argument("--total-profit-tp-pct", default="0", help="Equity percent profit target; overrides fixed target when >0")
     parser.add_argument("--total-profit-tp-cap", default="0", help="USDT cap for percent profit target; 0 disables cap")
@@ -2138,6 +2670,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--trend-filter", choices=("off", "auto"), default="auto")
     parser.add_argument("--trend-lookback", type=int, default=8, help="1m candles to compare for trend filtering")
     parser.add_argument("--trend-threshold-bps", default="70", help="Minimum lookback move in bps to classify up/down trend")
+    parser.add_argument("--market-regime-filter", choices=("off", "rules", "rf", "hmm"), default="off", help="Optional ADX/CHOP/ML market regime gate for new opens")
+    parser.add_argument("--market-regime-model-path", default="", help="Joblib model path for rf/hmm market regime modes")
+    parser.add_argument("--market-regime-min-confidence", default="0.52", help="Minimum model confidence before allowing model-driven opens")
     parser.add_argument("--regime-filter", choices=("off", "ma_cross"), default="off")
     parser.add_argument("--regime-bar", choices=("5m", "15m", "30m", "1H"), default="15m")
     parser.add_argument("--regime-short-ma", type=int, default=5)
@@ -2146,6 +2681,32 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--regime-confirm-bars", type=int, default=3)
     parser.add_argument("--allow-dual-open", dest="one_way_open", action="store_false", help="Allow both long and short open orders in the same cycle")
     parser.set_defaults(one_way_open=True)
+    parser.add_argument("--rolling-adaptive", action="store_true", help="Recalculate leverage, sizing, grid, TP, and SL from rolling candles each cycle")
+    parser.add_argument("--rolling-adaptive-window", type=int, default=30, help="1m candles used for rolling adaptive calculations")
+    parser.add_argument("--rolling-adaptive-low-vol-bps", default="3")
+    parser.add_argument("--rolling-adaptive-high-vol-bps", default="25")
+    parser.add_argument("--rolling-adaptive-min-leverage", default="1")
+    parser.add_argument("--rolling-adaptive-max-leverage", default="5")
+    parser.add_argument("--rolling-adaptive-min-grid-bps", default="18")
+    parser.add_argument("--rolling-adaptive-max-grid-bps", default="80")
+    parser.add_argument("--rolling-adaptive-grid-vol-multiplier", default="2.4")
+    parser.add_argument("--rolling-adaptive-min-width-bps", default="260")
+    parser.add_argument("--rolling-adaptive-max-width-bps", default="1200")
+    parser.add_argument("--rolling-adaptive-width-vol-multiplier", default="14")
+    parser.add_argument("--rolling-adaptive-min-order-margin-pct", default="3")
+    parser.add_argument("--rolling-adaptive-max-order-margin-pct", default="10")
+    parser.add_argument("--rolling-adaptive-min-max-margin-pct", default="12")
+    parser.add_argument("--rolling-adaptive-max-max-margin-pct", default="35")
+    parser.add_argument("--rolling-adaptive-min-stop-bps", default="90")
+    parser.add_argument("--rolling-adaptive-max-stop-bps", default="900")
+    parser.add_argument("--rolling-adaptive-stop-vol-multiplier", default="8")
+    parser.add_argument("--rolling-adaptive-min-tp-bps", default="45")
+    parser.add_argument("--rolling-adaptive-max-tp-bps", default="180")
+    parser.add_argument("--rolling-adaptive-tp-grid-multiplier", default="2.2")
+    parser.add_argument("--rolling-adaptive-min-total-profit-tp-pct", default="0.6")
+    parser.add_argument("--rolling-adaptive-max-total-profit-tp-pct", default="2.5")
+    parser.add_argument("--rolling-adaptive-min-total-loss-sl-pct", default="0.8")
+    parser.add_argument("--rolling-adaptive-max-total-loss-sl-pct", default="2.0")
     parser.add_argument("--set-leverage", action="store_true")
     parser.add_argument("--cancel-on-stop", action="store_true")
     parser.add_argument("--once", action="store_true")

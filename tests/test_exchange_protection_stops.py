@@ -14,10 +14,15 @@ from auto_grid_bot import (
     detect_triggered_exchange_stop,
     desired_exchange_stops,
     exchange_stop_trigger_price,
+    fit_missing_orders_to_margin_budget,
     missing_exchange_stops,
+    place_one,
+    reconcile_orders,
+    resolve_sizing,
     stale_exchange_stops,
     sync_exchange_protection_stops,
 )
+from okx_client import OkxApiError
 from okx_client import OkxRestClient
 
 
@@ -68,6 +73,7 @@ def make_config(**overrides) -> BotConfig:
         sizing_mode=args.sizing_mode,
         order_margin_pct=Decimal(args.order_margin_pct),
         max_margin_pct=Decimal(args.max_margin_pct),
+        cash_reserve_pct=Decimal(args.cash_reserve_pct),
         total_profit_tp=Decimal(args.total_profit_tp),
         total_profit_tp_pct=Decimal(args.total_profit_tp_pct),
         total_profit_tp_cap=Decimal(args.total_profit_tp_cap),
@@ -91,6 +97,9 @@ def make_config(**overrides) -> BotConfig:
         trend_filter=args.trend_filter,
         trend_lookback=args.trend_lookback,
         trend_threshold_bps=Decimal(args.trend_threshold_bps),
+        market_regime_filter=args.market_regime_filter,
+        market_regime_model_path=args.market_regime_model_path,
+        market_regime_min_confidence=Decimal(args.market_regime_min_confidence),
         regime_filter=args.regime_filter,
         regime_bar=args.regime_bar,
         regime_short_ma=args.regime_short_ma,
@@ -99,6 +108,32 @@ def make_config(**overrides) -> BotConfig:
         regime_confirm_bars=args.regime_confirm_bars,
         one_way_open=args.one_way_open,
         bot_started_ms=1,
+        rolling_adaptive_enabled=args.rolling_adaptive,
+        rolling_adaptive_window=args.rolling_adaptive_window,
+        rolling_adaptive_low_vol_bps=Decimal(args.rolling_adaptive_low_vol_bps),
+        rolling_adaptive_high_vol_bps=Decimal(args.rolling_adaptive_high_vol_bps),
+        rolling_adaptive_min_leverage=Decimal(args.rolling_adaptive_min_leverage),
+        rolling_adaptive_max_leverage=Decimal(args.rolling_adaptive_max_leverage),
+        rolling_adaptive_min_grid_bps=Decimal(args.rolling_adaptive_min_grid_bps),
+        rolling_adaptive_max_grid_bps=Decimal(args.rolling_adaptive_max_grid_bps),
+        rolling_adaptive_grid_vol_multiplier=Decimal(args.rolling_adaptive_grid_vol_multiplier),
+        rolling_adaptive_min_width_bps=Decimal(args.rolling_adaptive_min_width_bps),
+        rolling_adaptive_max_width_bps=Decimal(args.rolling_adaptive_max_width_bps),
+        rolling_adaptive_width_vol_multiplier=Decimal(args.rolling_adaptive_width_vol_multiplier),
+        rolling_adaptive_min_order_margin_pct=Decimal(args.rolling_adaptive_min_order_margin_pct),
+        rolling_adaptive_max_order_margin_pct=Decimal(args.rolling_adaptive_max_order_margin_pct),
+        rolling_adaptive_min_max_margin_pct=Decimal(args.rolling_adaptive_min_max_margin_pct),
+        rolling_adaptive_max_max_margin_pct=Decimal(args.rolling_adaptive_max_max_margin_pct),
+        rolling_adaptive_min_stop_bps=Decimal(args.rolling_adaptive_min_stop_bps),
+        rolling_adaptive_max_stop_bps=Decimal(args.rolling_adaptive_max_stop_bps),
+        rolling_adaptive_stop_vol_multiplier=Decimal(args.rolling_adaptive_stop_vol_multiplier),
+        rolling_adaptive_min_tp_bps=Decimal(args.rolling_adaptive_min_tp_bps),
+        rolling_adaptive_max_tp_bps=Decimal(args.rolling_adaptive_max_tp_bps),
+        rolling_adaptive_tp_grid_multiplier=Decimal(args.rolling_adaptive_tp_grid_multiplier),
+        rolling_adaptive_min_total_profit_tp_pct=Decimal(args.rolling_adaptive_min_total_profit_tp_pct),
+        rolling_adaptive_max_total_profit_tp_pct=Decimal(args.rolling_adaptive_max_total_profit_tp_pct),
+        rolling_adaptive_min_total_loss_sl_pct=Decimal(args.rolling_adaptive_min_total_loss_sl_pct),
+        rolling_adaptive_max_total_loss_sl_pct=Decimal(args.rolling_adaptive_max_total_loss_sl_pct),
     )
     for key, value in overrides.items():
         setattr(config, key, value)
@@ -238,6 +273,103 @@ class ExchangeProtectionStopsTest(unittest.TestCase):
         self.assertEqual(event["triggerPx"], "98.7")
         self.assertEqual(config.exchange_stop_triggers, {})
 
+    def test_resolve_sizing_deducts_cash_reserve_from_effective_available(self) -> None:
+        config = make_config(
+            sizing_mode="margin_pct",
+            leverage=Decimal("5"),
+            order_margin_pct=Decimal("100"),
+            max_margin_pct=Decimal("100"),
+            cash_reserve_pct=Decimal("10"),
+            max_position=Decimal("0"),
+        )
+        state = {
+            "meta": {"ctVal": "1"},
+            "balance": {"totalEq": "10", "details": [{"ccy": "USDT", "availBal": "1", "eq": "10"}]},
+            "pending": [
+                {
+                    "clOrdId": "gbopen",
+                    "side": "buy",
+                    "posSide": "long",
+                    "px": "100",
+                    "sz": "0.05",
+                    "reduceOnly": "false",
+                }
+            ],
+        }
+
+        order_sz, _max_position, note = resolve_sizing(
+            config,
+            state,
+            mark_px=Decimal("100"),
+            lot=Decimal("0.01"),
+            min_sz=Decimal("0.01"),
+        )
+
+        self.assertEqual(order_sz, Decimal("0.05"))
+        self.assertIn("reserve_margin=1", note)
+        self.assertIn("effective_available=1", note)
+
+    def test_reconcile_can_disable_preserving_valid_open_orders(self) -> None:
+        pending = [
+            {
+                "clOrdId": "tp",
+                "side": "sell",
+                "posSide": "long",
+                "px": "101",
+                "sz": "1",
+                "reduceOnly": "true",
+            },
+            {
+                "clOrdId": "open",
+                "side": "buy",
+                "posSide": "long",
+                "px": "99",
+                "sz": "1",
+                "reduceOnly": "false",
+            },
+        ]
+        desired = [
+            {
+                "side": "sell",
+                "pos_side": "long",
+                "px": "101",
+                "sz": "1",
+                "reduce_only": True,
+            }
+        ]
+
+        stale, missing, matched = reconcile_orders(
+            pending,
+            desired,
+            Decimal("1"),
+            lower=Decimal("90"),
+            upper=Decimal("110"),
+            open_sides={"long"},
+            open_capacity={"long": Decimal("5"), "short": Decimal("0")},
+            preserve_valid_open=False,
+        )
+
+        self.assertEqual(matched, 1)
+        self.assertEqual([order["clOrdId"] for order in stale], ["open"])
+        self.assertEqual(missing, [])
+
+    def test_missing_open_orders_are_capped_by_cash_reserve_budget(self) -> None:
+        orders = [
+            {"side": "sell", "pos_side": "long", "px": "101", "sz": "1", "reduce_only": True},
+            {"side": "buy", "pos_side": "long", "px": "100", "sz": "0.01"},
+            {"side": "sell", "pos_side": "short", "px": "101", "sz": "0.01"},
+        ]
+
+        selected = fit_missing_orders_to_margin_budget(
+            orders,
+            available=Decimal("1.30"),
+            reserve_margin=Decimal("0.70"),
+            ct_val=Decimal("1"),
+            leverage=Decimal("5"),
+        )
+
+        self.assertEqual(selected, orders[:2])
+
 
 class OkxAlgoClientTest(unittest.TestCase):
     def test_place_order_can_attach_stop(self) -> None:
@@ -297,6 +429,34 @@ class OkxAlgoClientTest(unittest.TestCase):
         self.assertEqual(call.body["algoClOrdId"], "xsgbl987")
         self.assertTrue(call.body["reduceOnly"])
         self.assertTrue(call.body["cxlOnClosePos"])
+
+    def test_open_order_insufficient_margin_sets_open_backoff(self) -> None:
+        class MarginClient(OkxRestClient):
+            def place_order(self, **kwargs):
+                raise OkxApiError(
+                    "OKX API error 1: All operations failed",
+                    okx_code="1",
+                    response={"data": [{"sCode": "51008", "sMsg": "Order failed. Insufficient USDT margin in account"}]},
+                )
+
+        config = make_config(live=True, interval=8)
+        order = {
+            "inst_id": "TEST-USDT-SWAP",
+            "td_mode": "cross",
+            "side": "buy",
+            "pos_side": "long",
+            "ord_type": "post_only",
+            "px": "100",
+            "sz": "1",
+            "cl_ord_id": "open",
+            "tag": "open",
+        }
+
+        with redirect_stdout(StringIO()):
+            placed = place_one(MarginClient(), config, order)
+
+        self.assertFalse(placed)
+        self.assertGreater(config.open_backoff_until_ms, auto_grid_bot.current_ms())
 
 
 if __name__ == "__main__":

@@ -12,6 +12,7 @@ Environment=PYTHONUNBUFFERED=1
 ExecStart=/opt/okx-quant/.venv/bin/python /opt/okx-quant/dashboard_server.py
 Restart=always
 RestartSec=5
+KillMode=process
 NoNewPrivileges=true
 PrivateTmp=true
 

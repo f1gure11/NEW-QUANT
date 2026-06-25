@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>OKX Quant Console</title>
+    <title>豆包 Quant Console</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -11,19 +11,23 @@
       <aside class="side">
         <div class="brand">
           <div>
-            <h1>OKX Quant</h1>
+            <h1>豆包 Quant</h1>
             <p id="capturedAt">--</p>
           </div>
           <span id="statusPill" class="pill">连接中</span>
         </div>
 
         <section class="panel">
-          <h2>策略参数</h2>
+          <h2>监控参数</h2>
           <label>
             合约
             <select id="instId">
-              <option value="BEAT-USDT-SWAP">BEAT-USDT-SWAP</option>
-              <option value="RE-USDT-SWAP">RE-USDT-SWAP</option>
+              <option value="ETH-USDT-SWAP" selected>ETH-USDT-SWAP</option>
+              <option value="SOL-USDT-SWAP">SOL-USDT-SWAP</option>
+              <option value="BTC-USDT-SWAP">BTC-USDT-SWAP</option>
+              <option value="HYPE-USDT-SWAP">HYPE-USDT-SWAP</option>
+              <option value="XAU-USDT-SWAP">XAU-USDT-SWAP</option>
+              <option value="DOGE-USDT-SWAP">DOGE-USDT-SWAP</option>
             </select>
           </label>
           <div class="fieldGrid">
@@ -115,164 +119,51 @@
           </dl>
         </section>
 
-        <section class="panel tradePanel">
-          <h2>交易尝试</h2>
-          <label>
-            方向
-            <select id="tradeIntent">
-              <option value="openLong">开多 buy long</option>
-              <option value="openShort">开空 sell short</option>
-              <option value="closeLong">平多 sell long</option>
-              <option value="closeShort">平空 buy short</option>
-            </select>
-          </label>
-          <div class="fieldGrid">
-            <label>
-              价格
-              <input id="tradePx" type="number" step="0.0001" value="1.74" />
-            </label>
-            <label>
-              张数
-              <input id="tradeSz" type="number" step="0.1" min="0.1" value="0.1" />
-            </label>
-          </div>
-          <label>
-            订单类型
-            <select id="ordType">
-              <option value="post_only">Post Only</option>
-              <option value="limit">Limit</option>
-            </select>
-          </label>
-          <label>
-            确认文本
-            <input id="confirmText" type="text" placeholder="预演无需填写，实盘必须完全匹配" />
-          </label>
-          <div class="actions tradeActions">
-            <button id="previewOrderBtn" type="button">预演</button>
-            <button id="placeOrderBtn" class="dangerBtn" type="button">实盘</button>
-          </div>
-          <pre id="tradeResult" class="tradeResult">尚未预演</pre>
-        </section>
-
-        <section class="panel tradePanel">
-          <h2>机器人控制</h2>
-          <div class="botControlGrid">
-            <article class="botConfigCard" data-bot="beat">
-              <div class="botSubhead">
-                <h3>BEAT 合约机器人</h3>
-                <span>BEAT-USDT-SWAP · gb</span>
-              </div>
-              <div id="botStateCard" class="botStateCard stopped">
-                <span id="botStateDot" class="botStateDot"></span>
-                <div>
-                  <strong id="botStateLabel">未启动</strong>
-                  <p id="botStateDetail">等待启动</p>
-                </div>
-              </div>
-              <div class="fieldGrid">
-                <label>模式<select id="beatBotLive"><option value="false">干跑</option><option value="true">实盘</option></select></label>
-                <label>下沿<input id="beatLower" type="number" step="0.0001" value="1.74" /></label>
-                <label>上沿<input id="beatUpper" type="number" step="0.0001" value="1.84" /></label>
-                <label>杠杆<input id="beatLeverage" type="number" step="1" min="1" value="3" /></label>
-                <label>每单<input id="beatOrderSz" type="number" step="0.1" min="0.1" value="0.1" /></label>
-                <label>单边上限<input id="beatMaxPosition" type="number" step="0.1" min="0.1" value="0.6" /></label>
-                <label>每单保证金 %<input id="beatOrderMarginPct" type="number" step="1" min="1" max="100" value="30" /></label>
-                <label>单边权益上限 %<input id="beatMaxMarginPct" type="number" step="1" min="1" max="100" value="55" /></label>
-                <label>每侧挂单<input id="beatMaxOrders" type="number" step="1" min="1" value="1" /></label>
-                <label>间隔秒<input id="beatInterval" type="number" step="1" min="3" value="8" /></label>
-                <label>持仓止盈 bps<input id="beatMinTpBps" type="number" step="5" min="0" value="160" /></label>
-                <label>单边止损 bps<input id="beatPositionLossSlBps" type="number" step="10" min="0" value="550" /></label>
-                <label>交易所止损 bps<input id="beatExchangeStopBps" type="number" step="10" min="0" value="650" /></label>
-                <label>止损触发价<select id="beatExchangeStopTriggerPxType"><option value="mark" selected>标记价</option><option value="last">最新价</option><option value="index">指数价</option></select></label>
-                <label>止损重挂 bps<input id="beatExchangeStopRepriceBps" type="number" step="1" min="0" value="5" /></label>
-              </div>
-              <div class="fieldGrid">
-                <label>行情过滤<select id="beatRegimeFilter"><option value="ma_cross" selected>15m MA5/MA20</option><option value="off">关闭</option></select></label>
-                <label>K线周期<select id="beatRegimeBar"><option value="15m" selected>15m</option><option value="5m">5m</option><option value="30m">30m</option><option value="1H">1H</option></select></label>
-                <label>短均线<input id="beatRegimeShortMa" type="number" step="1" min="1" value="5" /></label>
-                <label>长均线<input id="beatRegimeLongMa" type="number" step="1" min="2" value="20" /></label>
-                <label>差值 bps<input id="beatRegimeDiffBps" type="number" step="5" min="0" value="50" /></label>
-                <label>确认K数<input id="beatRegimeConfirmBars" type="number" step="1" min="1" value="3" /></label>
-              </div>
-              <label class="toggle"><input id="beatSetLeverage" type="checkbox" />启动时设置杠杆</label>
-              <label class="toggle"><input id="beatCancelOnStop" type="checkbox" checked />风控撤机器人挂单</label>
-              <label class="toggle"><input id="beatExchangeStopEnabled" type="checkbox" />交易所侧保护止损</label>
-              <label class="toggle"><input id="beatRecenterOnCooldown" type="checkbox" checked />冷静期后重算护栏</label>
-              <label class="toggle"><input id="beatOneWayOpen" type="checkbox" checked />单向开仓保护</label>
-              <label>实盘确认<input id="beatConfirmLive" type="text" placeholder="填 I_UNDERSTAND" /></label>
-              <div class="actions tradeActions compactActions">
-                <button id="loadBeatConfigBtn" class="secondaryBtn" type="button">载入BEAT</button>
-                <button id="startBotBtn" type="button">启动BEAT</button>
-                <button id="updateBotBtn" class="secondaryBtn" type="button">应用BEAT</button>
-                <button id="stopBotBtn" class="dangerBtn" type="button">停止BEAT</button>
-              </div>
-              <pre id="botStatus" class="tradeResult">BEAT 机器人未启动</pre>
-            </article>
-
-            <article class="botConfigCard" data-bot="re">
-              <div class="botSubhead">
-                <h3>RE 合约机器人</h3>
-                <span>RE-USDT-SWAP · gr</span>
-              </div>
-              <div id="reBotStateCard" class="botStateCard stopped">
-                <span class="botStateDot"></span>
-                <div>
-                  <strong id="reBotStateLabel">未启动</strong>
-                  <p id="reBotStateDetail">独立配置和日志，不影响 BEAT</p>
-                </div>
-              </div>
-              <div class="fieldGrid">
-                <label>模式<select id="reBotLive"><option value="false">干跑</option><option value="true">实盘</option></select></label>
-                <label>下沿<input id="reLower" type="number" step="0.0001" value="0.78" /></label>
-                <label>上沿<input id="reUpper" type="number" step="0.0001" value="0.88" /></label>
-                <label>杠杆<input id="reLeverage" type="number" step="1" min="1" value="5" /></label>
-                <label>每单<input id="reOrderSz" type="number" step="1" min="1" value="1" /></label>
-                <label>单边上限<input id="reMaxPosition" type="number" step="1" min="1" value="1" /></label>
-                <label>每单保证金 %<input id="reOrderMarginPct" type="number" step="1" min="1" max="100" value="10" /></label>
-                <label>单边权益上限 %<input id="reMaxMarginPct" type="number" step="1" min="1" max="100" value="30" /></label>
-                <label>每侧挂单<input id="reMaxOrders" type="number" step="1" min="1" value="1" /></label>
-                <label>间隔秒<input id="reInterval" type="number" step="1" min="3" value="8" /></label>
-                <label>持仓止盈 bps<input id="reMinTpBps" type="number" step="5" min="0" value="180" /></label>
-                <label>单边止损 bps<input id="rePositionLossSlBps" type="number" step="10" min="0" value="550" /></label>
-                <label>交易所止损 bps<input id="reExchangeStopBps" type="number" step="10" min="0" value="650" /></label>
-                <label>止损触发价<select id="reExchangeStopTriggerPxType"><option value="mark" selected>标记价</option><option value="last">最新价</option><option value="index">指数价</option></select></label>
-                <label>止损重挂 bps<input id="reExchangeStopRepriceBps" type="number" step="1" min="0" value="5" /></label>
-              </div>
-              <div class="fieldGrid">
-                <label>行情过滤<select id="reRegimeFilter"><option value="ma_cross" selected>15m MA5/MA20</option><option value="off">关闭</option></select></label>
-                <label>K线周期<select id="reRegimeBar"><option value="15m" selected>15m</option><option value="5m">5m</option><option value="30m">30m</option><option value="1H">1H</option></select></label>
-                <label>短均线<input id="reRegimeShortMa" type="number" step="1" min="1" value="5" /></label>
-                <label>长均线<input id="reRegimeLongMa" type="number" step="1" min="2" value="20" /></label>
-                <label>差值 bps<input id="reRegimeDiffBps" type="number" step="5" min="0" value="50" /></label>
-                <label>确认K数<input id="reRegimeConfirmBars" type="number" step="1" min="1" value="3" /></label>
-              </div>
-              <label class="toggle"><input id="reSetLeverage" type="checkbox" />启动时设置杠杆</label>
-              <label class="toggle"><input id="reCancelOnStop" type="checkbox" checked />风控撤机器人挂单</label>
-              <label class="toggle"><input id="reExchangeStopEnabled" type="checkbox" />交易所侧保护止损</label>
-              <label class="toggle"><input id="reRecenterOnCooldown" type="checkbox" checked />冷静期后重算护栏</label>
-              <label class="toggle"><input id="reOneWayOpen" type="checkbox" checked />单向开仓保护</label>
-              <label>实盘确认<input id="reConfirmLive" type="text" placeholder="填 I_UNDERSTAND" /></label>
-              <div class="actions tradeActions compactActions">
-                <button id="loadReBotConfigBtn" class="secondaryBtn" type="button">载入RE</button>
-                <button id="dryRunReBotBtn" type="button">RE干跑</button>
-                <button id="startReBotBtn" type="button">启动RE</button>
-                <button id="updateReBotBtn" class="secondaryBtn" type="button">应用RE</button>
-                <button id="stopReBotBtn" class="dangerBtn" type="button">停止RE</button>
-              </div>
-              <pre id="reBotStatus" class="tradeResult">RE 机器人未启动</pre>
-            </article>
-          </div>
+        <section class="panel sideOverview">
+          <h2>组合概览</h2>
+          <dl class="kv">
+            <div><dt>实时机器人</dt><dd id="sideLiveBot">ETH</dd></div>
+            <div><dt>组合实盘</dt><dd id="sidePortfolioLive">--</dd></div>
+            <div><dt>只读/沙盘</dt><dd id="sideReadonlyMode">--</dd></div>
+            <div><dt>组合目标</dt><dd id="sideTargets">--</dd></div>
+            <div><dt>卫星仓</dt><dd id="sideSatellites">--</dd></div>
+            <div><dt>执行草案</dt><dd id="sideExecution">--</dd></div>
+            <div><dt>调仓动作</dt><dd id="sideActions">--</dd></div>
+          </dl>
         </section>
       </aside>
 
       <section class="content">
         <div class="topbar">
           <div>
-            <h2 id="title">BEAT-USDT-SWAP</h2>
+            <h2 id="title">ETH-USDT-SWAP</h2>
             <p id="subtitle">range grid monitor</p>
           </div>
           <div id="stateBox" class="stateBox">--</div>
         </div>
+
+        <section class="commandBand">
+          <article>
+            <span>组合目标</span>
+            <strong id="digestTargets">--</strong>
+            <p id="digestReport">--</p>
+          </article>
+          <article>
+            <span>核心 / 卫星</span>
+            <strong id="digestRoles">--</strong>
+            <p id="digestSatelliteWeight">--</p>
+          </article>
+          <article>
+            <span>调仓动作</span>
+            <strong id="digestActions">--</strong>
+            <p id="digestExposure">--</p>
+          </article>
+          <article>
+            <span>ETH 实盘</span>
+            <strong id="digestLiveBot">--</strong>
+            <p id="digestLiveDetail">--</p>
+          </article>
+        </section>
 
         <section class="runtimeGrid">
           <article id="runtimeStatusCard" class="runtimeCard">
@@ -337,7 +228,7 @@
               <span class="range"></span>区间
               <span class="soft"></span>软止损
               <span class="hard"></span>硬止损
-              <span class="order"></span>挂单/持仓
+              <span class="order"></span>持仓/成交
             </div>
           </div>
           <canvas id="chart" width="1100" height="430"></canvas>
@@ -349,6 +240,116 @@
             <p id="botEventHint">--</p>
           </div>
           <div id="botActionFeed" class="actionFeed"></div>
+        </section>
+
+        <section class="liveBotPanel">
+          <div class="portfolioHead">
+            <div>
+              <h2 id="ethBotTitle">组合 ETH 滚动实盘</h2>
+              <p id="ethBotMeta">只读监控，不控制实盘进程</p>
+            </div>
+            <div class="portfolioActions">
+              <button id="refreshEthBotBtn" class="secondaryBtn" type="button">刷新ETH</button>
+            </div>
+          </div>
+          <div class="portfolioMetrics liveMetrics">
+            <article><span>运行状态</span><strong id="ethBotState">--</strong></article>
+            <article><span>杠杆/格距</span><strong id="ethBotLeverageGrid">--</strong></article>
+            <article><span>持仓</span><strong id="ethBotPosition">--</strong></article>
+            <article><span>每单/上限</span><strong id="ethBotSizing">--</strong></article>
+            <article><span>净收益</span><strong id="ethBotEdge">--</strong></article>
+            <article><span>最新原因</span><strong id="ethBotDecision">--</strong></article>
+          </div>
+          <div class="portfolioTables liveBotTables">
+            <article class="portfolioTableCard">
+              <h3>自适应算法</h3>
+              <div id="ethAdaptiveTable" class="tableWrap empty">暂无数据</div>
+            </article>
+            <article class="portfolioTableCard">
+              <h3>开仓判定</h3>
+              <div id="ethDecisionTable" class="tableWrap empty">暂无数据</div>
+            </article>
+          </div>
+          <pre id="ethBotLog" class="tradeResult">组合 ETH 实盘日志等待中</pre>
+        </section>
+
+        <section class="portfolioPanel">
+          <div class="portfolioHead">
+            <div>
+              <h2>组合回测与调仓</h2>
+              <p id="portfolioReportMeta">暂无组合报告</p>
+            </div>
+            <div class="portfolioActions">
+              <button id="startPortfolioLiveBtn" type="button">启动组合实盘</button>
+              <button id="stopPortfolioLiveBtn" class="dangerBtn" type="button">停止组合实盘</button>
+              <button id="runPortfolioBacktestBtn" type="button">跑组合回测</button>
+              <button id="refreshPortfolioBtn" class="secondaryBtn" type="button">刷新组合</button>
+            </div>
+          </div>
+          <div class="portfolioControls">
+            <label>
+              组合模式
+              <select id="portfolioTradingMode">
+                <option value="paper" selected>回测沙盘</option>
+                <option value="live">直接实盘</option>
+              </select>
+            </label>
+            <label>候选数<input id="portfolioTopN" type="number" min="1" max="50" step="1" value="12" /></label>
+            <label>目标数<input id="portfolioTargetSymbols" type="number" min="1" max="20" step="1" value="6" /></label>
+            <label>回测页数<input id="portfolioBacktestPages" type="number" min="1" max="8" step="1" value="2" /></label>
+            <label>每页K线<input id="portfolioBacktestLimit" type="number" min="80" max="300" step="10" value="300" /></label>
+            <label>核心数量<input id="portfolioCoreSymbols" type="number" min="1" max="10" step="1" value="2" /></label>
+            <label>核心预算 %<input id="portfolioCoreShare" type="number" min="0" max="100" step="1" value="70" /></label>
+            <label>卫星上限 %<input id="portfolioSatelliteMax" type="number" min="0" max="100" step="1" value="12" /></label>
+            <label>卫星下限 %<input id="portfolioSatelliteMin" type="number" min="0" max="100" step="1" value="3" /></label>
+            <label>
+              状态模型
+              <select id="portfolioMarketRegimeFilter">
+                <option value="auto" selected>自动选择模型</option>
+                <option value="rf">RF 模型</option>
+                <option value="hmm">HMM 模型</option>
+                <option value="rules">规则模型</option>
+                <option value="off">关闭</option>
+              </select>
+            </label>
+            <label>模型置信度<input id="portfolioMarketRegimeMinConfidence" type="number" min="0" max="1" step="0.01" value="0.52" /></label>
+            <label class="toggle"><input id="portfolioIncludeAccount" type="checkbox" />读取账户做调仓</label>
+            <label class="toggle"><input id="portfolioRefreshData" type="checkbox" />刷新公网K线</label>
+          </div>
+          <div class="portfolioMetrics">
+            <article><span>核心舱</span><strong id="portfolioCoreSummary">--</strong></article>
+            <article><span>卫星仓</span><strong id="portfolioSatelliteSummary">--</strong></article>
+            <article><span>ML 状态模型</span><strong id="portfolioMlRegime">--</strong></article>
+            <article><span>调仓时机</span><strong id="portfolioRebalanceTiming">--</strong></article>
+            <article><span>自适应参数</span><strong id="portfolioAdaptiveProfile">--</strong></article>
+            <article><span>回测状态</span><strong id="portfolioBacktestState">--</strong></article>
+            <article><span>回测日志</span><strong id="portfolioBacktestLogAt">--</strong></article>
+            <article><span>组合实盘</span><strong id="portfolioLiveState">--</strong></article>
+            <article><span>预检/计划</span><strong id="portfolioPreflightState">--</strong></article>
+          </div>
+          <div class="portfolioTables">
+            <article class="portfolioTableCard">
+              <h3>核心舱</h3>
+              <div id="portfolioCoreTable" class="tableWrap empty">暂无报告</div>
+            </article>
+            <article class="portfolioTableCard">
+              <h3>卫星仓</h3>
+              <div id="portfolioSatelliteTable" class="tableWrap empty">暂无报告</div>
+            </article>
+            <article class="portfolioTableCard">
+              <h3>调仓时机</h3>
+              <div id="portfolioActionsTable" class="tableWrap empty">暂无报告</div>
+            </article>
+            <article class="portfolioTableCard">
+              <h3>自适应参数</h3>
+              <div id="portfolioAdaptiveTable" class="tableWrap empty">暂无报告</div>
+            </article>
+            <article class="portfolioTableCard">
+              <h3>状态模型</h3>
+              <div id="portfolioRegimeResearch" class="tableWrap empty">暂无状态模型报告</div>
+            </article>
+          </div>
+          <pre id="portfolioLog" class="tradeResult">组合回测日志等待中</pre>
         </section>
 
         <section class="lowerGrid">
@@ -386,11 +387,6 @@
             <div class="positions" id="positions"></div>
           </article>
 
-          <article class="panel">
-            <h2>当前挂单</h2>
-            <div class="positions" id="pendingOrders"></div>
-          </article>
-
           <article class="panel fillsPanel">
             <h2>最近成交</h2>
             <div class="positions" id="fills"></div>
@@ -398,6 +394,6 @@
         </section>
       </section>
     </main>
-    <script src="/app.js?v=20260624-cloud-fix"></script>
+    <script src="/app.js?v=20260625-regime-research"></script>
   </body>
 </html>

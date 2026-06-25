@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OKX Quant Readonly</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              financeBg: "#0f172a",
+              financeCard: "#1e293b",
+              financeBorder: "#334155",
+              financeSuccess: "#10b981",
+              financeDanger: "#ef4444",
+              financeWarning: "#f59e0b",
+              financeText: "#e2e8f0",
+              financeMuted: "#94a3b8"
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="stylesheet" href="/view.css" />
+  </head>
+  <body class="bg-financeBg text-financeText">
+    <main class="shell antialiased">
+      <header class="top">
+        <div>
+          <h1>OKX Quant</h1>
+          <p>更新时间 <span id="updatedAt" class="mono">等待刷新</span></p>
+        </div>
+        <div class="statusRow">
+          <span id="connState" class="pill watch">连接中</span>
+          <span class="readonly">只读</span>
+        </div>
+      </header>
+
+      <section class="digest">
+        <article class="metricCard">
+          <span>账户权益</span>
+          <strong id="totalEq">--</strong>
+          <p id="accountDetail">--</p>
+        </article>
+        <article class="metricCard">
+          <span>USDT 可用</span>
+          <strong id="usdtAvail">--</strong>
+          <p id="accountMode">--</p>
+        </article>
+        <article class="metricCard">
+          <span>日收益</span>
+          <strong id="dailyPnl">--</strong>
+          <p id="dailyPnlDetail">--</p>
+        </article>
+        <article class="metricCard">
+          <span>累计收益</span>
+          <strong id="ethPnl">--</strong>
+          <p id="totalPnlDetail">--</p>
+        </article>
+      </section>
+
+      <section class="digest">
+        <article class="metricCard">
+          <span>核心舱</span>
+          <strong id="coreDigest">--</strong>
+          <p id="coreDetail">--</p>
+        </article>
+        <article class="metricCard">
+          <span>卫星仓</span>
+          <strong id="satelliteDigest">--</strong>
+          <p id="satelliteDetail">--</p>
+        </article>
+        <article class="metricCard">
+          <span>调仓时机</span>
+          <strong id="rebalanceDigest">--</strong>
+          <p id="rebalanceDetail">--</p>
+        </article>
+        <article class="metricCard">
+          <span>自适应参数</span>
+          <strong id="adaptiveDigest">--</strong>
+          <p id="adaptiveDetail">--</p>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="panel">
+          <div class="sectionTitle">
+            <h2>回测状态</h2>
+            <p id="backtestSummary">--</p>
+          </div>
+          <div id="backtestDetail" class="empty">暂无回测日志</div>
+        </article>
+        <article class="panel">
+          <div class="sectionTitle">
+            <h2>调仓记录</h2>
+            <p id="rebalanceRecordSummary">--</p>
+          </div>
+          <div id="rebalanceRecords" class="empty">暂无调仓记录</div>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="panel">
+          <div class="sectionTitle">
+            <h2>核心舱</h2>
+            <p id="coreSummary">--</p>
+          </div>
+          <div id="coreDetails" class="empty">暂无核心舱</div>
+        </article>
+        <article class="panel">
+          <div class="sectionTitle">
+            <h2>卫星仓</h2>
+            <p id="satelliteSummary">--</p>
+          </div>
+          <div id="satelliteDetails" class="empty">暂无卫星仓</div>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="panel">
+          <div class="sectionTitle">
+            <h2>调仓时机</h2>
+            <p id="rebalanceSummary">--</p>
+          </div>
+          <div id="rebalanceLogic" class="empty">暂无调仓逻辑</div>
+        </article>
+
+        <article class="panel">
+          <div class="sectionTitle">
+            <h2>自适应参数</h2>
+            <p id="adaptiveSummary">--</p>
+          </div>
+          <div id="portfolioAdaptive" class="empty">暂无自适应参数</div>
+        </article>
+        <article class="panel">
+          <div class="sectionTitle">
+            <h2>状态模型</h2>
+            <p id="regimeResearchSummary">--</p>
+          </div>
+          <div id="regimeResearch" class="empty">暂无状态模型报告</div>
+        </article>
+      </section>
+    </main>
+
+    <script src="/view.js?v=20260625-regime-research"></script>
+  </body>
+</html>

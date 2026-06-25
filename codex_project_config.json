@@ -1,0 +1,15 @@
+{
+  "memoryFile": "CODEX_MEMORY.md",
+  "memoryPolicy": {
+    "updateAfterRiskOrPortfolioChanges": true,
+    "neverStoreSecrets": true,
+    "treatMemoryAsStaleUnlessUserConfirms": true
+  },
+  "portfolioTrading": {
+    "modes": ["backtest", "paper", "live"],
+    "defaultMode": "paper",
+    "liveStartRequiresAccountPreflight": true,
+    "liveStartUsesLivePlan": true,
+    "readonlyDashboardIsReadOnly": true
+  }
+}

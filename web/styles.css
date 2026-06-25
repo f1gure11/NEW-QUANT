@@ -19,7 +19,6 @@
 
 body {
   margin: 0;
-  min-width: 1420px;
   background: var(--bg);
   color: var(--ink);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
@@ -27,7 +26,7 @@ body {
 
 .app {
   display: grid;
-  grid-template-columns: 760px 1fr;
+  grid-template-columns: minmax(620px, 760px) minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -35,7 +34,7 @@ body {
   border-right: 1px solid var(--line);
   padding: 18px;
   background: #eef3ef;
-  overflow-x: hidden;
+  min-width: 0;
 }
 
 .brand,
@@ -102,6 +101,7 @@ label {
 
 .content {
   padding: 18px;
+  min-width: 0;
 }
 
 .panel,
@@ -258,6 +258,7 @@ button {
 }
 
 .metricGrid article {
+  min-width: 0;
   padding: 14px;
 }
 
@@ -279,6 +280,7 @@ button {
   margin-top: 8px;
   font-size: 20px;
   letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 
 .metricGrid small {
@@ -296,11 +298,14 @@ button {
 
 .chartHeader {
   margin-bottom: 10px;
+  align-items: flex-start;
 }
 
 .legend {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   color: var(--muted);
   font-size: 12px;
@@ -337,6 +342,7 @@ canvas {
   display: grid;
   grid-template-columns: 1.05fr 1.25fr 1fr 1fr;
   gap: 14px;
+  margin-top: 14px;
 }
 
 .fillsPanel {
@@ -468,6 +474,7 @@ button:disabled {
   color: var(--ink);
   font-size: 12px;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .botConfigCard .tradeResult {
@@ -505,36 +512,257 @@ button:disabled {
   background: #9aa5a0;
 }
 
-.botStateCard.running {
+.botStateCard.running,
+.botStateCard.ok {
   border-color: #9ed8b9;
   background: #edf9f2;
 }
 
-.botStateCard.running .botStateDot {
+.botStateCard.running .botStateDot,
+.botStateCard.ok .botStateDot {
   background: var(--green);
   box-shadow: 0 0 0 4px rgba(29, 143, 97, 0.12);
 }
 
 .botStateCard.starting,
-.botStateCard.stopping {
+.botStateCard.stopping,
+.botStateCard.warn,
+.botStateCard.idle {
   border-color: #efd28d;
   background: #fff8e5;
 }
 
 .botStateCard.starting .botStateDot,
-.botStateCard.stopping .botStateDot {
+.botStateCard.stopping .botStateDot,
+.botStateCard.warn .botStateDot,
+.botStateCard.idle .botStateDot {
   background: var(--amber);
   box-shadow: 0 0 0 4px rgba(183, 121, 31, 0.12);
 }
 
-.botStateCard.error {
+.botStateCard.error,
+.botStateCard.danger {
   border-color: #efaaa6;
   background: #fff0ef;
 }
 
-.botStateCard.error .botStateDot {
+.botStateCard.error .botStateDot,
+.botStateCard.danger .botStateDot {
   background: var(--red);
   box-shadow: 0 0 0 4px rgba(194, 65, 59, 0.12);
+}
+
+.runtimeGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.runtimeCard,
+.activityPanel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.runtimeCard {
+  min-width: 0;
+  padding: 14px;
+}
+
+.runtimeCard span {
+  display: block;
+  font-size: 12px;
+}
+
+.runtimeCard strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.runtimeCard p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.runtimeCard.ok {
+  border-color: #b9dfc9;
+}
+
+.runtimeCard.warn,
+.runtimeCard.idle {
+  border-color: #efd28d;
+}
+
+.runtimeCard.danger {
+  border-color: #efaaa6;
+}
+
+.runtimeCard.stopped {
+  border-color: #d4dbd7;
+}
+
+.warnText {
+  color: var(--amber);
+}
+
+.activityPanel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.35fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 14px;
+  padding: 16px;
+}
+
+.activityPanel h2 {
+  margin-bottom: 6px;
+}
+
+.actionFeed {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.actionItem {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fbfcfb;
+}
+
+.actionItem strong,
+.actionItem span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.actionItem strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.actionItem span {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.actionItem.place {
+  border-left-color: var(--green);
+}
+
+.actionItem.cancel {
+  border-left-color: var(--amber);
+}
+
+.actionItem.risk {
+  border-left-color: var(--red);
+}
+
+.portfolioPanel,
+.liveBotPanel {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.portfolioHead,
+.portfolioActions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.portfolioActions button {
+  width: 132px;
+  margin-top: 0;
+}
+
+.portfolioControls {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.portfolioMetrics {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.portfolioMetrics article,
+.portfolioTableCard {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
+}
+
+.portfolioMetrics article {
+  padding: 12px;
+}
+
+.portfolioMetrics span {
+  display: block;
+  font-size: 12px;
+}
+
+.portfolioMetrics strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.portfolioTables {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.liveBotTables {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.portfolioTableCard {
+  padding: 12px;
+}
+
+.portfolioTableCard h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.tableWrap {
+  max-height: 280px;
+  overflow: auto;
+}
+
+.tableWrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.tableWrap th,
+.tableWrap td {
+  white-space: nowrap;
 }
 
 .sectionDivider {
@@ -563,19 +791,415 @@ button:disabled {
 }
 
 @media (max-width: 1240px) {
-  body {
-    min-width: 980px;
+  .app {
+    grid-template-columns: minmax(360px, 0.42fr) minmax(0, 1fr);
   }
 
-  .app {
-    grid-template-columns: 300px 1fr;
+  .botControlGrid {
+    grid-template-columns: 1fr;
   }
 
   .metricGrid {
     grid-template-columns: repeat(3, 1fr);
   }
 
+  .riskGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .runtimeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .actionFeed {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portfolioControls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portfolioMetrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .portfolioTables {
+    grid-template-columns: 1fr;
+  }
+
   .lowerGrid {
     grid-template-columns: 1fr;
+  }
+
+  .fillsPanel {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 860px) {
+  .app {
+    display: block;
+  }
+
+  .side {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .brand,
+  .topbar,
+  .chartHeader,
+  .actions,
+  .bookStats {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .actions,
+  .bookStats {
+    width: 100%;
+  }
+
+  .actions button,
+  .bookStats div {
+    width: 100%;
+  }
+
+  .fieldGrid,
+  .metricGrid,
+  .pnlGrid,
+  .riskGrid,
+  .runtimeGrid,
+  .activityPanel,
+  .actionFeed,
+  .portfolioControls,
+  .portfolioMetrics,
+  .portfolioTables,
+  .book {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolioHead,
+  .portfolioActions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .portfolioActions button {
+    width: 100%;
+  }
+
+  .compactActions button {
+    width: 100%;
+  }
+
+  .legend {
+    justify-content: flex-start;
+  }
+
+canvas {
+    height: 340px;
+  }
+}
+
+/* Current portfolio console theme */
+:root {
+  --bg: #eef1f5;
+  --panel: #ffffff;
+  --ink: #17212b;
+  --muted: #657383;
+  --line: #d8dee7;
+  --green: #16845b;
+  --red: #c23b3b;
+  --amber: #aa6a12;
+  --blue: #2463eb;
+  --teal: #0f766e;
+  --shadow: 0 10px 24px rgba(21, 32, 43, 0.06);
+}
+
+body {
+  background: var(--bg);
+}
+
+.app {
+  grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
+}
+
+.side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  border-right: 1px solid #cfd7e2;
+  background: #f8fafc;
+}
+
+.brand {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 16px;
+}
+
+h1 {
+  color: var(--ink);
+  font-size: 20px;
+}
+
+h2 {
+  color: var(--ink);
+}
+
+.panel,
+.chartPanel,
+.runtimeCard,
+.activityPanel,
+.portfolioPanel,
+.liveBotPanel,
+.metricGrid article,
+.commandBand article {
+  border-color: var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.panel {
+  padding: 14px;
+}
+
+input,
+select {
+  height: 36px;
+  border-color: #cfd7e2;
+  background: #fbfdff;
+}
+
+button {
+  height: 36px;
+  border-radius: 6px;
+  background: #0f766e;
+  font-weight: 700;
+}
+
+.secondaryBtn {
+  background: #f2f5f8;
+}
+
+.topbar {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+#title {
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.commandBand {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.commandBand article {
+  min-width: 0;
+  padding: 14px;
+  background: #fff;
+}
+
+.commandBand span,
+.runtimeCard span,
+.metricGrid span,
+.portfolioMetrics span {
+  color: #6b7787;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.commandBand strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.commandBand p {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.runtimeGrid,
+.metricGrid,
+.portfolioMetrics {
+  gap: 10px;
+}
+
+.runtimeCard,
+.metricGrid article,
+.portfolioMetrics article {
+  padding: 12px;
+  background: #fff;
+}
+
+.runtimeCard strong,
+.metricGrid strong,
+.portfolioMetrics strong {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.pnlGrid strong,
+.riskGrid strong {
+  font-size: 16px;
+}
+
+.chartPanel canvas {
+  border-color: #dce3ec;
+  background: #fff;
+}
+
+.liveBotPanel {
+  border-left: 4px solid var(--teal);
+}
+
+.portfolioPanel {
+  border-left: 4px solid var(--blue);
+}
+
+.portfolioHead h2 {
+  font-size: 17px;
+}
+
+.portfolioHead p {
+  margin-top: 4px;
+  max-width: 920px;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.portfolioControls {
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.portfolioControls label {
+  min-width: 0;
+}
+
+.portfolioControls .toggle {
+  align-self: end;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px;
+  background: #fbfdff;
+}
+
+.portfolioMetrics {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.portfolioTables {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.portfolioTableCard {
+  background: #fff;
+}
+
+.portfolioTableCard h3 {
+  color: var(--ink);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.tableWrap {
+  max-height: 340px;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f7f9fc;
+  color: #5a6675;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+td {
+  color: #26323f;
+}
+
+th,
+td {
+  border-bottom-color: #e8edf3;
+  padding: 7px 6px;
+}
+
+.tradeResult {
+  max-height: 220px;
+  border-color: #dce3ec;
+  background: #111827;
+  color: #dbeafe;
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.sideOverview .kv dd {
+  color: var(--ink);
+}
+
+.lowerGrid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.fillsPanel {
+  grid-column: span 2;
+}
+
+@media (max-width: 1440px) {
+  .commandBand {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portfolioControls {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .portfolioMetrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .portfolioTables {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .side {
+    position: static;
+    height: auto;
+  }
+
+  .commandBand,
+  .portfolioControls,
+  .portfolioMetrics,
+  .portfolioTables,
+  .lowerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fillsPanel {
+    grid-column: auto;
   }
 }

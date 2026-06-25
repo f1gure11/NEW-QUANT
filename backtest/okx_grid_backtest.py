@@ -85,6 +85,9 @@ class GridBacktestConfig:
     trend_filter: str = "off"
     trend_lookback: int = 8
     trend_threshold_bps: Decimal = Decimal("90")
+    market_regime_filter: str = "off"
+    market_regime_model_path: str = ""
+    market_regime_min_confidence: Decimal = Decimal("0.52")
 
 
 @dataclass(slots=True)
@@ -203,6 +206,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--trend-filter", choices=["off", "auto"], default="off")
     parser.add_argument("--trend-lookback", type=int, default=8)
     parser.add_argument("--trend-threshold-bps", default="90")
+    parser.add_argument("--market-regime-filter", choices=["off", "rules", "rf", "hmm"], default="off")
+    parser.add_argument("--market-regime-model-path", default="")
+    parser.add_argument("--market-regime-min-confidence", default="0.52")
     return parser.parse_args()
 
 
@@ -243,6 +249,9 @@ def config_from_args(args: argparse.Namespace) -> GridBacktestConfig:
             "trendFilter": "trend_filter",
             "trendLookback": "trend_lookback",
             "trendThresholdBps": "trend_threshold_bps",
+            "marketRegimeFilter": "market_regime_filter",
+            "marketRegimeModelPath": "market_regime_model_path",
+            "marketRegimeMinConfidence": "market_regime_min_confidence",
         }
         for source_key, target_key in mapping.items():
             if source_key in payload:
@@ -296,6 +305,9 @@ def config_from_args(args: argparse.Namespace) -> GridBacktestConfig:
         trend_filter=str(values["trend_filter"]),
         trend_lookback=int(values["trend_lookback"]),
         trend_threshold_bps=dec(values["trend_threshold_bps"]),
+        market_regime_filter=str(values["market_regime_filter"]),
+        market_regime_model_path=str(values["market_regime_model_path"]),
+        market_regime_min_confidence=dec(values["market_regime_min_confidence"]),
     )
 
 
@@ -694,6 +706,10 @@ def allowed_open_sides(
     mark_px: Decimal,
     midpoint: Decimal,
 ) -> set[str]:
+    market_sides = market_regime_open_sides(config, candles, long_pos, short_pos, mark_px, midpoint)
+    if market_sides is not None:
+        return market_sides
+
     regime = regime_state(config, candles)
     trend = trend_state(config, candles)
     if config.regime_filter == "ma_cross" and regime in {"up", "down"}:
@@ -709,6 +725,37 @@ def allowed_open_sides(
             return set()
         sides = trend_sides
 
+    if config.one_way_open:
+        if short_pos.size > 0 and "long" in sides:
+            return set()
+        if long_pos.size > 0 and "short" in sides:
+            return set()
+    return sides
+
+
+def market_regime_open_sides(
+    config: GridBacktestConfig,
+    candles: list[Candle],
+    long_pos: Position,
+    short_pos: Position,
+    mark_px: Decimal,
+    midpoint: Decimal,
+) -> set[str] | None:
+    if config.market_regime_filter == "off":
+        return None
+    from market_regime import signal_from_candles
+
+    signal = signal_from_candles(
+        candles,
+        mode=config.market_regime_filter,
+        model_path=config.market_regime_model_path,
+        min_confidence=float(config.market_regime_min_confidence),
+    )
+    sides = set(signal.allowed_open_sides)
+    if not sides:
+        return set()
+    if config.one_way_open and sides == {"long", "short"}:
+        sides = {"long"} if mark_px <= midpoint else {"short"}
     if config.one_way_open:
         if short_pos.size > 0 and "long" in sides:
             return set()

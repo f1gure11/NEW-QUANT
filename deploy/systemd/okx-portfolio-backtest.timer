@@ -1,0 +1,13 @@
+[Unit]
+Description=Run OKX Portfolio Hot Contract Backtest Periodically
+
+[Timer]
+OnActiveSec=30min
+OnUnitActiveSec=4h
+AccuracySec=5min
+RandomizedDelaySec=3min
+Persistent=true
+Unit=okx-portfolio-backtest.service
+
+[Install]
+WantedBy=timers.target

@@ -10,6 +10,8 @@ data/backtest/*
 !data/backtest/.gitkeep
 reports/backtests/*
 !reports/backtests/.gitkeep
+reports/portfolio/*
+!reports/portfolio/.gitkeep
 
 *.log
 *.pid

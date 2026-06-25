@@ -1,0 +1,52 @@
+[Unit]
+Description=OKX ETH-USDT-SWAP Rolling Adaptive Grid Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=okxbot
+Group=okxbot
+WorkingDirectory=/opt/okx-quant
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/okx-quant/.venv/bin/python -u /opt/okx-quant/auto_grid_bot.py \
+  --inst-id ETH-USDT-SWAP \
+  --runtime-config /opt/okx-quant/data/okx/eth_rolling_runtime_config.json \
+  --log-path /opt/okx-quant/data/okx/eth_rolling_actions.jsonl \
+  --bot-prefix ethg \
+  --lower 1500 --upper 1800 --leverage 7 \
+  --grid-bps 10 --min-net-bps 1 --soft-bps 35 --hard-bps 60 \
+  --order-sz 0.01 --max-position 0.18 \
+  --max-open-orders-per-side 5 --max-actions-per-cycle 12 --interval 2 \
+  --ord-type post_only --mode adaptive \
+  --adaptive-width-bps 420 --adaptive-min-width-bps 260 --adaptive-max-width-bps 1200 --adaptive-vol-multiplier 12 \
+  --range-drift-mode cooldown --range-drift-weight-bps 2500 --range-drift-max-bps 250 \
+  --sizing-mode margin_pct --order-margin-pct 25 --max-margin-pct 75 --cash-reserve-pct 10 \
+  --total-profit-tp 0 --total-profit-tp-pct 1.5 --total-profit-tp-cap 0.4 --total-profit-action checkpoint \
+  --min-tp-profit 0 --total-loss-sl 0 --total-loss-sl-pct 4 --total-loss-sl-cap 0.8 \
+  --position-loss-sl-bps 700 --min-tp-bps 30 \
+  --exchange-stop-enabled --exchange-stop-bps 800 --exchange-stop-trigger-px-type mark --exchange-stop-reprice-bps 5 \
+  --missed-tp-ord-type limit --missed-tp-slippage-bps 20 \
+  --hard-stop-ord-type market --hard-stop-slippage-bps 50 \
+  --risk-cooldown 60 \
+  --trend-filter off --trend-lookback 8 --trend-threshold-bps 70 \
+  --regime-filter off --regime-bar 15m --regime-short-ma 5 --regime-long-ma 20 --regime-diff-bps 50 --regime-confirm-bars 3 \
+  --rolling-adaptive --rolling-adaptive-window 20 \
+  --rolling-adaptive-min-leverage 3 --rolling-adaptive-max-leverage 7 \
+  --rolling-adaptive-min-grid-bps 8 --rolling-adaptive-max-grid-bps 36 --rolling-adaptive-grid-vol-multiplier 1.0 \
+  --rolling-adaptive-min-order-margin-pct 12 --rolling-adaptive-max-order-margin-pct 22 \
+  --rolling-adaptive-min-max-margin-pct 55 --rolling-adaptive-max-max-margin-pct 95 \
+  --rolling-adaptive-min-stop-bps 700 --rolling-adaptive-max-stop-bps 1300 --rolling-adaptive-stop-vol-multiplier 26 \
+  --rolling-adaptive-min-tp-bps 30 --rolling-adaptive-max-tp-bps 120 --rolling-adaptive-tp-grid-multiplier 1.6 \
+  --allow-dual-open --set-leverage --cancel-on-stop --live --confirm-live I_UNDERSTAND
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=20
+KillSignal=SIGTERM
+StandardOutput=append:/opt/okx-quant/data/okx/eth_rolling_stdout.log
+StandardError=append:/opt/okx-quant/data/okx/eth_rolling_stdout.log
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
