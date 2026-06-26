@@ -9,10 +9,13 @@ from unittest.mock import patch
 from portfolio_preflight import (
     BLOCK,
     PASS,
+    ProcessSnapshot,
     account_equity,
     check_intent,
     check_min_contract_capacity,
     run_preflight,
+    split_bot_algos,
+    split_bot_orders,
     write_preflight_report,
 )
 
@@ -116,6 +119,120 @@ class PortfolioPreflightTest(unittest.TestCase):
         self.assertEqual(severities["no_live_flag"], PASS)
         self.assertEqual(severities["once_flag_present"], PASS)
         self.assertEqual(severities["reduce_only_rebalance"], "warn")
+
+    def test_matching_portfolio_bot_process_is_adoptable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report_dir = Path(tmpdir)
+            write_bundle(report_dir)
+            runtime_path = next((report_dir / "runtime_configs").glob("*.json"))
+            checks = check_intent(
+                {
+                    "inst_id": "AAA-USDT-SWAP",
+                    "status": "runtime_config_ready",
+                    "runtime_config_path": str(runtime_path),
+                    "bot_prefix": "paaa",
+                    "dry_run_command": f"auto_grid_bot.py --inst-id AAA-USDT-SWAP --runtime-config {runtime_path} --bot-prefix paaa --once",
+                },
+                [
+                    ProcessSnapshot(
+                        pid="123",
+                        ppid="1",
+                        command=f"python auto_grid_bot.py --inst-id AAA-USDT-SWAP --runtime-config {runtime_path} --bot-prefix paaa --live",
+                    )
+                ],
+            )
+
+        severities = {check.code: check.severity for check in checks}
+        self.assertEqual(severities["bot_process_already_running"], "warn")
+        self.assertEqual(severities["no_foreign_bot_process"], PASS)
+        self.assertNotIn(BLOCK, {check.severity for check in checks})
+
+    def test_foreign_bot_process_still_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report_dir = Path(tmpdir)
+            write_bundle(report_dir)
+            runtime_path = next((report_dir / "runtime_configs").glob("*.json"))
+            checks = check_intent(
+                {
+                    "inst_id": "AAA-USDT-SWAP",
+                    "status": "runtime_config_ready",
+                    "runtime_config_path": str(runtime_path),
+                    "bot_prefix": "paaa",
+                    "dry_run_command": f"auto_grid_bot.py --inst-id AAA-USDT-SWAP --runtime-config {runtime_path} --bot-prefix paaa --once",
+                },
+                [
+                    ProcessSnapshot(
+                        pid="123",
+                        ppid="1",
+                        command="python auto_grid_bot.py --inst-id AAA-USDT-SWAP --runtime-config /tmp/other.json --bot-prefix other --live",
+                    )
+                ],
+            )
+
+        severities = {check.code: check.severity for check in checks}
+        self.assertEqual(severities["foreign_bot_process_already_running"], BLOCK)
+
+    def test_previous_portfolio_runtime_with_same_prefix_is_adoptable_for_hot_update(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = Path(tmpdir)
+            report_dir = project_root / "reports" / "portfolio" / "new"
+            write_bundle(report_dir)
+            runtime_path = next((report_dir / "runtime_configs").glob("*.json"))
+            previous_runtime_path = project_root / "reports" / "portfolio" / "old" / "runtime_configs" / "aaa_usdt_swap.json"
+            previous_runtime_path.parent.mkdir(parents=True)
+            previous_runtime_path.write_text("{}", encoding="utf-8")
+            checks = check_intent(
+                {
+                    "inst_id": "AAA-USDT-SWAP",
+                    "status": "runtime_config_ready",
+                    "runtime_config_path": str(runtime_path),
+                    "bot_prefix": "paaa",
+                    "dry_run_command": f"auto_grid_bot.py --inst-id AAA-USDT-SWAP --runtime-config {runtime_path} --bot-prefix paaa --once",
+                },
+                [
+                    ProcessSnapshot(
+                        pid="123",
+                        ppid="1",
+                        command=f"python auto_grid_bot.py --inst-id AAA-USDT-SWAP --runtime-config {previous_runtime_path} --bot-prefix paaa --live",
+                    )
+                ],
+            )
+
+        severities = {check.code: check.severity for check in checks}
+        self.assertEqual(severities["bot_process_already_running"], "warn")
+        self.assertEqual(severities["no_foreign_bot_process"], PASS)
+        self.assertNotIn(BLOCK, {check.severity for check in checks})
+
+    def test_bot_prefix_orders_are_adoptable(self) -> None:
+        intent = {"bot_prefix": "pbtc"}
+        owned, foreign = split_bot_orders(
+            intent,
+            [
+                {"clOrdId": "pbtcobl60000"},
+                {"clOrdId": "manual-order"},
+            ],
+        )
+        owned_algos, foreign_algos = split_bot_algos(
+            intent,
+            [
+                {"algoClOrdId": "xspbtcl59000"},
+                {"algoClOrdId": "manual-stop"},
+            ],
+        )
+
+        self.assertEqual([item["clOrdId"] for item in owned], ["pbtcobl60000"])
+        self.assertEqual([item["clOrdId"] for item in foreign], ["manual-order"])
+        self.assertEqual([item["algoClOrdId"] for item in owned_algos], ["xspbtcl59000"])
+        self.assertEqual([item["algoClOrdId"] for item in foreign_algos], ["manual-stop"])
+
+    def test_missing_bot_prefix_treats_orders_as_foreign(self) -> None:
+        owned, foreign = split_bot_orders({}, [{"clOrdId": "pbtcobl60000"}])
+        owned_algos, foreign_algos = split_bot_algos({}, [{"algoClOrdId": "xspbtcl59000"}])
+
+        self.assertEqual(owned, [])
+        self.assertEqual(foreign, [{"clOrdId": "pbtcobl60000"}])
+        self.assertEqual(owned_algos, [])
+        self.assertEqual(foreign_algos, [{"algoClOrdId": "xspbtcl59000"}])
 
     def test_write_preflight_report_outputs_json_and_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -105,11 +105,11 @@ class DashboardRuntimeConfigTest(unittest.TestCase):
         self.assertEqual(dashboard_server.console_unprefixed_path("/console/api/portfolio/latest"), "/api/portfolio/latest")
         self.assertEqual(dashboard_server.console_unprefixed_path("/api/portfolio/latest"), "/api/portfolio/latest")
 
-    def test_dashboard_systemd_unit_kills_portfolio_children_on_restart(self) -> None:
+    def test_dashboard_systemd_unit_keeps_portfolio_children_on_restart(self) -> None:
         unit = Path("deploy/systemd/okx-dashboard.service").read_text(encoding="utf-8")
 
-        self.assertIn("KillMode=control-group", unit)
-        self.assertNotIn("KillMode=process", unit)
+        self.assertIn("KillMode=process", unit)
+        self.assertNotIn("KillMode=control-group", unit)
 
     def test_parse_bot_diagnostics_extracts_rolling_adaptive(self) -> None:
         diagnostics = dashboard_server.parse_bot_diagnostics(
@@ -208,7 +208,7 @@ class DashboardRuntimeConfigTest(unittest.TestCase):
         pages_index = args.index("--backtest-pages")
         self.assertEqual(args[pages_index + 1], "3")
         risk_index = args.index("--allocation-max-risk-events")
-        self.assertEqual(args[risk_index + 1], "10")
+        self.assertEqual(args[risk_index + 1], "80")
         mixed_index = args.index("--market-regime-mixed-policy")
         self.assertEqual(args[mixed_index + 1], "price_anchor")
 
@@ -229,11 +229,11 @@ class DashboardRuntimeConfigTest(unittest.TestCase):
         self.assertEqual(payload["parameters"]["targetSymbols"], 8)
         self.assertEqual(payload["parameters"]["backtestPages"], 3)
         self.assertEqual(payload["parameters"]["backtestLimit"], 300)
-        self.assertEqual(payload["parameters"]["allocationMaxRiskEvents"], 10)
+        self.assertEqual(payload["parameters"]["allocationMaxRiskEvents"], 80)
         self.assertEqual(payload["parameters"]["marketRegimeMixedPolicy"], "price_anchor")
         self.assertEqual(payload["parameters"]["coreSymbols"], 4)
         self.assertIn("topN: requested 999, capped to 20", payload["warnings"][0])
-        self.assertTrue(any("allocationMaxRiskEvents: requested 99, capped to 10" in item for item in payload["warnings"]))
+        self.assertTrue(any("allocationMaxRiskEvents: requested 99, capped to 80" in item for item in payload["warnings"]))
 
     def test_parse_portfolio_backtest_log_detects_completed_report(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

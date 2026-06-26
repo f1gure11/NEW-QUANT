@@ -78,7 +78,7 @@ PORTFOLIO_BACKTEST_LIMITS = {
     "targetSymbols": (1, 8, 6),
     "backtestPages": (1, 3, 2),
     "backtestLimit": (80, 300, 300),
-    "allocationMaxRiskEvents": (0, 10, 5),
+    "allocationMaxRiskEvents": (0, 80, 5),
     "coreSymbols": (1, 4, 2),
 }
 

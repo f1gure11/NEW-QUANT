@@ -161,18 +161,81 @@ def check_intent(intent: dict[str, Any], processes: list[ProcessSnapshot]) -> li
 
     matching_processes = [process for process in processes if inst_id and inst_id in process.command]
     if matching_processes:
-        checks.append(
-            PreflightCheck(
-                BLOCK,
-                "bot_process_already_running",
-                inst_id,
-                "A bot process for this instrument is already running.",
-                {"processes": [asdict(process) for process in matching_processes]},
+        adoptable_processes, foreign_processes = split_bot_processes(intent, matching_processes)
+        if adoptable_processes:
+            checks.append(
+                PreflightCheck(
+                    WARN,
+                    "bot_process_already_running",
+                    inst_id,
+                    "A matching portfolio bot process is already running and can be adopted.",
+                    {"processes": [asdict(process) for process in adoptable_processes]},
+                )
             )
-        )
+        if not foreign_processes:
+            checks.append(PreflightCheck(PASS, "no_foreign_bot_process", inst_id, "No foreign bot process found for this instrument.", {}))
+        else:
+            checks.append(
+                PreflightCheck(
+                    BLOCK,
+                    "foreign_bot_process_already_running",
+                    inst_id,
+                    "A foreign bot process for this instrument is already running.",
+                    {"processes": [asdict(process) for process in foreign_processes]},
+                )
+            )
     else:
         checks.append(PreflightCheck(PASS, "no_matching_bot_process", inst_id, "No running bot process found for this instrument.", {}))
     return checks
+
+
+def split_bot_processes(
+    intent: dict[str, Any],
+    processes: list[ProcessSnapshot],
+) -> tuple[list[ProcessSnapshot], list[ProcessSnapshot]]:
+    runtime_path = str(intent.get("runtime_config_path") or "")
+    bot_prefix = str(intent.get("bot_prefix") or "")
+    inst_id = str(intent.get("inst_id") or "")
+    owned: list[ProcessSnapshot] = []
+    foreign: list[ProcessSnapshot] = []
+    for process in processes:
+        command_parts = command_tokens(process.command)
+        process_runtime_path = option_value(command_parts, "--runtime-config")
+        process_bot_prefix = option_value(command_parts, "--bot-prefix")
+        same_runtime = runtime_path and process_runtime_path == runtime_path and (not bot_prefix or process_bot_prefix == bot_prefix)
+        same_portfolio_bot = (
+            inst_id
+            and inst_id in process.command
+            and bot_prefix
+            and process_bot_prefix == bot_prefix
+            and is_portfolio_runtime_path(process_runtime_path)
+        )
+        if same_runtime or same_portfolio_bot:
+            owned.append(process)
+        else:
+            foreign.append(process)
+    return owned, foreign
+
+
+def is_portfolio_runtime_path(value: str) -> bool:
+    return "/reports/portfolio/" in value or value.startswith("reports/portfolio/")
+
+
+def command_tokens(command: str) -> list[str]:
+    try:
+        import shlex
+
+        return shlex.split(command)
+    except Exception:
+        return command.split()
+
+
+def option_value(command_parts: list[str], option: str) -> str:
+    try:
+        index = command_parts.index(option)
+        return command_parts[index + 1]
+    except Exception:
+        return ""
 
 
 def check_runtime_config(inst_id: str, runtime_path: Path) -> list[PreflightCheck]:
@@ -305,32 +368,87 @@ def check_account_state(intents: list[dict[str, Any]], client: OkxRestClient) ->
         else:
             checks.append(PreflightCheck(PASS, "no_existing_position", inst_id, "No existing position found.", {}))
         if orders:
-            checks.append(
-                PreflightCheck(
-                    BLOCK,
-                    "pending_orders_exist",
-                    inst_id,
-                    "Pending normal orders exist for this instrument.",
-                    {"count": len(orders), "orders": summarize_orders(orders)},
+            owned_orders, foreign_orders = split_bot_orders(intent, orders)
+            if owned_orders:
+                checks.append(
+                    PreflightCheck(
+                        WARN,
+                        "bot_pending_orders_exist",
+                        inst_id,
+                        "Pending normal orders from this portfolio bot prefix exist and can be adopted.",
+                        {"count": len(owned_orders), "orders": summarize_orders(owned_orders)},
+                    )
                 )
-            )
+            if not foreign_orders:
+                checks.append(PreflightCheck(PASS, "no_foreign_pending_orders", inst_id, "No foreign pending normal orders found.", {}))
+                checks.append(PreflightCheck(PASS, "no_pending_orders", inst_id, "No blocking pending normal orders found.", {}))
+            else:
+                checks.append(
+                    PreflightCheck(
+                        BLOCK,
+                        "pending_orders_exist",
+                        inst_id,
+                        "Foreign pending normal orders exist for this instrument.",
+                        {"count": len(foreign_orders), "orders": summarize_orders(foreign_orders)},
+                    )
+                )
         else:
             checks.append(PreflightCheck(PASS, "no_pending_orders", inst_id, "No pending normal orders found.", {}))
         if algos:
-            checks.append(
-                PreflightCheck(
-                    BLOCK,
-                    "pending_algo_orders_exist",
-                    inst_id,
-                    "Pending conditional algo orders exist for this instrument.",
-                    {"count": len(algos), "algos": summarize_algos(algos)},
+            owned_algos, foreign_algos = split_bot_algos(intent, algos)
+            if owned_algos:
+                checks.append(
+                    PreflightCheck(
+                        WARN,
+                        "bot_pending_algo_orders_exist",
+                        inst_id,
+                        "Pending conditional algo orders from this portfolio bot prefix exist and can be adopted.",
+                        {"count": len(owned_algos), "algos": summarize_algos(owned_algos)},
+                    )
                 )
-            )
+            if not foreign_algos:
+                checks.append(PreflightCheck(PASS, "no_foreign_pending_algo_orders", inst_id, "No foreign pending conditional algo orders found.", {}))
+                checks.append(PreflightCheck(PASS, "no_pending_algo_orders", inst_id, "No blocking pending conditional algo orders found.", {}))
+            else:
+                checks.append(
+                    PreflightCheck(
+                        BLOCK,
+                        "pending_algo_orders_exist",
+                        inst_id,
+                        "Foreign pending conditional algo orders exist for this instrument.",
+                        {"count": len(foreign_algos), "algos": summarize_algos(foreign_algos)},
+                    )
+                )
         else:
             checks.append(PreflightCheck(PASS, "no_pending_algo_orders", inst_id, "No pending conditional algo orders found.", {}))
         if action in {"enter", "increase", "hold"} and equity > 0:
             checks.extend(check_min_contract_capacity(intent, candidates.get(inst_id, {}), equity))
     return checks
+
+
+def split_bot_orders(intent: dict[str, Any], orders: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    prefix = str(intent.get("bot_prefix") or "")
+    if not prefix:
+        return [], orders
+    owned: list[dict[str, Any]] = []
+    foreign: list[dict[str, Any]] = []
+    for order in orders:
+        cl_ord_id = str(order.get("clOrdId") or order.get("cl_ord_id") or "")
+        (owned if cl_ord_id.startswith(prefix) else foreign).append(order)
+    return owned, foreign
+
+
+def split_bot_algos(intent: dict[str, Any], algos: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    prefix = str(intent.get("bot_prefix") or "")
+    stop_prefix = f"xs{prefix}" if prefix else ""
+    if not stop_prefix:
+        return [], algos
+    owned: list[dict[str, Any]] = []
+    foreign: list[dict[str, Any]] = []
+    for algo in algos:
+        algo_cl_ord_id = str(algo.get("algoClOrdId") or algo.get("algo_cl_ord_id") or "")
+        (owned if algo_cl_ord_id.startswith(stop_prefix) else foreign).append(algo)
+    return owned, foreign
 
 
 def load_candidate_metadata(intents: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:

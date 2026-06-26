@@ -23,7 +23,7 @@ set +e
     --max-spread-bps "${PORTFOLIO_SCHEDULE_MAX_SPREAD_BPS:-20}" \
     --starting-equity "${PORTFOLIO_SCHEDULE_STARTING_EQUITY:-100}" \
     --cash-reserve-pct "${PORTFOLIO_SCHEDULE_CASH_RESERVE_PCT:-3}" \
-    --allocation-max-risk-events "${PORTFOLIO_SCHEDULE_MAX_RISK_EVENTS:-5}" \
+    --allocation-max-risk-events "${PORTFOLIO_SCHEDULE_MAX_RISK_EVENTS:-80}" \
     --core-symbols "${PORTFOLIO_SCHEDULE_CORE_SYMBOLS:-2}" \
     --core-weight-share-pct "${PORTFOLIO_SCHEDULE_CORE_WEIGHT_SHARE_PCT:-70}" \
     --satellite-max-weight-pct "${PORTFOLIO_SCHEDULE_SATELLITE_MAX_WEIGHT_PCT:-15}" \
