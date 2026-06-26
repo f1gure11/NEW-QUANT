@@ -68,6 +68,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("refreshPortfolioBtn").addEventListener("click", refreshPortfolio);
     document.getElementById("runPortfolioBacktestBtn").addEventListener("click", startPortfolioBacktest);
+    document.getElementById("downloadDatasetBtn")?.addEventListener("click", downloadDataset);
     document.getElementById("startPortfolioLiveBtn")?.addEventListener("click", startPortfolioLive);
     document.getElementById("stopPortfolioLiveBtn")?.addEventListener("click", stopPortfolioLive);
     document.getElementById("autoRefresh").addEventListener("change", () => {
@@ -583,6 +584,38 @@ async function startPortfolioBacktest() {
   }
 }
 
+async function downloadDataset() {
+  const button = document.getElementById("downloadDatasetBtn");
+  button.disabled = true;
+  button.textContent = "打包中";
+  try {
+    const response = await fetch(apiUrl("/dataset/download"), { cache: "no-store" });
+    if (!response.ok) {
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const payload = await response.json();
+        throw new Error(payload.error || "数据集下载失败");
+      }
+      throw new Error(`数据集下载失败 HTTP ${response.status}`);
+    }
+    const blob = await response.blob();
+    const href = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = href;
+    anchor.download = filenameFromDisposition(response.headers.get("content-disposition")) || "okx-quant-dataset.zip";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(href);
+    text("portfolioReportMeta", "数据集已开始下载");
+  } catch (error) {
+    text("portfolioReportMeta", `数据集下载失败：${error?.message || error}`);
+  } finally {
+    button.disabled = false;
+    button.textContent = "下载数据集";
+  }
+}
+
 async function startPortfolioLive() {
   const button = document.getElementById("startPortfolioLiveBtn");
   button.disabled = true;
@@ -629,6 +662,11 @@ async function stopPortfolioLive() {
     button.disabled = false;
     button.textContent = "停止组合实盘";
   }
+}
+
+function filenameFromDisposition(value) {
+  const match = String(value || "").match(/filename=\"?([^\";]+)\"?/i);
+  return match ? match[1] : "";
 }
 
 function portfolioBacktestPayload() {

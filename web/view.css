@@ -98,7 +98,8 @@ th.num {
 
 .readonly,
 .pill,
-.consoleLink {
+.consoleLink,
+.datasetBtn {
   border-radius: 6px;
   padding: 6px 10px;
   color: var(--text);
@@ -124,6 +125,23 @@ th.num {
 .consoleLink:hover {
   border-color: rgba(16, 185, 129, 0.56);
   color: #ffffff;
+}
+
+.datasetBtn {
+  margin: 0;
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  background: rgba(56, 189, 248, 0.12);
+  cursor: pointer;
+}
+
+.datasetBtn:hover:not(:disabled) {
+  border-color: rgba(56, 189, 248, 0.58);
+  color: #ffffff;
+}
+
+.datasetBtn:disabled {
+  cursor: wait;
+  opacity: 0.62;
 }
 
 .pill.ok {

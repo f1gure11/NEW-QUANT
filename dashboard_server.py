@@ -7,8 +7,10 @@ import re
 import signal
 import subprocess
 import sys
+import tempfile
 import threading
 import time
+import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
@@ -55,6 +57,15 @@ PORTFOLIO_BACKTEST_STARTED_AT: str | None = None
 PORTFOLIO_BACKTEST_LOG = Path(__file__).parent / "data" / "okx" / "portfolio_backtest_stdout.log"
 PORTFOLIO_REPORT_DIR = Path(__file__).parent / "reports" / "portfolio"
 REGIME_REPORT_DIR = Path(__file__).parent / "reports" / "regime_model"
+DATASET_DOWNLOAD_ROOTS = (
+    ("data/backtest", Path(__file__).parent / "data" / "backtest"),
+    ("reports/backtests", Path(__file__).parent / "reports" / "backtests"),
+    ("reports/regime_model", REGIME_REPORT_DIR),
+)
+DATASET_ARCHIVE_DIR = Path(os.environ.get("OKX_DATASET_ARCHIVE_DIR", "/www/okx-quant/dataset-downloads"))
+DATASET_ARCHIVE_CHUNK_BYTES = 1024 * 1024
+DATASET_EXCLUDED_SUFFIXES = {".log", ".jsonl", ".pid", ".lock"}
+DATASET_EXCLUDED_NAMES = {".env", ".env.example"}
 PORTFOLIO_BOT_PROCESSES: dict[str, subprocess.Popen] = {}
 PORTFOLIO_BOT_STARTED_AT: dict[str, str] = {}
 PORTFOLIO_BOT_COMMANDS: dict[str, list[str]] = {}
@@ -273,6 +284,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         if request_path == "/api/portfolio/latest":
             self.handle_portfolio_latest(parsed.query)
+            return
+        if request_path == "/api/dataset/download":
+            self.handle_dataset_download()
             return
         self.handle_static(request_path)
 
@@ -514,6 +528,27 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_json({"ok": True, "data": stop_portfolio_live(payload)})
         except Exception as exc:
             self.send_json({"ok": False, "error": str(exc)}, status=400)
+
+    def handle_dataset_download(self) -> None:
+        zip_path: Path | None = None
+        try:
+            zip_path, filename = build_dataset_archive()
+            content_length = zip_path.stat().st_size
+        except Exception as exc:
+            self.send_json({"ok": False, "error": str(exc)}, status=500)
+            return
+        try:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/zip")
+            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(content_length))
+            self.end_headers()
+            with zip_path.open("rb") as archive:
+                while chunk := archive.read(DATASET_ARCHIVE_CHUNK_BYTES):
+                    self.wfile.write(chunk)
+        finally:
+            zip_path.unlink(missing_ok=True)
 
     def handle_static(self, request_path: str, *, head_only: bool = False) -> None:
         if request_path in ("", "/"):
@@ -1268,6 +1303,82 @@ def console_unprefixed_path(path: str) -> str:
     if path.startswith("/console/"):
         return path.removeprefix("/console") or "/"
     return path
+
+
+def build_dataset_archive() -> tuple[Path, str]:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    filename = f"okx-quant-dataset-{stamp}.zip"
+    handle = tempfile.NamedTemporaryFile(
+        prefix="okx-quant-dataset-",
+        suffix=".zip",
+        dir=dataset_archive_dir(),
+        delete=False,
+    )
+    archive_path = Path(handle.name)
+    handle.close()
+    try:
+        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            manifest: list[dict[str, Any]] = []
+            for label, root in DATASET_DOWNLOAD_ROOTS:
+                root = root.resolve()
+                for path in dataset_files(root):
+                    arcname = Path("okx-quant-dataset") / label / path.relative_to(root)
+                    archive.write(path, arcname.as_posix())
+                    manifest.append(
+                        {
+                            "path": arcname.as_posix(),
+                            "size": path.stat().st_size,
+                            "mtime": datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat(timespec="seconds"),
+                        }
+                    )
+            archive.writestr(
+                "okx-quant-dataset/manifest.json",
+                json.dumps(
+                    {
+                        "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                        "includedRoots": [label for label, _root in DATASET_DOWNLOAD_ROOTS],
+                        "excluded": sorted(DATASET_EXCLUDED_SUFFIXES),
+                        "files": manifest,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+            )
+    except Exception:
+        archive_path.unlink(missing_ok=True)
+        raise
+    return archive_path, filename
+
+
+def dataset_archive_dir() -> Path | None:
+    try:
+        DATASET_ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        return None
+    return DATASET_ARCHIVE_DIR if os.access(DATASET_ARCHIVE_DIR, os.W_OK) else None
+
+
+def dataset_files(root: Path) -> list[Path]:
+    if not root.exists():
+        return []
+    output: list[Path] = []
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        if should_exclude_dataset_file(path):
+            continue
+        output.append(path)
+    return output
+
+
+def should_exclude_dataset_file(path: Path) -> bool:
+    name = path.name
+    if name in DATASET_EXCLUDED_NAMES or name.startswith("."):
+        return True
+    if path.suffix.lower() in DATASET_EXCLUDED_SUFFIXES:
+        return True
+    parts = {part.lower() for part in path.parts}
+    return "__pycache__" in parts
 
 
 def is_reduce_only_pending_order(order: dict[str, Any]) -> bool:

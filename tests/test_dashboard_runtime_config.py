@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -255,6 +256,42 @@ class DashboardRuntimeConfigTest(unittest.TestCase):
         self.assertTrue(payload["reportPath"].endswith("20260624T222240Z"))
         self.assertEqual(payload["parameters"]["topN"], 20)
         self.assertIn("topN: requested 999, capped to 20", payload["parameterWarnings"][0])
+
+    def test_build_dataset_archive_includes_only_dataset_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            backtest_dir = root / "data" / "backtest"
+            regime_dir = root / "reports" / "regime_model"
+            backtest_dir.mkdir(parents=True)
+            regime_dir.mkdir(parents=True)
+            (backtest_dir / "BTC-USDT-SWAP_1m_120.csv").write_text("ts,open,high,low,close,volume\n", encoding="utf-8")
+            (backtest_dir / "private.log").write_text("secret runtime log\n", encoding="utf-8")
+            (regime_dir / "scores.csv").write_text("variant,score\nrf,1\n", encoding="utf-8")
+            (regime_dir / ".env").write_text("OKX_SECRET_KEY=x\n", encoding="utf-8")
+
+            with patch.object(
+                dashboard_server,
+                "DATASET_DOWNLOAD_ROOTS",
+                (
+                    ("data/backtest", backtest_dir),
+                    ("reports/regime_model", regime_dir),
+                ),
+            ), patch.object(dashboard_server, "DATASET_ARCHIVE_DIR", root / "downloads"):
+                zip_path, filename = dashboard_server.build_dataset_archive()
+                self.assertEqual(zip_path.parent, root / "downloads")
+
+            try:
+                with zipfile.ZipFile(zip_path) as archive:
+                    names = set(archive.namelist())
+            finally:
+                zip_path.unlink(missing_ok=True)
+
+        self.assertTrue(filename.startswith("okx-quant-dataset-"))
+        self.assertIn("okx-quant-dataset/data/backtest/BTC-USDT-SWAP_1m_120.csv", names)
+        self.assertIn("okx-quant-dataset/reports/regime_model/scores.csv", names)
+        self.assertIn("okx-quant-dataset/manifest.json", names)
+        self.assertNotIn("okx-quant-dataset/data/backtest/private.log", names)
+        self.assertNotIn("okx-quant-dataset/reports/regime_model/.env", names)
 
     def test_compute_account_pnl_includes_recent_windows(self) -> None:
         now_ms = int(dashboard_server.datetime.now(dashboard_server.timezone.utc).timestamp() * 1000)
