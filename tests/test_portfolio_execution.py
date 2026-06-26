@@ -105,7 +105,7 @@ class PortfolioExecutionTest(unittest.TestCase):
         self.assertEqual(runtime["maxPosition"], "3")
         self.assertEqual(runtime["sizingMode"], "margin_pct")
         self.assertEqual(runtime["cashReservePct"], "10")
-        self.assertEqual(runtime["strategyProfile"], "legacy_eth_rolling_high_frequency")
+        self.assertEqual(runtime["strategyProfile"], "portfolio_rolling_adaptive_v1")
         self.assertTrue(runtime["rollingAdaptiveEnabled"])
         self.assertEqual(runtime["rollingAdaptiveWindow"], "20")
         self.assertEqual(runtime["rollingAdaptiveMinLeverage"], "3")
@@ -145,8 +145,8 @@ class PortfolioExecutionTest(unittest.TestCase):
             SimpleNamespace(outer_range_bps=Decimal("1000")),
         )
 
-        self.assertEqual(quiet["strategyProfile"], "legacy_eth_rolling_high_frequency")
-        self.assertEqual(volatile["strategyProfile"], "legacy_eth_rolling_high_frequency")
+        self.assertEqual(quiet["strategyProfile"], "portfolio_rolling_adaptive_v1")
+        self.assertEqual(volatile["strategyProfile"], "portfolio_rolling_adaptive_v1")
         self.assertEqual(quiet["leverage"], volatile["leverage"])
         self.assertEqual(quiet["gridBps"], volatile["gridBps"])
         self.assertEqual(quiet["minTpBps"], volatile["minTpBps"])
@@ -217,6 +217,7 @@ class PortfolioExecutionTest(unittest.TestCase):
         self.assertIn("--grid-bps 10", intents[0].dry_run_command)
         self.assertIn("--position-loss-sl-bps 700", intents[0].dry_run_command)
         self.assertIn("--market-regime-filter off", intents[0].dry_run_command)
+        self.assertIn("--market-regime-mixed-policy price_anchor", intents[0].dry_run_command)
         self.assertIn("--cash-reserve-pct 10", intents[0].dry_run_command)
         self.assertIn("--rolling-adaptive", intents[0].dry_run_command)
         self.assertIn("--rolling-adaptive-window 20", intents[0].dry_run_command)
@@ -254,6 +255,7 @@ class PortfolioExecutionTest(unittest.TestCase):
 
         self.assertEqual(runtime["marketRegimeFilter"], "rf")
         self.assertEqual(runtime["marketRegimeModelPath"], "/models/rf.joblib")
+        self.assertEqual(runtime["marketRegimeMixedPolicy"], "price_anchor")
         self.assertEqual(runtime["marketRegimeSignal"], "range")
         self.assertEqual(runtime["marketRegimeConfidence"], "0.91")
         self.assertEqual(runtime["marketRegimeAllowedSides"], "long,short")

@@ -8,6 +8,7 @@ import signal
 import subprocess
 import sys
 import threading
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
@@ -18,6 +19,7 @@ from urllib.parse import parse_qs, urlparse
 
 from doubao_quant import quant_metadata
 from okx_client import OkxApiError, OkxRestClient, load_env
+from portfolio_live_plan import live_plan_status as portfolio_live_plan_status
 from portfolio_live_plan import write_live_plan as write_portfolio_live_plan
 from portfolio_preflight import run_preflight as run_portfolio_preflight
 from portfolio_preflight import write_preflight_report as write_portfolio_preflight_report
@@ -58,6 +60,16 @@ PORTFOLIO_BOT_STARTED_AT: dict[str, str] = {}
 PORTFOLIO_BOT_COMMANDS: dict[str, list[str]] = {}
 PORTFOLIO_ACCOUNT_CACHE: dict[str, Any] = {}
 PORTFOLIO_ACCOUNT_CACHE_TTL_SECONDS = 20.0
+TAIL_READ_BYTES = 256 * 1024
+LEGACY_BOT_ENABLE_ENV = "OKX_ENABLE_LEGACY_BOTS"
+PORTFOLIO_BACKTEST_LIMITS = {
+    "topN": (1, 20, 12),
+    "targetSymbols": (1, 8, 6),
+    "backtestPages": (1, 3, 2),
+    "backtestLimit": (80, 300, 300),
+    "allocationMaxRiskEvents": (0, 10, 5),
+    "coreSymbols": (1, 4, 2),
+}
 
 RE_BOT_DEFAULTS: dict[str, Any] = {
     "instId": RE_BOT_INST_ID,
@@ -230,73 +242,83 @@ class StrategyParams:
 class DashboardHandler(BaseHTTPRequestHandler):
     server_version = "OKXQuantDashboard/0.1"
 
+    def do_HEAD(self) -> None:
+        parsed = urlparse(self.path)
+        request_path = console_unprefixed_path(parsed.path)
+        if request_path.startswith("/api/"):
+            self.send_error(405)
+            return
+        self.handle_static(request_path, head_only=True)
+
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
-        if parsed.path == "/api/snapshot":
+        request_path = console_unprefixed_path(parsed.path)
+        if request_path == "/api/snapshot":
             self.handle_snapshot(parsed.query)
             return
-        if parsed.path == "/api/bot/status":
+        if request_path == "/api/bot/status":
             self.handle_bot_status()
             return
-        if parsed.path == "/api/bot/config":
+        if request_path == "/api/bot/config":
             self.handle_bot_config_get()
             return
-        if parsed.path == "/api/re-bot/status":
+        if request_path == "/api/re-bot/status":
             self.handle_re_bot_status()
             return
-        if parsed.path == "/api/re-bot/config":
+        if request_path == "/api/re-bot/config":
             self.handle_re_bot_config_get()
             return
-        if parsed.path == "/api/eth-bot/status":
+        if request_path == "/api/eth-bot/status":
             self.handle_eth_bot_status()
             return
-        if parsed.path == "/api/portfolio/latest":
-            self.handle_portfolio_latest()
+        if request_path == "/api/portfolio/latest":
+            self.handle_portfolio_latest(parsed.query)
             return
-        self.handle_static(parsed.path)
+        self.handle_static(request_path)
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
-        if parsed.path == "/api/trade/preview":
+        request_path = console_unprefixed_path(parsed.path)
+        if request_path == "/api/trade/preview":
             self.handle_trade(preview_only=True)
             return
-        if parsed.path == "/api/trade/order":
+        if request_path == "/api/trade/order":
             self.handle_trade(preview_only=False)
             return
-        if parsed.path == "/api/trade/cancel":
+        if request_path == "/api/trade/cancel":
             self.handle_cancel()
             return
-        if parsed.path == "/api/trade/set-leverage":
+        if request_path == "/api/trade/set-leverage":
             self.handle_set_leverage()
             return
-        if parsed.path == "/api/bot/start":
+        if request_path == "/api/bot/start":
             self.handle_bot_start()
             return
-        if parsed.path == "/api/bot/stop":
+        if request_path == "/api/bot/stop":
             self.handle_bot_stop()
             return
-        if parsed.path == "/api/bot/config":
+        if request_path == "/api/bot/config":
             self.handle_bot_config_update()
             return
-        if parsed.path == "/api/re-bot/start":
+        if request_path == "/api/re-bot/start":
             self.handle_re_bot_start()
             return
-        if parsed.path == "/api/re-bot/dry-run-once":
+        if request_path == "/api/re-bot/dry-run-once":
             self.handle_re_bot_dry_run_once()
             return
-        if parsed.path == "/api/re-bot/stop":
+        if request_path == "/api/re-bot/stop":
             self.handle_re_bot_stop()
             return
-        if parsed.path == "/api/re-bot/config":
+        if request_path == "/api/re-bot/config":
             self.handle_re_bot_config_update()
             return
-        if parsed.path == "/api/portfolio/backtest/start":
+        if request_path == "/api/portfolio/backtest/start":
             self.handle_portfolio_backtest_start()
             return
-        if parsed.path == "/api/portfolio/live/start":
+        if request_path == "/api/portfolio/live/start":
             self.handle_portfolio_live_start()
             return
-        if parsed.path == "/api/portfolio/live/stop":
+        if request_path == "/api/portfolio/live/stop":
             self.handle_portfolio_live_stop()
             return
         self.send_error(404)
@@ -460,8 +482,17 @@ class DashboardHandler(BaseHTTPRequestHandler):
     def handle_eth_bot_status(self) -> None:
         self.send_json({"ok": True, "data": eth_bot_status()})
 
-    def handle_portfolio_latest(self) -> None:
-        self.send_json({"ok": True, "data": portfolio_status()})
+    def handle_portfolio_latest(self, query: str = "") -> None:
+        values = parse_qs(query)
+        self.send_json(
+            {
+                "ok": True,
+                "data": portfolio_status(
+                    include_account=query_bool(values, "includeAccount"),
+                    include_regime_research=query_bool(values, "includeRegimeResearch"),
+                ),
+            }
+        )
 
     def handle_portfolio_backtest_start(self) -> None:
         try:
@@ -484,7 +515,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         except Exception as exc:
             self.send_json({"ok": False, "error": str(exc)}, status=400)
 
-    def handle_static(self, request_path: str) -> None:
+    def handle_static(self, request_path: str, *, head_only: bool = False) -> None:
         if request_path in ("", "/"):
             file_path = APP_DIR / "index.html"
         elif request_path in ("/view", "/view/"):
@@ -508,7 +539,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Expires", "0")
         self.send_header("Content-Length", str(len(content)))
         self.end_headers()
-        self.wfile.write(content)
+        if not head_only:
+            self.wfile.write(content)
 
     def send_json(self, payload: dict[str, Any], *, status: int = 200) -> None:
         content = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -1230,6 +1262,14 @@ def safe_name(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_") or "portfolio"
 
 
+def console_unprefixed_path(path: str) -> str:
+    if path == "/console":
+        return "/"
+    if path.startswith("/console/"):
+        return path.removeprefix("/console") or "/"
+    return path
+
+
 def is_reduce_only_pending_order(order: dict[str, Any]) -> bool:
     return str(order.get("reduceOnly", "")).lower() == "true"
 
@@ -1356,6 +1396,18 @@ def require_live_enabled() -> None:
         raise PermissionError("Live trading is locked. Set OKX_ENABLE_LIVE_TRADING=1 in .env to enable.")
 
 
+def legacy_bot_control_enabled() -> bool:
+    load_env()
+    return os.getenv(LEGACY_BOT_ENABLE_ENV, "0").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def require_legacy_bot_control_enabled() -> None:
+    if not legacy_bot_control_enabled():
+        raise PermissionError(
+            f"Legacy single-instrument bot controls are disabled. Set {LEGACY_BOT_ENABLE_ENV}=1 only for maintenance."
+        )
+
+
 def require_confirmation(payload: dict[str, Any], plan: dict[str, Any]) -> None:
     expected = f"TRADE {plan['instId']} {plan['side'].upper()} {plan['posSide'].upper()} {plan['sz']} @ {plan['px']}"
     if payload.get("confirm") != expected:
@@ -1363,6 +1415,7 @@ def require_confirmation(payload: dict[str, Any], plan: dict[str, Any]) -> None:
 
 
 def is_live_enabled() -> bool:
+    load_env()
     return os.getenv("OKX_ENABLE_LIVE_TRADING", "0") == "1"
 
 
@@ -1530,6 +1583,7 @@ def build_grid_bot_args(
 
 def start_bot(payload: dict[str, Any]) -> dict[str, Any]:
     global BOT_PROCESS, BOT_STARTED_AT, BOT_COMMAND
+    require_legacy_bot_control_enabled()
     if BOT_PROCESS and BOT_PROCESS.poll() is None:
         raise RuntimeError("Grid bot is already running.")
     pid = bot_pid_from_file()
@@ -1607,6 +1661,7 @@ def read_bot_runtime_config() -> dict[str, Any]:
 
 
 def write_bot_runtime_config(payload: dict[str, Any]) -> dict[str, Any]:
+    require_legacy_bot_control_enabled()
     current = read_bot_runtime_config()
     for key in BOT_RUNTIME_KEYS:
         if key in payload:
@@ -1620,6 +1675,7 @@ def write_bot_runtime_config(payload: dict[str, Any]) -> dict[str, Any]:
 
 def start_re_bot(payload: dict[str, Any], *, once: bool = False) -> dict[str, Any]:
     global RE_BOT_PROCESS, RE_BOT_STARTED_AT, RE_BOT_COMMAND
+    require_legacy_bot_control_enabled()
     if not once and RE_BOT_PROCESS and RE_BOT_PROCESS.poll() is None:
         raise RuntimeError("RE grid bot is already running.")
     pid = None if once else re_bot_pid_from_file()
@@ -1730,6 +1786,7 @@ def read_re_bot_runtime_config() -> dict[str, Any]:
 
 
 def write_re_bot_runtime_config(payload: dict[str, Any]) -> dict[str, Any]:
+    require_legacy_bot_control_enabled()
     current = read_re_bot_runtime_config()
     for key in BOT_RUNTIME_KEYS:
         if key in payload:
@@ -1919,8 +1976,18 @@ def bot_status() -> dict[str, Any]:
 def tail_lines(path: Path, lines: int) -> list[str]:
     if not path.exists():
         return []
-    content = path.read_text(encoding="utf-8", errors="replace").splitlines()
-    return content[-lines:]
+    try:
+        with path.open("rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            size = handle.tell()
+            handle.seek(max(0, size - TAIL_READ_BYTES))
+            content = handle.read().decode("utf-8", errors="replace")
+    except OSError:
+        return []
+    output = content.splitlines()
+    if output and path.stat().st_size > TAIL_READ_BYTES and not content.startswith(("\n", "\r")):
+        output = output[1:]
+    return output[-lines:]
 
 
 def tail_text(path: Path, lines: int) -> str:
@@ -1934,8 +2001,8 @@ def file_mtime_iso(path: Path) -> str:
         return ""
 
 
-def portfolio_status() -> dict[str, Any]:
-    account = portfolio_account_summary()
+def portfolio_status(*, include_account: bool = False, include_regime_research: bool = False) -> dict[str, Any]:
+    account = portfolio_account_summary() if include_account else portfolio_account_placeholder()
     live = portfolio_live_status(include_pnl=False)
     if account.get("ok"):
         live["balance"] = account.get("balance", {})
@@ -1946,7 +2013,20 @@ def portfolio_status() -> dict[str, Any]:
         "account": account,
         "live": live,
         "latestReport": latest_report,
-        "regimeResearch": latest_regime_research_payload(),
+        "regimeResearch": latest_regime_research_payload() if include_regime_research else None,
+    }
+
+
+def portfolio_account_placeholder() -> dict[str, Any]:
+    return {
+        "ok": False,
+        "capturedAt": "",
+        "skipped": True,
+        "error": "account refresh skipped for lightweight dashboard status",
+        "account": {},
+        "balance": {},
+        "pnl": {},
+        "cache": {"hit": False, "ageSeconds": 0, "stale": False},
     }
 
 
@@ -2020,6 +2100,8 @@ def portfolio_backtest_status() -> dict[str, Any]:
         "returnCode": return_code,
         "startedAt": PORTFOLIO_BACKTEST_STARTED_AT or log_status.get("startedAt"),
         "command": log_status.get("command", ""),
+        "parameters": log_status.get("parameters", {}),
+        "parameterWarnings": log_status.get("parameterWarnings", []),
         "logPath": str(PORTFOLIO_BACKTEST_LOG),
         "lastLogAt": file_mtime_iso(PORTFOLIO_BACKTEST_LOG),
         "lastReportDir": str(report_dir) if report_dir else "",
@@ -2041,6 +2123,24 @@ def parse_portfolio_backtest_log() -> dict[str, Any]:
     if len(parts) > 1 and lines:
         started_at = lines[0].replace(" ---", "").strip()
     command = next((line.removeprefix("command=").strip() for line in lines if line.startswith("command=")), "")
+    parameters = {}
+    parameter_warnings = []
+    parameters_line = next((line.removeprefix("parameters=").strip() for line in lines if line.startswith("parameters=")), "")
+    warnings_line = next((line.removeprefix("parameter_warnings=").strip() for line in lines if line.startswith("parameter_warnings=")), "")
+    if parameters_line:
+        try:
+            loaded_parameters = json.loads(parameters_line)
+            if isinstance(loaded_parameters, dict):
+                parameters = loaded_parameters
+        except json.JSONDecodeError:
+            parameters = {}
+    if warnings_line:
+        try:
+            loaded_warnings = json.loads(warnings_line)
+            if isinstance(loaded_warnings, list):
+                parameter_warnings = loaded_warnings
+        except json.JSONDecodeError:
+            parameter_warnings = []
     report_path = next((line.removeprefix("portfolio_report=").strip() for line in lines if line.startswith("portfolio_report=")), "")
     if report_path:
         state = "completed"
@@ -2056,6 +2156,8 @@ def parse_portfolio_backtest_log() -> dict[str, Any]:
         "returnCode": return_code,
         "startedAt": started_at,
         "command": command,
+        "parameters": parameters,
+        "parameterWarnings": parameter_warnings,
         "reportPath": report_path,
     }
 
@@ -2066,10 +2168,13 @@ def start_portfolio_backtest(payload: dict[str, Any]) -> dict[str, Any]:
         raise RuntimeError("Portfolio backtest is already running.")
 
     args = build_portfolio_backtest_args(payload)
+    normalized = normalize_portfolio_backtest_payload(payload)
     PORTFOLIO_BACKTEST_LOG.parent.mkdir(parents=True, exist_ok=True)
     PORTFOLIO_BACKTEST_STARTED_AT = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with PORTFOLIO_BACKTEST_LOG.open("a", encoding="utf-8") as log:
         log.write(f"\n--- portfolio backtest start {PORTFOLIO_BACKTEST_STARTED_AT} ---\n")
+        log.write("parameters=" + json.dumps(normalized["parameters"], ensure_ascii=False, sort_keys=True) + "\n")
+        log.write("parameter_warnings=" + json.dumps(normalized["warnings"], ensure_ascii=False) + "\n")
         log.write("command=" + " ".join(args) + "\n")
         log.flush()
         PORTFOLIO_BACKTEST_PROCESS = subprocess.Popen(
@@ -2091,9 +2196,9 @@ def wait_portfolio_backtest() -> None:
 
 def start_portfolio_live(payload: dict[str, Any]) -> dict[str, Any]:
     require_live_enabled()
-    report_dir = latest_portfolio_report_dir()
+    report_dir = latest_portfolio_report_dir(trading_mode="live", require_execution=True)
     if not report_dir:
-        raise RuntimeError("No portfolio report found. Run a portfolio backtest first.")
+        raise RuntimeError("No executable live portfolio report found. Run a live portfolio backtest that generates targets before starting.")
     require_portfolio_live_report(report_dir)
 
     requested = set(str(item) for item in payload.get("instIds", []) if item)
@@ -2102,7 +2207,9 @@ def start_portfolio_live(payload: dict[str, Any]) -> dict[str, Any]:
         preflight_checks = [check for check in preflight_checks if not check.inst_id or check.inst_id in requested]
     preflight_path = write_portfolio_preflight_report(report_dir, preflight_checks, include_account=True)
     preflight_blocked = any(check.severity == "block" for check in preflight_checks)
-    if preflight_blocked and not payload.get("allowBlocked"):
+    global_preflight_blocked = any(check.severity == "block" and not check.inst_id for check in preflight_checks)
+    blocked_inst_reasons = portfolio_preflight_block_reasons(preflight_checks)
+    if global_preflight_blocked and not payload.get("allowBlocked"):
         status = portfolio_status()
         status["liveStartResult"] = {
             "started": [],
@@ -2114,12 +2221,6 @@ def start_portfolio_live(payload: dict[str, Any]) -> dict[str, Any]:
         }
         raise RuntimeError(f"Portfolio live preflight blocked. Review {preflight_path}.")
 
-    live_plan_items = write_portfolio_live_plan(
-        report_dir,
-        requested or None,
-        allow_blocked_preflight=bool(payload.get("allowBlocked")),
-    )
-    live_plan_by_inst = {item.inst_id: item for item in live_plan_items if item.inst_id}
     execution = read_json_file(report_dir / "execution_intents.json")
     intents = execution.get("intents", []) if isinstance(execution.get("intents", []), list) else []
     runnable = [
@@ -2135,12 +2236,61 @@ def start_portfolio_live(payload: dict[str, Any]) -> dict[str, Any]:
     ]
     if not runnable and not reduce_intents:
         raise RuntimeError("No runtime-ready portfolio targets found.")
+    actionable_inst_ids = {
+        str(item.get("inst_id", ""))
+        for item in [*runnable, *reduce_intents]
+        if str(item.get("inst_id", ""))
+    }
+    if requested:
+        actionable_inst_ids = {inst_id for inst_id in actionable_inst_ids if inst_id in requested}
+    blocked_actionable = set(blocked_inst_reasons) & actionable_inst_ids
+    if preflight_blocked and not payload.get("allowBlocked") and actionable_inst_ids and blocked_actionable == actionable_inst_ids:
+        status = portfolio_status()
+        status["liveStartResult"] = {
+            "started": [],
+            "skipped": [{"instId": inst_id, "reason": "; ".join(blocked_inst_reasons[inst_id])} for inst_id in sorted(blocked_actionable)],
+            "reduce": [],
+            "preflightPath": str(preflight_path),
+            "preflightStatus": "blocked",
+            "mode": "live",
+        }
+        raise RuntimeError(f"Portfolio live preflight blocked all requested targets. Review {preflight_path}.")
+
+    live_plan_items = write_portfolio_live_plan(
+        report_dir,
+        requested or None,
+        allow_blocked_preflight=bool(payload.get("allowBlocked")),
+    )
+    live_plan_by_inst = {item.inst_id: item for item in live_plan_items if item.inst_id}
 
     reduce_results = []
+    stopped_for_reduce = []
     if payload.get("executeRebalance", True):
-        reduce_results = run_portfolio_reduce_intents(reduce_intents, requested=requested)
+        reduce_ready_intents = [
+            intent for intent in reduce_intents
+            if payload.get("allowBlocked") or str(intent.get("inst_id", "")) not in blocked_inst_reasons
+        ]
+        stopped_for_reduce = stop_portfolio_bots_for_reduce(reduce_ready_intents, requested=requested)
+        reduce_results = run_portfolio_reduce_intents(reduce_ready_intents, requested=requested)
+        failed_reduce = [item for item in reduce_results if item.get("status") == "failed" or item.get("returnCode") not in (None, 0)]
+        if failed_reduce:
+            status = portfolio_status()
+            status["liveStartResult"] = {
+                "started": [],
+                "skipped": [],
+                "stoppedForReduce": stopped_for_reduce,
+                "hotUpdated": [],
+                "reduce": reduce_results,
+                "preflightPath": str(preflight_path),
+                "preflightStatus": "pass" if not preflight_blocked else ("blocked_allowed" if payload.get("allowBlocked") else "partial"),
+                "livePlanStatus": portfolio_live_plan_status(live_plan_items),
+                "mode": "live",
+                "error": "reduce-only rebalance failed; start blocked",
+            }
+            raise RuntimeError("Portfolio reduce-only rebalance failed; live bot start blocked.")
     started = []
     skipped = []
+    hot_updated = []
     for intent in runnable:
         inst_id = str(intent.get("inst_id", ""))
         if requested and inst_id not in requested:
@@ -2148,11 +2298,15 @@ def start_portfolio_live(payload: dict[str, Any]) -> dict[str, Any]:
             continue
         live_plan_item = live_plan_by_inst.get(inst_id)
         if not live_plan_item or live_plan_item.status != "ready":
-            skipped.append({"instId": inst_id, "reason": "live plan not ready"})
+            reason = live_plan_item.note if live_plan_item else "live plan not ready"
+            skipped.append({"instId": inst_id, "reason": reason})
             continue
         status = portfolio_bot_status_for_intent(intent)
         if status.get("running"):
-            skipped.append({"instId": inst_id, "reason": "already running", "pid": status.get("pid")})
+            try:
+                hot_updated.append(hot_update_portfolio_runtime(report_dir, intent, status))
+            except Exception as exc:
+                skipped.append({"instId": inst_id, "reason": f"hot update failed: {exc}", "pid": status.get("pid")})
             continue
         command = live_command_from_dry_run(live_plan_item.live_command, remove_once=True)
         if not command:
@@ -2180,25 +2334,33 @@ def start_portfolio_live(payload: dict[str, Any]) -> dict[str, Any]:
     status["liveStartResult"] = {
         "started": started,
         "skipped": skipped,
+        "stoppedForReduce": stopped_for_reduce,
+        "hotUpdated": hot_updated,
         "reduce": reduce_results,
         "preflightPath": str(preflight_path),
-        "preflightStatus": "pass" if not preflight_blocked else "blocked_allowed",
-        "livePlanStatus": "ready" if all(item.status == "ready" for item in live_plan_items if item.inst_id) else "partial",
+        "preflightStatus": "pass" if not preflight_blocked else ("blocked_allowed" if payload.get("allowBlocked") else "partial"),
+        "livePlanStatus": portfolio_live_plan_status(live_plan_items),
         "mode": "live",
     }
     return status
 
 
+def portfolio_preflight_block_reasons(preflight_checks: list[Any]) -> dict[str, list[str]]:
+    reasons: dict[str, list[str]] = {}
+    for check in preflight_checks:
+        if getattr(check, "severity", "") != "block":
+            continue
+        inst_id = str(getattr(check, "inst_id", "") or "")
+        if not inst_id:
+            continue
+        code = str(getattr(check, "code", "") or "preflight_block")
+        message = str(getattr(check, "message", "") or "").strip()
+        reasons.setdefault(inst_id, []).append(f"{code}: {message}" if message else code)
+    return reasons
+
+
 def require_portfolio_live_report(report_dir: Path) -> None:
-    rebalance = read_json_file(report_dir / "rebalance_plan.json")
-    execution = read_json_file(report_dir / "execution_intents.json")
-    execution_config = execution.get("execution", {}) if isinstance(execution.get("execution", {}), dict) else {}
-    trading_mode = normalize_portfolio_trading_mode(
-        rebalance.get("tradingMode")
-        or execution.get("tradingMode")
-        or execution_config.get("trading_mode")
-        or execution.get("mode")
-    )
+    trading_mode = portfolio_report_trading_mode(report_dir)
     if trading_mode != "live":
         raise PermissionError(
             "Latest portfolio report is not a live candidate. "
@@ -2247,6 +2409,44 @@ def terminate_pid(pid: int) -> None:
         pass
 
 
+def stop_portfolio_bots_for_reduce(reduce_intents: list[dict[str, Any]], *, requested: set[str]) -> list[dict[str, Any]]:
+    stopped = []
+    for intent in reduce_intents:
+        inst_id = str(intent.get("inst_id", ""))
+        if requested and inst_id not in requested:
+            continue
+        status = portfolio_bot_status_for_intent({"inst_id": inst_id})
+        pid = status.get("pid")
+        process = PORTFOLIO_BOT_PROCESSES.get(inst_id)
+        if process and process.poll() is None:
+            terminate_process(process)
+            PORTFOLIO_BOT_PROCESSES.pop(inst_id, None)
+            stopped.append({"instId": inst_id, "pid": process.pid, "reason": "before_reduce"})
+            continue
+        if pid:
+            terminate_pid(int(pid))
+            wait_for_pid_exit(int(pid), timeout=8.0)
+            PORTFOLIO_BOT_PROCESSES.pop(inst_id, None)
+            stopped.append({"instId": inst_id, "pid": pid, "reason": "before_reduce"})
+    return stopped
+
+
+def wait_for_pid_exit(pid: int, *, timeout: float) -> bool:
+    if os.name == "nt":
+        return True
+    deadline = time.time() + timeout
+    proc_path = Path("/proc") / str(pid)
+    while time.time() < deadline:
+        if not proc_path.exists():
+            return True
+        time.sleep(0.2)
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except Exception:
+        pass
+    return not proc_path.exists()
+
+
 def run_portfolio_reduce_intents(reduce_intents: list[dict[str, Any]], *, requested: set[str]) -> list[dict[str, Any]]:
     results = []
     log_path = Path(__file__).parent / "data" / "okx" / "portfolio_rebalancer_stdout.log"
@@ -2273,8 +2473,44 @@ def run_portfolio_reduce_intents(reduce_intents: list[dict[str, Any]], *, reques
                 text=True,
                 timeout=90,
             )
-        results.append({"instId": inst_id, "status": "done", "returnCode": completed.returncode, "logPath": str(log_path)})
+        status = "done" if completed.returncode == 0 else "failed"
+        results.append({"instId": inst_id, "status": status, "returnCode": completed.returncode, "logPath": str(log_path)})
     return results
+
+
+def hot_update_portfolio_runtime(report_dir: Path, intent: dict[str, Any], status: dict[str, Any]) -> dict[str, Any]:
+    inst_id = str(intent.get("inst_id", ""))
+    source_path = Path(str(intent.get("runtime_config_path", "")))
+    if not source_path.exists():
+        raise FileNotFoundError(f"runtime config missing: {source_path}")
+    runtime_path = running_portfolio_runtime_path(inst_id, status) or source_path
+    payload = read_json_file(source_path)
+    payload["dashboardHotUpdatedFromReport"] = str(report_dir)
+    payload["dashboardHotUpdatedAt"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    runtime_path.parent.mkdir(parents=True, exist_ok=True)
+    runtime_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return {"instId": inst_id, "pid": status.get("pid"), "from": str(source_path), "to": str(runtime_path)}
+
+
+def running_portfolio_runtime_path(inst_id: str, status: dict[str, Any]) -> Path | None:
+    command = status.get("command")
+    parts = command if isinstance(command, list) else shlex_split_portable(str(command or ""))
+    if "--runtime-config" in parts:
+        try:
+            return Path(parts[parts.index("--runtime-config") + 1])
+        except Exception:
+            return None
+    pid = status.get("pid")
+    if not pid:
+        return None
+    live_command = process_command(int(pid))
+    live_parts = shlex_split_portable(live_command) if live_command else []
+    if "--runtime-config" not in live_parts:
+        return None
+    try:
+        return Path(live_parts[live_parts.index("--runtime-config") + 1])
+    except Exception:
+        return None
 
 
 def live_command_from_dry_run(dry_run_command: str, *, remove_once: bool, set_leverage: bool = True) -> list[str]:
@@ -2305,7 +2541,7 @@ def shlex_split_portable(command: str) -> list[str]:
 
 
 def portfolio_live_status(*, include_pnl: bool = True) -> dict[str, Any]:
-    report_dir = latest_portfolio_report_dir()
+    report_dir = latest_portfolio_report_dir(trading_mode="live", require_execution=True) or latest_portfolio_report_dir(trading_mode="live")
     intents = []
     if report_dir:
         execution = read_json_file(report_dir / "execution_intents.json")
@@ -2346,7 +2582,7 @@ def portfolio_bot_status_for_intent(intent: dict[str, Any]) -> dict[str, Any]:
     command = process_command(pid) if pid else ""
     if not running and pid:
         running = bool(command and "auto_grid_bot.py" in command and (not inst_id or inst_id in command))
-    log_lines = tail_lines(stdout_log, 220)
+    log_lines = tail_lines(stdout_log, 120)
     diagnostics = parse_bot_diagnostics(log_lines, running)
     runtime_config = read_json_file(Path(runtime_path)) if runtime_path else {}
     return {
@@ -2363,7 +2599,7 @@ def portfolio_bot_status_for_intent(intent: dict[str, Any]) -> dict[str, Any]:
         "botPrefix": bot_prefix,
         "logPath": str(stdout_log),
         "diagnostics": diagnostics,
-        "logTail": "\n".join(log_lines[-80:]),
+        "logTail": "\n".join(log_lines[-40:]),
         "status": "实盘运行中" if running else "未运行",
     }
 
@@ -2396,60 +2632,115 @@ def fill_time_ms(fill: dict[str, Any]) -> int:
 
 
 def build_portfolio_backtest_args(payload: dict[str, Any]) -> list[str]:
-    top_n = bounded_int(payload.get("topN"), default=12, lower=1, upper=50)
-    target_symbols = bounded_int(payload.get("targetSymbols"), default=6, lower=1, upper=20)
-    pages = bounded_int(payload.get("backtestPages"), default=2, lower=1, upper=8)
-    limit = bounded_int(payload.get("backtestLimit"), default=300, lower=80, upper=300)
-    trading_mode = str(payload.get("tradingMode") or payload.get("mode") or "backtest")
-    if trading_mode not in {"backtest", "paper", "live"}:
-        trading_mode = "backtest"
+    normalized = normalize_portfolio_backtest_payload(payload)
+    params = normalized["parameters"]
     args = [
         sys.executable,
         str(Path(__file__).parent / "portfolio_backtest.py"),
         "--top-n",
-        str(top_n),
+        str(params["topN"]),
         "--target-symbols",
-        str(target_symbols),
+        str(params["targetSymbols"]),
         "--backtest-pages",
-        str(pages),
+        str(params["backtestPages"]),
         "--backtest-limit",
-        str(limit),
+        str(params["backtestLimit"]),
         "--min-quote-volume",
-        safe_decimal_arg(payload.get("minQuoteVolume"), "5000000"),
+        params["minQuoteVolume"],
         "--max-spread-bps",
-        safe_decimal_arg(payload.get("maxSpreadBps"), "20"),
+        params["maxSpreadBps"],
         "--starting-equity",
-        safe_decimal_arg(payload.get("startingEquity"), "100"),
+        params["startingEquity"],
         "--cash-reserve-pct",
-        safe_decimal_arg(payload.get("cashReservePct"), "10"),
+        params["cashReservePct"],
+        "--allocation-max-risk-events",
+        str(params["allocationMaxRiskEvents"]),
         "--core-symbols",
-        str(bounded_int(payload.get("coreSymbols"), default=2, lower=1, upper=10)),
+        str(params["coreSymbols"]),
         "--core-weight-share-pct",
-        safe_decimal_arg(payload.get("coreWeightSharePct"), "70"),
+        params["coreWeightSharePct"],
         "--satellite-max-weight-pct",
-        safe_decimal_arg(payload.get("satelliteMaxWeightPct"), "12"),
+        params["satelliteMaxWeightPct"],
         "--satellite-min-weight-pct",
-        safe_decimal_arg(payload.get("satelliteMinWeightPct"), "3"),
+        params["satelliteMinWeightPct"],
         "--trend-filter",
-        str(payload.get("trendFilter") or "compare"),
+        params["trendFilter"],
         "--market-regime-filter",
-        str(payload.get("marketRegimeFilter") or "auto"),
+        params["marketRegimeFilter"],
         "--market-regime-min-confidence",
-        safe_decimal_arg(payload.get("marketRegimeMinConfidence"), "0.52"),
+        params["marketRegimeMinConfidence"],
+        "--market-regime-mixed-policy",
+        params["marketRegimeMixedPolicy"],
         "--trading-mode",
-        trading_mode,
+        params["tradingMode"],
     ]
-    if payload.get("marketRegimeModelPath"):
-        args.extend(["--market-regime-model-path", str(payload.get("marketRegimeModelPath"))])
-    if payload.get("includeAccount") or trading_mode == "live":
+    if params.get("marketRegimeModelPath"):
+        args.extend(["--market-regime-model-path", params["marketRegimeModelPath"]])
+    if params["includeAccount"] or params["tradingMode"] == "live":
         args.append("--include-account")
-    if payload.get("refresh"):
+    if params["refresh"]:
         args.append("--refresh")
     return args
 
 
-def latest_portfolio_report_payload(*, live: dict[str, Any] | None = None) -> dict[str, Any] | None:
-    report_dir = latest_portfolio_report_dir()
+def normalize_portfolio_backtest_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    parameters: dict[str, Any] = {}
+    warnings: list[str] = []
+    for name, (lower, upper, default) in PORTFOLIO_BACKTEST_LIMITS.items():
+        raw = payload.get(name)
+        value = bounded_int(raw, default=default, lower=lower, upper=upper)
+        parameters[name] = value
+        if raw not in (None, ""):
+            try:
+                requested = int(raw)
+            except Exception:
+                warnings.append(f"{name}: invalid `{raw}`, using default {default}")
+                continue
+            if requested != value:
+                warnings.append(f"{name}: requested {requested}, capped to {value} (allowed {lower}-{upper})")
+
+    trading_mode = str(payload.get("tradingMode") or payload.get("mode") or "backtest")
+    if trading_mode not in {"backtest", "paper", "live"}:
+        warnings.append(f"tradingMode: invalid `{trading_mode}`, using `backtest`")
+        trading_mode = "backtest"
+    parameters.update(
+        {
+            "tradingMode": trading_mode,
+            "minQuoteVolume": safe_decimal_arg(payload.get("minQuoteVolume"), "5000000"),
+            "maxSpreadBps": safe_decimal_arg(payload.get("maxSpreadBps"), "20"),
+            "startingEquity": safe_decimal_arg(payload.get("startingEquity"), "100"),
+            "cashReservePct": safe_decimal_arg(payload.get("cashReservePct"), "10"),
+            "coreWeightSharePct": safe_decimal_arg(payload.get("coreWeightSharePct"), "70"),
+            "satelliteMaxWeightPct": safe_decimal_arg(payload.get("satelliteMaxWeightPct"), "12"),
+            "satelliteMinWeightPct": safe_decimal_arg(payload.get("satelliteMinWeightPct"), "3"),
+            "trendFilter": str(payload.get("trendFilter") or "compare"),
+            "marketRegimeFilter": str(payload.get("marketRegimeFilter") or "auto"),
+            "marketRegimeMinConfidence": safe_decimal_arg(payload.get("marketRegimeMinConfidence"), "0.52"),
+            "marketRegimeMixedPolicy": normalized_choice(
+                payload.get("marketRegimeMixedPolicy"),
+                {"pause", "price_anchor", "range"},
+                "price_anchor",
+            ),
+            "marketRegimeModelPath": str(payload.get("marketRegimeModelPath") or ""),
+            "includeAccount": bool(payload.get("includeAccount")),
+            "refresh": bool(payload.get("refresh")),
+        }
+    )
+    return {"parameters": parameters, "warnings": warnings}
+
+
+def bounded_portfolio_int(name: str, value: Any) -> int:
+    lower, upper, default = PORTFOLIO_BACKTEST_LIMITS[name]
+    return bounded_int(value, default=default, lower=lower, upper=upper)
+
+
+def normalized_choice(value: Any, allowed: set[str], default: str) -> str:
+    selected = str(value or default)
+    return selected if selected in allowed else default
+
+
+def latest_portfolio_report_payload(*, live: dict[str, Any] | None = None, report_dir: Path | None = None) -> dict[str, Any] | None:
+    report_dir = report_dir or latest_portfolio_report_dir()
     if not report_dir:
         return None
     candidates = read_json_file(report_dir / "candidates.json")
@@ -2467,7 +2758,8 @@ def latest_portfolio_report_payload(*, live: dict[str, Any] | None = None) -> di
         "generatedAt": rebalance.get("generatedAt") or candidates.get("generatedAt") or "",
         "product": rebalance.get("product") or candidates.get("product") or quant_metadata(),
         "summary": portfolio_report_summary(scores, rebalance, execution, runtime_configs, live),
-        "candidates": candidates,
+        "candidates": compact_candidates_payload(candidates),
+        "eligibilityDiagnostics": portfolio_eligibility_diagnostics(scores, rebalance),
         "scores": scores,
         "rebalance": rebalance,
         "execution": execution,
@@ -2475,7 +2767,7 @@ def latest_portfolio_report_payload(*, live: dict[str, Any] | None = None) -> di
         "livePlan": live_plan,
         "runtimeConfigs": runtime_configs,
         "live": live,
-        "summaryMarkdown": (report_dir / "summary.md").read_text(encoding="utf-8", errors="replace") if (report_dir / "summary.md").exists() else "",
+        "summaryMarkdown": "",
     }
 
 
@@ -2520,14 +2812,66 @@ def rebalance_action_reason(action: dict[str, Any], threshold: Any = "2") -> str
     return f"{note_text}，偏离 {plain(abs(delta))}% 达到 {threshold_text}% 调仓阈值。"
 
 
-def latest_portfolio_report_dir() -> Path | None:
+def compact_candidates_payload(candidates: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(candidates, dict):
+        return {}
+    backtest = candidates.get("backtest", {}) if isinstance(candidates.get("backtest", {}), dict) else {}
+    return {
+        "generatedAt": candidates.get("generatedAt", ""),
+        "candidateCount": candidates.get("candidateCount", 0),
+        "selector": candidates.get("selector", {}),
+        "backtest": {
+            "trading_mode": backtest.get("trading_mode"),
+            "target_symbols": (backtest.get("allocation") or {}).get("max_symbols") if isinstance(backtest.get("allocation"), dict) else None,
+            "include_account": backtest.get("include_account"),
+            "market_regime_filter": backtest.get("market_regime_filter"),
+            "trend_filter": backtest.get("trend_filter"),
+        },
+    }
+
+
+def latest_portfolio_report_dir(*, trading_mode: str | None = None, require_execution: bool = False) -> Path | None:
     if not PORTFOLIO_REPORT_DIR.exists():
         return None
     dirs = [path for path in PORTFOLIO_REPORT_DIR.iterdir() if path.is_dir()]
     if not dirs:
         return None
     dirs.sort(key=lambda path: path.stat().st_mtime, reverse=True)
-    return dirs[0]
+    if trading_mode is None:
+        return next((path for path in dirs if not require_execution or portfolio_report_has_execution(path)), None)
+    expected = normalize_portfolio_trading_mode(trading_mode)
+    return next(
+        (
+            path for path in dirs
+            if portfolio_report_trading_mode(path) == expected
+            and (not require_execution or portfolio_report_has_execution(path))
+        ),
+        None,
+    )
+
+
+def portfolio_report_has_execution(report_dir: Path) -> bool:
+    execution = read_json_file(report_dir / "execution_intents.json")
+    intents = execution.get("intents", [])
+    if not isinstance(intents, list):
+        return False
+    return any(
+        isinstance(item, dict)
+        and item.get("status") in {"runtime_config_ready", "rebalance_reduce_ready"}
+        for item in intents
+    )
+
+
+def portfolio_report_trading_mode(report_dir: Path) -> str:
+    rebalance = read_json_file(report_dir / "rebalance_plan.json")
+    execution = read_json_file(report_dir / "execution_intents.json")
+    execution_config = execution.get("execution", {}) if isinstance(execution.get("execution", {}), dict) else {}
+    return normalize_portfolio_trading_mode(
+        rebalance.get("tradingMode")
+        or execution.get("tradingMode")
+        or execution_config.get("trading_mode")
+        or execution.get("mode")
+    )
 
 
 def latest_regime_research_payload() -> dict[str, Any] | None:
@@ -2742,6 +3086,7 @@ def portfolio_report_summary(
                 "marketRegimeSignal": runtime_by_inst.get(target.get("inst_id"), {}).get("marketRegimeSignal"),
                 "marketRegimeConfidence": runtime_by_inst.get(target.get("inst_id"), {}).get("marketRegimeConfidence"),
                 "marketRegimeAllowedSides": runtime_by_inst.get(target.get("inst_id"), {}).get("marketRegimeAllowedSides"),
+                "marketRegimeMixedPolicy": runtime_by_inst.get(target.get("inst_id"), {}).get("marketRegimeMixedPolicy"),
                 "mlScoreDeltaVsBaseline": runtime_by_inst.get(target.get("inst_id"), {}).get("mlScoreDeltaVsBaseline"),
                 "mlReturnDeltaVsBaseline": runtime_by_inst.get(target.get("inst_id"), {}).get("mlReturnDeltaVsBaseline"),
                 "mlDrawdownDeltaVsBaseline": runtime_by_inst.get(target.get("inst_id"), {}).get("mlDrawdownDeltaVsBaseline"),
@@ -2753,6 +3098,41 @@ def portfolio_report_summary(
     }
 
 
+def portfolio_eligibility_diagnostics(scores: list[dict[str, str]], rebalance: dict[str, Any]) -> list[dict[str, str]]:
+    allocation = rebalance.get("allocation", {}) if isinstance(rebalance.get("allocation", {}), dict) else {}
+    min_score = dec(allocation.get("min_score"), Decimal("-999999"))
+    min_fills = int(dec(allocation.get("min_fills"), Decimal("1")))
+    max_risk_events = int(dec(allocation.get("max_risk_events"), Decimal("5")))
+    diagnostics: list[dict[str, str]] = []
+    for row in scores:
+        if row.get("status") != "ok":
+            continue
+        reasons = []
+        score = dec(row.get("score"), Decimal("0"))
+        fills = int(dec(row.get("fills"), Decimal("0")))
+        risk_events = int(dec(row.get("risk_events"), Decimal("0")))
+        if score < min_score:
+            reasons.append(f"score {plain(score)} < min {plain(min_score)}")
+        if fills < min_fills:
+            reasons.append(f"fills {fills} < min {min_fills}")
+        if risk_events > max_risk_events:
+            reasons.append(f"risk events {risk_events} > max {max_risk_events}")
+        diagnostics.append(
+            {
+                "rank": str(row.get("rank", "")),
+                "instId": str(row.get("inst_id", "")),
+                "status": "filtered" if reasons else "eligible",
+                "reason": "; ".join(reasons) if reasons else "passed allocation filters",
+                "totalReturnPct": str(row.get("total_return_pct", "")),
+                "maxDrawdownPct": str(row.get("max_drawdown_pct", "")),
+                "profitFactor": str(row.get("profit_factor", "")),
+                "fills": str(row.get("fills", "")),
+                "riskEvents": str(row.get("risk_events", "")),
+            }
+        )
+    return diagnostics
+
+
 def read_portfolio_runtime_configs(report_dir: Path) -> list[dict[str, Any]]:
     runtime_dir = report_dir / "runtime_configs"
     if not runtime_dir.exists():
@@ -2761,6 +3141,8 @@ def read_portfolio_runtime_configs(report_dir: Path) -> list[dict[str, Any]]:
     for path in sorted(runtime_dir.glob("*.json")):
         payload = read_json_file(path)
         if payload:
+            if payload.get("marketRegimeFilter") and payload.get("marketRegimeFilter") != "off":
+                payload.setdefault("marketRegimeMixedPolicy", "price_anchor")
             payload["_path"] = str(path)
             rows.append(payload)
     return rows
@@ -2826,12 +3208,18 @@ def bounded_int(value: Any, *, default: int, lower: int, upper: int) -> int:
     return max(lower, min(upper, number))
 
 
+def query_bool(values: dict[str, list[str]], name: str) -> bool:
+    raw = values.get(name, [""])[0]
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
 def safe_decimal_arg(value: Any, default: str) -> str:
     number = dec(value, Decimal(default))
     return plain(number)
 
 
 def parse_bot_diagnostics(lines: list[str], running: bool) -> dict[str, Any]:
+    lines = current_bot_log_segment(lines)
     cycle: dict[str, Any] | None = None
     open_guard: dict[str, Any] | None = None
     order_plan: dict[str, Any] | None = None
@@ -2960,6 +3348,14 @@ def parse_bot_diagnostics(lines: list[str], running: bool) -> dict[str, Any]:
         "lastError": last_error,
         "actions": actions[-12:],
     }
+
+
+def current_bot_log_segment(lines: list[str]) -> list[str]:
+    start_index = -1
+    for index, line in enumerate(lines):
+        if line.startswith("--- bot start ") or line.startswith("--- portfolio live bot start "):
+            start_index = index
+    return lines[start_index:] if start_index >= 0 else lines
 
 
 def parse_key_values(text: str) -> dict[str, str]:

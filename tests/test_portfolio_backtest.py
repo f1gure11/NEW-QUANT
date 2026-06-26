@@ -186,6 +186,7 @@ class PortfolioBacktestTest(unittest.TestCase):
         self.assertEqual(backtest_config.market_regime_filter, "rf")
         self.assertEqual(backtest_config.market_regime_model_path, "/tmp/regime_rf.joblib")
         self.assertEqual(backtest_config.market_regime_min_confidence, Decimal("0.52"))
+        self.assertEqual(backtest_config.market_regime_mixed_policy, "price_anchor")
 
     def test_empty_candidates_write_reports(self) -> None:
         config = PortfolioBacktestConfig(
@@ -245,6 +246,44 @@ class PortfolioBacktestTest(unittest.TestCase):
             runtime = json.loads(runtime_path.read_text(encoding="utf-8"))
 
         self.assertEqual(runtime["cashReservePct"], "3")
+
+    def test_summary_explains_filtered_candidates_when_no_targets(self) -> None:
+        config = PortfolioBacktestConfig(
+            selector=MarketSelectorConfig(top_n=1),
+            score_weights=ScoreWeights(),
+            allocation=AllocationConfig(max_risk_events=2),
+            backtest_pages=1,
+        )
+        row = {
+            "rank": 1,
+            "status": "ok",
+            "inst_id": "AAA-USDT-SWAP",
+            "score": Decimal("1"),
+            "fills": 10,
+            "risk_events": 3,
+            "quote_volume_24h": Decimal("10000000"),
+            "pool_window_hours": Decimal("5"),
+            "pool_window_bars": 300,
+            "pool_avg_abs_bps": Decimal("5"),
+            "pool_shock_bps": Decimal("10"),
+            "pool_trend_bps": Decimal("0"),
+            "total_return_pct": Decimal("1"),
+            "max_drawdown_pct": Decimal("1"),
+            "profit_factor": Decimal("1.5"),
+            "win_rate_pct": Decimal("60"),
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch("portfolio_backtest.select_candidates", return_value=[candidate()]), patch(
+                "portfolio_backtest.backtest_candidate",
+                return_value=row,
+            ):
+                output_dir = run_portfolio_backtest(FakeClient(), config, tmpdir)
+            summary = (Path(output_dir) / "summary.md").read_text(encoding="utf-8")
+
+        self.assertIn("## Run Parameters", summary)
+        self.assertIn("## Eligibility Diagnostics", summary)
+        self.assertIn("risk events 3 > max 2", summary)
+        self.assertIn("No target allocations were generated because every successful candidate was filtered out", summary)
 
     def test_empty_report_contains_doubao_quant_metadata(self) -> None:
         config = PortfolioBacktestConfig(

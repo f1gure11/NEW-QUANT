@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import portfolio_auto_apply
-from portfolio_auto_apply import BotProcess, build_apply_plan, hot_update_runtime, run
+from portfolio_auto_apply import BotProcess, build_apply_plan, hot_update_runtime, live_command_from_dry_run, run
 
 
 class PortfolioAutoApplyTest(unittest.TestCase):
@@ -123,6 +123,20 @@ class PortfolioAutoApplyTest(unittest.TestCase):
         self.assertEqual(result["instId"], "AAA-USDT-SWAP")
         self.assertEqual(saved["interval"], "8")
         self.assertEqual(saved["autoAppliedFromReport"], str(root))
+
+    def test_live_command_from_dry_run_reuses_report_reduce_command(self) -> None:
+        command = live_command_from_dry_run(
+            "PYTHONPATH=. .venv/bin/python portfolio_rebalancer.py --report-dir reports/portfolio/x "
+            "--inst-id OLD-USDT-SWAP --ord-type limit --slippage-bps 12 --once"
+        )
+
+        self.assertEqual(command[1], "portfolio_rebalancer.py")
+        self.assertIn("--ord-type", command)
+        self.assertIn("limit", command)
+        self.assertIn("--slippage-bps", command)
+        self.assertIn("12", command)
+        self.assertIn("--live", command)
+        self.assertIn("--confirm-live", command)
 
     def test_run_blocks_empty_target_report(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

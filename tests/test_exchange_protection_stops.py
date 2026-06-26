@@ -100,6 +100,7 @@ def make_config(**overrides) -> BotConfig:
         market_regime_filter=args.market_regime_filter,
         market_regime_model_path=args.market_regime_model_path,
         market_regime_min_confidence=Decimal(args.market_regime_min_confidence),
+        market_regime_mixed_policy=args.market_regime_mixed_policy,
         regime_filter=args.regime_filter,
         regime_bar=args.regime_bar,
         regime_short_ma=args.regime_short_ma,

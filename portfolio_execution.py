@@ -21,7 +21,7 @@ class ExecutionConfig:
     trading_mode: str = "paper"
     runtime_subdir: str = "runtime_configs"
     log_dir: str = "data/okx"
-    profile_name: str = "legacy_eth_rolling_high_frequency"
+    profile_name: str = "portfolio_rolling_adaptive_v1"
     initial_leverage: Decimal = Decimal("7")
     initial_grid_bps: Decimal = Decimal("10")
     initial_adaptive_width_bps: Decimal = Decimal("420")
@@ -59,6 +59,7 @@ class ExecutionConfig:
     market_regime_filter: str = "off"
     market_regime_model_path: str = ""
     market_regime_min_confidence: Decimal = Decimal("0.52")
+    market_regime_mixed_policy: str = "price_anchor"
     rolling_adaptive_enabled: bool = True
     rolling_adaptive_window: int = 20
     rolling_adaptive_low_vol_bps: Decimal = Decimal("3")
@@ -356,6 +357,7 @@ def runtime_config_for_target(
         "marketRegimeFilter": execution_config.market_regime_filter,
         "marketRegimeModelPath": execution_config.market_regime_model_path,
         "marketRegimeMinConfidence": plain(execution_config.market_regime_min_confidence),
+        "marketRegimeMixedPolicy": execution_config.market_regime_mixed_policy,
         "marketRegimeSignal": str(getattr(target, "market_regime_signal", "")),
         "marketRegimeConfidence": plain(dec(getattr(target, "market_regime_confidence", Decimal("0")))),
         "marketRegimeAllowedSides": str(getattr(target, "market_regime_allowed_sides", "")),
@@ -413,7 +415,7 @@ def runtime_config_for_target(
         "backtestWinRatePct": plain(target.win_rate_pct),
         "backtestRiskRewardScore": plain(risk_reward["risk_reward_score"]),
         "backtestTargetSlRatio": plain(risk_reward["target_sl_ratio"]),
-        "backtestRiskRewardNote": f"{risk_reward['note']}; strategy uses {execution_config.profile_name} fixed high-frequency runtime seed",
+        "backtestRiskRewardNote": f"{risk_reward['note']}; strategy uses {execution_config.profile_name} runtime seed",
         "trendFilterChecked": bool(getattr(target, "trend_filter_checked", False)),
         "trendScoreDelta": plain(dec(getattr(target, "trend_score_delta", Decimal("0")))),
         "updatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -760,6 +762,8 @@ def dry_run_command(
         str(runtime_config["marketRegimeModelPath"]),
         "--market-regime-min-confidence",
         str(runtime_config["marketRegimeMinConfidence"]),
+        "--market-regime-mixed-policy",
+        str(runtime_config["marketRegimeMixedPolicy"]),
         "--regime-filter",
         str(runtime_config["regimeFilter"]),
         "--regime-bar",

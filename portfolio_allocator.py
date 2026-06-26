@@ -14,7 +14,7 @@ class AllocationConfig:
     max_symbols: int = 6
     min_score: Decimal = Decimal("-999999")
     min_fills: int = 1
-    max_risk_events: int = 2
+    max_risk_events: int = 5
     max_weight_pct: Decimal = Decimal("45")
     min_weight_pct: Decimal = Decimal("5")
     cash_reserve_pct: Decimal = Decimal("10")

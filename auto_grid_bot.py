@@ -79,6 +79,7 @@ class BotConfig:
     market_regime_filter: str
     market_regime_model_path: str
     market_regime_min_confidence: Decimal
+    market_regime_mixed_policy: str
     regime_filter: str
     regime_bar: str
     regime_short_ma: int
@@ -193,6 +194,7 @@ def main() -> None:
         market_regime_filter=args.market_regime_filter,
         market_regime_model_path=args.market_regime_model_path,
         market_regime_min_confidence=Decimal(args.market_regime_min_confidence),
+        market_regime_mixed_policy=args.market_regime_mixed_policy,
         regime_filter=args.regime_filter,
         regime_bar=args.regime_bar,
         regime_short_ma=args.regime_short_ma,
@@ -1061,7 +1063,7 @@ def market_regime_open_sides(
 ) -> tuple[set[str], str] | tuple[None, str]:
     if config.market_regime_filter == "off":
         return None, ""
-    from market_regime import signal_from_candles
+    from market_regime import signal_from_candles, signal_to_dict
 
     candles = config.private_cache.get("marketRegimeCandles", [])
     signal = signal_from_candles(
@@ -1075,8 +1077,15 @@ def market_regime_open_sides(
         f"market-regime {signal.source} state={signal.state} "
         f"direction={signal.direction} confidence={signal.confidence:.3f} {signal.note}"
     )
+    if signal.state == "mixed" and not sides:
+        if config.market_regime_mixed_policy == "price_anchor":
+            sides = {"long"} if mark_px <= midpoint else {"short"}
+            note = f"{note}; mixed price-anchor {next(iter(sides))}"
+        elif config.market_regime_mixed_policy == "range":
+            sides = {"long", "short"}
+            note = f"{note}; mixed range"
     if not sides:
-        return set(), f"{note}; mixed/unknown pauses new opens"
+        return set(), f"{note}; no-open policy pauses new opens"
     if config.one_way_open and sides == {"long", "short"}:
         sides = {"long"} if mark_px <= midpoint else {"short"}
         note = f"{note}; one-way range uses price-anchor"
@@ -1085,7 +1094,7 @@ def market_regime_open_sides(
             return set(), f"{note}; blocked by active short"
         if positions["long"] > 0 and "short" in sides:
             return set(), f"{note}; blocked by active long"
-    log_event("market_regime_signal", {"live": config.live, **signal.__dict__})
+    log_event("market_regime_signal", {"live": config.live, **signal_to_dict(signal)})
     return sides, note
 
 
@@ -1503,6 +1512,7 @@ def runtime_config_has_trading_fields(payload: dict[str, Any]) -> bool:
         "sizingMode",
         "marketRegimeFilter",
         "marketRegimeModelPath",
+        "marketRegimeMixedPolicy",
     }
     return any(field in payload for field in fields)
 
@@ -1696,6 +1706,7 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         "totalProfitAction": ("total_profit_action", {"checkpoint", "close"}),
         "trendFilter": ("trend_filter", {"off", "auto"}),
         "marketRegimeFilter": ("market_regime_filter", {"off", "rules", "rf", "hmm"}),
+        "marketRegimeMixedPolicy": ("market_regime_mixed_policy", {"pause", "price_anchor", "range"}),
         "regimeFilter": ("regime_filter", {"off", "ma_cross"}),
         "regimeBar": ("regime_bar", {"5m", "15m", "30m", "1H"}),
         "exchangeStopTriggerPxType": ("exchange_stop_trigger_px_type", {"last", "mark", "index"}),
@@ -2540,7 +2551,8 @@ def print_banner(config: BotConfig) -> None:
     print(f"risk_cooldown={config.risk_cooldown}s recenter_on_cooldown={config.recenter_on_cooldown}")
     print(
         f"trend_filter={config.trend_filter} trend_lookback={config.trend_lookback} "
-        f"trend_threshold_bps={config.trend_threshold_bps} one_way_open={config.one_way_open}"
+        f"trend_threshold_bps={config.trend_threshold_bps} one_way_open={config.one_way_open} "
+        f"market_regime={config.market_regime_filter} mixed_policy={config.market_regime_mixed_policy}"
     )
     print(
         f"regime_filter={config.regime_filter} bar={config.regime_bar} "
@@ -2673,6 +2685,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--market-regime-filter", choices=("off", "rules", "rf", "hmm"), default="off", help="Optional ADX/CHOP/ML market regime gate for new opens")
     parser.add_argument("--market-regime-model-path", default="", help="Joblib model path for rf/hmm market regime modes")
     parser.add_argument("--market-regime-min-confidence", default="0.52", help="Minimum model confidence before allowing model-driven opens")
+    parser.add_argument(
+        "--market-regime-mixed-policy",
+        choices=("pause", "price_anchor", "range"),
+        default="price_anchor",
+        help="How to trade RF/HMM/rules mixed regime: pause, price-anchor one side, or range both sides",
+    )
     parser.add_argument("--regime-filter", choices=("off", "ma_cross"), default="off")
     parser.add_argument("--regime-bar", choices=("5m", "15m", "30m", "1H"), default="15m")
     parser.add_argument("--regime-short-ma", type=int, default=5)

@@ -97,8 +97,7 @@ def build_live_plan_items(
             )
         ]
 
-    preflight_status_ok = preflight.get("status") == "pass" or allow_blocked_preflight
-    if not preflight_status_ok or not preflight.get("includeAccount"):
+    if not preflight.get("includeAccount") and not allow_blocked_preflight:
         return [
             LivePlanItem(
                 inst_id="",
@@ -106,6 +105,31 @@ def build_live_plan_items(
                 live_command="",
                 systemd_draft_path="",
                 note="preflight_report.json must have status=pass and includeAccount=true unless blocked preflight is explicitly allowed",
+            )
+        ]
+
+    preflight_checks = preflight.get("checks", [])
+    has_preflight_details = isinstance(preflight_checks, list) and bool(preflight_checks)
+    if preflight.get("status") != "pass" and not allow_blocked_preflight and not has_preflight_details:
+        return [
+            LivePlanItem(
+                inst_id="",
+                status="blocked",
+                live_command="",
+                systemd_draft_path="",
+                note="preflight_report.json must have status=pass and includeAccount=true unless blocked preflight is explicitly allowed",
+            )
+        ]
+
+    global_preflight_blocks = preflight_block_notes(preflight, "")
+    if global_preflight_blocks and not allow_blocked_preflight:
+        return [
+            LivePlanItem(
+                inst_id="",
+                status="blocked",
+                live_command="",
+                systemd_draft_path="",
+                note="preflight blocked: " + "; ".join(global_preflight_blocks),
             )
         ]
 
@@ -131,6 +155,18 @@ def build_live_plan_items(
                     live_command="",
                     systemd_draft_path="",
                     note=f"intent status is {intent.get('status')}",
+                )
+            )
+            continue
+        preflight_blocks = preflight_block_notes(preflight, inst_id)
+        if preflight_blocks and not allow_blocked_preflight:
+            items.append(
+                LivePlanItem(
+                    inst_id=inst_id,
+                    status="blocked",
+                    live_command="",
+                    systemd_draft_path="",
+                    note="preflight blocked: " + "; ".join(preflight_blocks),
                 )
             )
             continue
@@ -193,6 +229,23 @@ def report_trading_mode(report_dir: Path, intents: list[dict[str, Any]]) -> str:
     if any(str(item.get("dry_run_command", "")).find("--live") >= 0 for item in intents):
         return "live"
     return "backtest"
+
+
+def preflight_block_notes(preflight: dict[str, Any], inst_id: str) -> list[str]:
+    checks = preflight.get("checks", [])
+    if not isinstance(checks, list):
+        return []
+    notes = []
+    for check in checks:
+        if not isinstance(check, dict) or check.get("severity") != "block":
+            continue
+        check_inst_id = str(check.get("inst_id") or check.get("instId") or "")
+        if check_inst_id != inst_id:
+            continue
+        code = str(check.get("code") or "preflight_block")
+        message = str(check.get("message") or "").strip()
+        notes.append(f"{code}: {message}" if message else code)
+    return notes
 
 
 def live_command_from_dry_run(dry_run_command: str) -> str:

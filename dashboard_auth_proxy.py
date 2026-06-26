@@ -52,9 +52,10 @@ class AuthProxyHandler(BaseHTTPRequestHandler):
 
         body = self.read_body()
         headers = self.forward_headers(body)
+        upstream_method = "GET" if self.command == "HEAD" else self.command
         conn = http.client.HTTPConnection(TARGET_HOST, TARGET_PORT, timeout=30)
         try:
-            conn.request(self.command, self.path, body=body, headers=headers)
+            conn.request(upstream_method, self.path, body=body, headers=headers)
             response = conn.getresponse()
             response_body = response.read()
         except Exception as exc:

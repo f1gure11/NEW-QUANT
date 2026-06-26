@@ -19,12 +19,15 @@ class ReadonlyDashboardProxyTest(unittest.TestCase):
         self.assertEqual(readonly_upstream_path("/api/eth-bot/status"), "")
         self.assertEqual(readonly_upstream_path("/api/bot/stop"), "")
         self.assertEqual(readonly_upstream_path("/api/trade/order"), "")
+        self.assertEqual(readonly_upstream_path("/console/api/portfolio/live/start"), "")
+        self.assertEqual(readonly_upstream_path("/console/api/trade/order"), "")
 
     def test_allows_only_view_static_assets(self) -> None:
         self.assertEqual(readonly_upstream_path("/view.js"), "/view.js")
         self.assertEqual(readonly_upstream_path("/view.css"), "/view.css")
         self.assertEqual(readonly_upstream_path("/app.js"), "")
         self.assertEqual(readonly_upstream_path("/index.html"), "")
+        self.assertEqual(readonly_upstream_path("/console/"), "")
 
     def test_auth_is_optional_by_default(self) -> None:
         self.assertFalse(readonly_auth_enabled(None))

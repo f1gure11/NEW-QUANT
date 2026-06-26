@@ -28,6 +28,8 @@ BAR_MS = {
     "1D": 86_400_000,
 }
 
+MARKET_REGIME_SIGNAL_CACHE: dict[tuple[str, str, str, str, int, int], Any] = {}
+
 
 @dataclass(slots=True)
 class Candle:
@@ -88,6 +90,7 @@ class GridBacktestConfig:
     market_regime_filter: str = "off"
     market_regime_model_path: str = ""
     market_regime_min_confidence: Decimal = Decimal("0.52")
+    market_regime_mixed_policy: str = "price_anchor"
 
 
 @dataclass(slots=True)
@@ -209,6 +212,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--market-regime-filter", choices=["off", "rules", "rf", "hmm"], default="off")
     parser.add_argument("--market-regime-model-path", default="")
     parser.add_argument("--market-regime-min-confidence", default="0.52")
+    parser.add_argument("--market-regime-mixed-policy", choices=["pause", "price_anchor", "range"], default="price_anchor")
     return parser.parse_args()
 
 
@@ -308,6 +312,7 @@ def config_from_args(args: argparse.Namespace) -> GridBacktestConfig:
         market_regime_filter=str(values["market_regime_filter"]),
         market_regime_model_path=str(values["market_regime_model_path"]),
         market_regime_min_confidence=dec(values["market_regime_min_confidence"]),
+        market_regime_mixed_policy=str(values["market_regime_mixed_policy"]),
     )
 
 
@@ -743,15 +748,13 @@ def market_regime_open_sides(
 ) -> set[str] | None:
     if config.market_regime_filter == "off":
         return None
-    from market_regime import signal_from_candles
-
-    signal = signal_from_candles(
-        candles,
-        mode=config.market_regime_filter,
-        model_path=config.market_regime_model_path,
-        min_confidence=float(config.market_regime_min_confidence),
-    )
+    signal = cached_market_regime_signal(config, candles)
     sides = set(signal.allowed_open_sides)
+    if getattr(signal, "state", "") == "mixed" and not sides:
+        if config.market_regime_mixed_policy == "price_anchor":
+            sides = {"long"} if mark_px <= midpoint else {"short"}
+        elif config.market_regime_mixed_policy == "range":
+            sides = {"long", "short"}
     if not sides:
         return set()
     if config.one_way_open and sides == {"long", "short"}:
@@ -762,6 +765,36 @@ def market_regime_open_sides(
         if long_pos.size > 0 and "short" in sides:
             return set()
     return sides
+
+
+def cached_market_regime_signal(config: GridBacktestConfig, candles: list[Candle]) -> Any:
+    if not candles:
+        from market_regime import signal_from_candles
+
+        return signal_from_candles(
+            candles,
+            mode=config.market_regime_filter,
+            model_path=config.market_regime_model_path,
+            min_confidence=float(config.market_regime_min_confidence),
+        )
+    key = (
+        config.inst_id,
+        config.market_regime_filter,
+        config.market_regime_model_path,
+        plain(config.market_regime_min_confidence),
+        len(candles),
+        candles[-1].ts,
+    )
+    if key not in MARKET_REGIME_SIGNAL_CACHE:
+        from market_regime import signal_from_candles
+
+        MARKET_REGIME_SIGNAL_CACHE[key] = signal_from_candles(
+            candles,
+            mode=config.market_regime_filter,
+            model_path=config.market_regime_model_path,
+            min_confidence=float(config.market_regime_min_confidence),
+        )
+    return MARKET_REGIME_SIGNAL_CACHE[key]
 
 
 def regime_state(config: GridBacktestConfig, candles: list[Candle]) -> str:

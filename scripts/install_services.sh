@@ -31,12 +31,12 @@ cp deploy/systemd/okx-re-bot.service /etc/systemd/system/okx-re-bot.service
 
 systemctl daemon-reload
 systemctl enable okx-dashboard.service
-systemctl enable okx-portfolio-backtest.timer
+systemctl enable --now okx-portfolio-backtest.timer
 
 echo "Services installed."
 echo "Start dashboard: systemctl start okx-dashboard"
 echo "Readonly domain proxy: configure /etc/okx-dashboard-readonly.env, then systemctl enable --now okx-dashboard-readonly-proxy"
-echo "Scheduled portfolio hot-contract backtest: systemctl start okx-portfolio-backtest.timer"
+echo "Scheduled portfolio hot-contract backtest and auto-apply timer is enabled and started."
 echo "Default bot control path: open the dashboard and use the BEAT/RE buttons."
 echo "Standalone units are installed for emergency/manual use only:"
 echo "  systemctl start okx-beat-bot"

@@ -25,7 +25,7 @@ async function refresh() {
   const failures = [];
   try {
     setConn("连接中", "watch");
-    const [portfolioResult] = await Promise.allSettled([getJson("/api/portfolio/latest")]);
+    const [portfolioResult] = await Promise.allSettled([getJson("/api/portfolio/latest?includeAccount=1&includeRegimeResearch=1")]);
     if (portfolioResult.status === "fulfilled") {
       latestPortfolio = portfolioResult.value.data || {};
     } else {
@@ -244,8 +244,8 @@ function renderPortfolio(data) {
   text("adaptiveDigest", adaptiveProfileText(adaptiveRows));
   text("adaptiveDetail", `${modeText(summary.tradingMode)} · 实盘 ${summary.liveRunningCount ?? live.runningCount ?? 0}/${summary.liveTargetCount ?? live.targetCount ?? 0} · 预检 ${live.preflightStatus || report.preflight?.status || "--"}`);
 
-  renderRoleTargets(coreRows, report.scores || [], report.runtimeConfigs || [], "coreDetails", "核心舱", "coreSummary");
-  renderRoleTargets(satelliteRows, report.scores || [], report.runtimeConfigs || [], "satelliteDetails", "卫星仓", "satelliteSummary");
+  renderRoleTargets(coreRows, report.scores || [], report.runtimeConfigs || [], "coreDetails", "核心舱", "coreSummary", report.eligibilityDiagnostics || []);
+  renderRoleTargets(satelliteRows, report.scores || [], report.runtimeConfigs || [], "satelliteDetails", "卫星仓", "satelliteSummary", report.eligibilityDiagnostics || []);
   renderRebalanceTiming(actions, allocation);
   renderBacktestStatus(data.backtest || {});
   renderRebalanceRecords(actions, report.generatedAt, allocation);
@@ -329,13 +329,13 @@ function renderRebalanceRecords(actions, generatedAt, allocation) {
   );
 }
 
-function renderRoleTargets(targets, scores, runtimeConfigs, targetId, label, summaryId) {
+function renderRoleTargets(targets, scores, runtimeConfigs, targetId, label, summaryId, diagnostics = []) {
   const scoreByInst = Object.fromEntries(scores.map((row) => [row.inst_id, row]));
   const runtimeByInst = Object.fromEntries(runtimeConfigs.map((row) => [row.instId, row]));
   const totalWeight = targets.reduce((sum, item) => sum + Number(item.weight_pct || 0), 0);
   text(summaryId, `${targets.length} 个${label} · 合计 ${fmt(totalWeight, 2)}%`);
   if (!targets.length) {
-    html(targetId, `<div class="empty">暂无${label}</div>`);
+    html(targetId, emptyTargetHtml(label, diagnostics));
     return;
   }
   html(
@@ -363,6 +363,38 @@ function renderRoleTargets(targets, scores, runtimeConfigs, targetId, label, sum
       })
       .join("")}</div>`,
   );
+}
+
+function emptyTargetHtml(label, diagnostics) {
+  const filtered = (diagnostics || []).filter((item) => item.status === "filtered").slice(0, 6);
+  if (!filtered.length) return `<div class="empty">暂无${label}</div>`;
+  return [
+    `<div class="empty">暂无${label}：候选未通过组合过滤</div>`,
+    table(
+      [
+        { label: "排名", type: "num" },
+        { label: "合约", type: "text" },
+        { label: "收益", type: "num" },
+        { label: "风险事件", type: "num" },
+        { label: "过滤原因", type: "text" },
+      ],
+      filtered.map((item) => [
+        item.rank,
+        item.instId,
+        `${fmt(item.totalReturnPct, 2)}%`,
+        item.riskEvents,
+        translateEligibilityReason(item.reason),
+      ]),
+    ),
+  ].join("");
+}
+
+function translateEligibilityReason(reason) {
+  return String(reason || "--")
+    .replace(/risk events (\d+) > max (\d+)/g, "风险事件 $1 > 上限 $2")
+    .replace(/fills (\d+) < min (\d+)/g, "成交 $1 < 最少 $2")
+    .replace(/score ([^ ]+) < min ([^ ;]+)/g, "评分 $1 < 下限 $2")
+    .replace("passed allocation filters", "通过组合过滤");
 }
 
 function renderRebalanceTiming(actions, allocation) {
@@ -443,9 +475,10 @@ function renderRegimeResearch(research, runtimeConfigs = []) {
   }
   const best = research.bestVariant || {};
   const activeModes = [...new Set(runtimeConfigs.map((item) => item.marketRegimeFilter || "off"))].join(", ") || "off";
+  const mixedPolicy = mixedPolicyText(runtimeConfigs[0]?.marketRegimeMixedPolicy);
   text(
     "regimeResearchSummary",
-    `${research.name || "--"} · 最佳研究层 ${regimeVariantText(best.variant)} · 当前 ${activeModes}`,
+    `${research.name || "--"} · 最佳研究层 ${regimeVariantText(best.variant)} · 当前 ${activeModes} · ${mixedPolicy}`,
   );
   const variantRows = (research.variantSummary || []).map((row) => [
     regimeVariantText(row.variant),
@@ -476,7 +509,7 @@ function renderRegimeResearch(research, runtimeConfigs = []) {
         ],
         [
           ["报告", `${research.generatedAt || "--"} · ${research.reportDir || "--"}`],
-          ["当前实盘开关", activeModes],
+          ["当前实盘开关", `${activeModes} · ${mixedPolicy}`],
           ["相对基线", `收益 ${signed(best.returnDeltaVsBaseline, 2)}%，回撤 ${signed(best.drawdownDeltaVsBaseline, 2)}%，风险事件 ${signed(best.riskEventDeltaVsBaseline, 0)}`],
           ["RF/HMM 弱标签", `${fmt(research.models?.rf?.accuracy, 3)} / ${fmt(research.models?.hmm?.accuracyVsWeakLabels, 3)}`],
           ["QuantDinger", `${research.quantDinger?.license || "--"} · 标准已参考，未接管实盘执行`],
@@ -979,6 +1012,14 @@ function regimeSignalText(signal) {
     trend_up: "上行趋势",
     trend_down: "下行趋势",
   }[signal] || signal || "--";
+}
+
+function mixedPolicyText(policy) {
+  return {
+    pause: "混合暂停",
+    price_anchor: "混合价格锚定",
+    range: "混合双向网格",
+  }[policy] || policy || "混合价格锚定";
 }
 
 function trendCheckText(summary) {

@@ -98,7 +98,7 @@ Useful knobs:
 --target-symbols 4
 --allocation-min-score -999999
 --allocation-min-fills 1
---allocation-max-risk-events 2
+--allocation-max-risk-events 5
 --cash-reserve-pct 20
 --max-weight-pct 40
 --min-weight-pct 5

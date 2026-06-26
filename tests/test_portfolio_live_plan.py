@@ -71,6 +71,44 @@ class PortfolioLivePlanTest(unittest.TestCase):
 
             self.assertEqual(items[0].status, "blocked")
 
+    def test_write_live_plan_allows_unblocked_targets_when_other_target_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report_dir = Path(tmpdir)
+            write_report(report_dir)
+            runtime_dir = report_dir / "runtime_configs"
+            blocked_runtime = runtime_dir / "bbb_usdt_swap.json"
+            blocked_runtime.write_text('{"instId":"BBB-USDT-SWAP"}', encoding="utf-8")
+            execution = json.loads((report_dir / "execution_intents.json").read_text(encoding="utf-8"))
+            execution["intents"].append(
+                {
+                    "inst_id": "BBB-USDT-SWAP",
+                    "status": "runtime_config_ready",
+                    "runtime_config_path": str(blocked_runtime),
+                    "dry_run_command": f"PYTHONPATH=. .venv/bin/python auto_grid_bot.py --inst-id BBB-USDT-SWAP --runtime-config {blocked_runtime} --once",
+                }
+            )
+            (report_dir / "execution_intents.json").write_text(json.dumps(execution), encoding="utf-8")
+            (report_dir / "preflight_report.json").write_text(
+                json.dumps(
+                    {
+                        "status": "blocked",
+                        "includeAccount": True,
+                        "checks": [
+                            {"severity": "pass", "code": "no_pending_orders", "inst_id": "AAA-USDT-SWAP", "message": ""},
+                            {"severity": "block", "code": "pending_algo_orders_exist", "inst_id": "BBB-USDT-SWAP", "message": "Pending conditional algo orders exist."},
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            items = write_live_plan(report_dir)
+            live_plan = json.loads((report_dir / "live_plan.json").read_text(encoding="utf-8"))
+
+        self.assertEqual([item.status for item in items], ["ready", "blocked"])
+        self.assertIn("pending_algo_orders_exist", items[1].note)
+        self.assertEqual(live_plan["status"], "partial")
+
     def test_write_live_plan_can_explicitly_allow_blocked_preflight(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             report_dir = Path(tmpdir)

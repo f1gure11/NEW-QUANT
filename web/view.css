@@ -97,7 +97,8 @@ th.num {
 }
 
 .readonly,
-.pill {
+.pill,
+.consoleLink {
   border-radius: 6px;
   padding: 6px 10px;
   color: var(--text);
@@ -111,6 +112,18 @@ th.num {
   border: 1px solid rgba(148, 163, 184, 0.28);
   background: rgba(148, 163, 184, 0.14);
   color: var(--muted);
+}
+
+.consoleLink {
+  border: 1px solid rgba(16, 185, 129, 0.32);
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.consoleLink:hover {
+  border-color: rgba(16, 185, 129, 0.56);
+  color: #ffffff;
 }
 
 .pill.ok {

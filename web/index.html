@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>豆包 Quant Console</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="app">
@@ -159,7 +159,7 @@
             <p id="digestExposure">--</p>
           </article>
           <article>
-            <span>ETH 实盘</span>
+            <span>组合实盘</span>
             <strong id="digestLiveBot">--</strong>
             <p id="digestLiveDetail">--</p>
           </article>
@@ -242,41 +242,10 @@
           <div id="botActionFeed" class="actionFeed"></div>
         </section>
 
-        <section class="liveBotPanel">
-          <div class="portfolioHead">
-            <div>
-              <h2 id="ethBotTitle">组合 ETH 滚动实盘</h2>
-              <p id="ethBotMeta">只读监控，不控制实盘进程</p>
-            </div>
-            <div class="portfolioActions">
-              <button id="refreshEthBotBtn" class="secondaryBtn" type="button">刷新ETH</button>
-            </div>
-          </div>
-          <div class="portfolioMetrics liveMetrics">
-            <article><span>运行状态</span><strong id="ethBotState">--</strong></article>
-            <article><span>杠杆/格距</span><strong id="ethBotLeverageGrid">--</strong></article>
-            <article><span>持仓</span><strong id="ethBotPosition">--</strong></article>
-            <article><span>每单/上限</span><strong id="ethBotSizing">--</strong></article>
-            <article><span>净收益</span><strong id="ethBotEdge">--</strong></article>
-            <article><span>最新原因</span><strong id="ethBotDecision">--</strong></article>
-          </div>
-          <div class="portfolioTables liveBotTables">
-            <article class="portfolioTableCard">
-              <h3>自适应算法</h3>
-              <div id="ethAdaptiveTable" class="tableWrap empty">暂无数据</div>
-            </article>
-            <article class="portfolioTableCard">
-              <h3>开仓判定</h3>
-              <div id="ethDecisionTable" class="tableWrap empty">暂无数据</div>
-            </article>
-          </div>
-          <pre id="ethBotLog" class="tradeResult">组合 ETH 实盘日志等待中</pre>
-        </section>
-
         <section class="portfolioPanel">
           <div class="portfolioHead">
             <div>
-              <h2>组合回测与调仓</h2>
+              <h2>组合自适应交易</h2>
               <p id="portfolioReportMeta">暂无组合报告</p>
             </div>
             <div class="portfolioActions">
@@ -294,11 +263,12 @@
                 <option value="live">直接实盘</option>
               </select>
             </label>
-            <label>候选数<input id="portfolioTopN" type="number" min="1" max="50" step="1" value="12" /></label>
-            <label>目标数<input id="portfolioTargetSymbols" type="number" min="1" max="20" step="1" value="6" /></label>
-            <label>回测页数<input id="portfolioBacktestPages" type="number" min="1" max="8" step="1" value="2" /></label>
+            <label>候选数<input id="portfolioTopN" type="number" min="1" max="20" step="1" value="12" /></label>
+            <label>目标数<input id="portfolioTargetSymbols" type="number" min="1" max="8" step="1" value="6" /></label>
+            <label>回测页数<input id="portfolioBacktestPages" type="number" min="1" max="3" step="1" value="2" /></label>
             <label>每页K线<input id="portfolioBacktestLimit" type="number" min="80" max="300" step="10" value="300" /></label>
-            <label>核心数量<input id="portfolioCoreSymbols" type="number" min="1" max="10" step="1" value="2" /></label>
+            <label>最大风险事件<input id="portfolioMaxRiskEvents" type="number" min="0" max="10" step="1" value="5" /></label>
+            <label>核心数量<input id="portfolioCoreSymbols" type="number" min="1" max="4" step="1" value="2" /></label>
             <label>核心预算 %<input id="portfolioCoreShare" type="number" min="0" max="100" step="1" value="70" /></label>
             <label>卫星上限 %<input id="portfolioSatelliteMax" type="number" min="0" max="100" step="1" value="12" /></label>
             <label>卫星下限 %<input id="portfolioSatelliteMin" type="number" min="0" max="100" step="1" value="3" /></label>
@@ -313,8 +283,22 @@
               </select>
             </label>
             <label>模型置信度<input id="portfolioMarketRegimeMinConfidence" type="number" min="0" max="1" step="0.01" value="0.52" /></label>
+            <label>
+              混合策略
+              <select id="portfolioMarketRegimeMixedPolicy">
+                <option value="price_anchor" selected>价格锚定</option>
+                <option value="pause">暂停开仓</option>
+                <option value="range">双向网格</option>
+              </select>
+            </label>
             <label class="toggle"><input id="portfolioIncludeAccount" type="checkbox" />读取账户做调仓</label>
             <label class="toggle"><input id="portfolioRefreshData" type="checkbox" />刷新公网K线</label>
+          </div>
+          <div class="qdFlow" aria-label="QuantDinger execution workflow">
+            <article><span>Signal</span><strong id="qdSignal">--</strong><p id="qdSignalDetail">--</p></article>
+            <article><span>Execute</span><strong id="qdExecute">--</strong><p id="qdExecuteDetail">--</p></article>
+            <article><span>Risk</span><strong id="qdRisk">--</strong><p id="qdRiskDetail">--</p></article>
+            <article><span>Observe</span><strong id="qdObserve">--</strong><p id="qdObserveDetail">--</p></article>
           </div>
           <div class="portfolioMetrics">
             <article><span>核心舱</span><strong id="portfolioCoreSummary">--</strong></article>
@@ -347,6 +331,10 @@
             <article class="portfolioTableCard">
               <h3>状态模型</h3>
               <div id="portfolioRegimeResearch" class="tableWrap empty">暂无状态模型报告</div>
+            </article>
+            <article class="portfolioTableCard">
+              <h3>组合实盘运行</h3>
+              <div id="portfolioLiveTable" class="tableWrap empty">暂无组合实盘目标</div>
             </article>
           </div>
           <pre id="portfolioLog" class="tradeResult">组合回测日志等待中</pre>
@@ -394,6 +382,6 @@
         </section>
       </section>
     </main>
-    <script src="/app.js?v=20260625-doubao-quant-ui"></script>
+    <script src="app.js?v=20260625-doubao-quant-ui"></script>
   </body>
 </html>

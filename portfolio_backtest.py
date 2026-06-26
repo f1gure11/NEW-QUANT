@@ -148,6 +148,7 @@ class PortfolioBacktestConfig:
     market_regime_filter: str = "auto"
     market_regime_model_path: str = ""
     market_regime_min_confidence: Decimal = Decimal("0.52")
+    market_regime_mixed_policy: str = "price_anchor"
     ml_profile: MlRegimeProfile | None = None
     trend_filter: str = "off"
     trend_lookback: int = 8
@@ -194,6 +195,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--market-regime-filter", choices=["auto", "off", "rules", "rf", "hmm"], default="auto")
     parser.add_argument("--market-regime-model-path", default="")
     parser.add_argument("--market-regime-min-confidence", default="0.52")
+    parser.add_argument("--market-regime-mixed-policy", choices=["pause", "price_anchor", "range"], default="price_anchor")
     parser.add_argument("--trend-filter", choices=["off", "auto", "compare"], default="off")
     parser.add_argument("--allow-dual-open", dest="one_way_open", action="store_false")
     parser.add_argument("--one-way-open", dest="one_way_open", action="store_true")
@@ -201,7 +203,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-symbols", type=int, default=6)
     parser.add_argument("--allocation-min-score", default="-999999")
     parser.add_argument("--allocation-min-fills", type=int, default=1)
-    parser.add_argument("--allocation-max-risk-events", type=int, default=2)
+    parser.add_argument("--allocation-max-risk-events", type=int, default=5)
     parser.add_argument("--max-weight-pct", default="45")
     parser.add_argument("--min-weight-pct", default="5")
     parser.add_argument("--cash-reserve-pct", default="10")
@@ -264,6 +266,7 @@ def config_from_args(args: argparse.Namespace) -> PortfolioBacktestConfig:
         market_regime_filter=args.market_regime_filter,
         market_regime_model_path=args.market_regime_model_path,
         market_regime_min_confidence=market_regime_min_confidence,
+        market_regime_mixed_policy=args.market_regime_mixed_policy,
         ml_profile=ml_profile,
         trend_filter=args.trend_filter,
         one_way_open=args.one_way_open,
@@ -508,6 +511,7 @@ def grid_config_for_candidate(
         market_regime_filter=effective_market_regime_filter(config),
         market_regime_model_path=effective_market_regime_model_path(config),
         market_regime_min_confidence=config.market_regime_min_confidence,
+        market_regime_mixed_policy=config.market_regime_mixed_policy,
     )
 
 
@@ -747,8 +751,24 @@ def write_summary(
         f"- Selector: min quote volume `{plain(config.selector.min_quote_volume)}`, max spread `{plain(config.selector.max_spread_bps)}` bps, top `{config.selector.top_n}`",
         f"- Rebalance: dry-run, target symbols `{config.allocation.max_symbols}`, cash reserve `{plain(config.allocation.cash_reserve_pct)}`%, min deploy `{plain(config.allocation.min_deploy_pct)}`%",
         f"- Trading mode: `{config.trading_mode}`",
-        f"- ML regime gate: `{effective_market_regime_filter(config)}` model `{effective_market_regime_model_path(config) or 'none'}` min confidence `{plain(config.market_regime_min_confidence)}`",
+        f"- ML regime gate: `{effective_market_regime_filter(config)}` model `{effective_market_regime_model_path(config) or 'none'}` min confidence `{plain(config.market_regime_min_confidence)}` mixed policy `{config.market_regime_mixed_policy}`",
         f"- Portfolio shape: core `{config.allocation.core_symbols}` symbols / `{plain(config.allocation.core_weight_share_pct)}`% of deployed capital, satellites max `{plain(config.allocation.satellite_max_weight_pct)}`%",
+        "",
+        "## Run Parameters",
+        "",
+        "| Group | Setting | Value |",
+        "| --- | --- | ---: |",
+        f"| Universe | Candidate limit | {config.selector.top_n} |",
+        f"| Universe | Min quote volume | {plain(config.selector.min_quote_volume)} |",
+        f"| Universe | Max spread bps | {plain(config.selector.max_spread_bps)} |",
+        f"| Backtest | Bar / pages / limit | {config.backtest_bar} / {config.backtest_pages} / {config.backtest_limit} |",
+        f"| Allocation | Target symbols | {config.allocation.max_symbols} |",
+        f"| Allocation | Min fills | {config.allocation.min_fills} |",
+        f"| Allocation | Max risk events | {config.allocation.max_risk_events} |",
+        f"| Allocation | Cash reserve % | {plain(config.allocation.cash_reserve_pct)} |",
+        f"| Allocation | Min deploy % | {plain(config.allocation.min_deploy_pct)} |",
+        f"| Sizing | Starting equity / leverage | {plain(config.starting_equity)} / {plain(config.leverage)}x |",
+        f"| Filters | Trend / market regime | {config.trend_filter} / {effective_market_regime_filter(config)} |",
         "",
         "## Scores",
         "",
@@ -776,6 +796,36 @@ def write_summary(
                     risk=csv_value(row.get("risk_events", "")),
                 )
             )
+        lines.append("")
+
+    lines.extend(["## Eligibility Diagnostics", ""])
+    diagnostics = eligibility_diagnostics(rows, config)
+    if not diagnostics:
+        lines.extend(["No successful candidates were available for allocation.", ""])
+    else:
+        lines.extend(
+            [
+                "| Rank | Instrument | Allocation Status | Reason |",
+                "| ---: | --- | --- | --- |",
+            ]
+        )
+        for item in diagnostics[:20]:
+            lines.append(
+                f"| {item['rank']} | {item['inst_id']} | {item['status']} | {item['reason']} |"
+            )
+        if not targets:
+            blocked = [item for item in diagnostics if item["status"] == "filtered"]
+            if blocked:
+                lines.extend(
+                    [
+                        "",
+                        (
+                            "No target allocations were generated because every successful candidate was filtered out. "
+                            "The most common cause is `risk_events` above the allocation cap; raise the sandbox "
+                            "`Max risk events` only for sensitivity testing, not as an automatic live setting."
+                        ),
+                    ]
+                )
         lines.append("")
 
     lines.extend(["## Target Portfolio", ""])
@@ -865,6 +915,32 @@ def write_summary(
         ]
     )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def eligibility_diagnostics(rows: list[dict[str, Any]], config: PortfolioBacktestConfig) -> list[dict[str, str]]:
+    diagnostics: list[dict[str, str]] = []
+    for row in rows:
+        if row.get("status") != "ok":
+            continue
+        reasons = []
+        score = dec(row.get("score"))
+        fills = int(dec(row.get("fills")))
+        risk_events = int(dec(row.get("risk_events")))
+        if score < config.allocation.min_score:
+            reasons.append(f"score {plain(score)} < min {plain(config.allocation.min_score)}")
+        if fills < config.allocation.min_fills:
+            reasons.append(f"fills {fills} < min {config.allocation.min_fills}")
+        if risk_events > config.allocation.max_risk_events:
+            reasons.append(f"risk events {risk_events} > max {config.allocation.max_risk_events}")
+        diagnostics.append(
+            {
+                "rank": str(row.get("rank", "")),
+                "inst_id": str(row.get("inst_id", "")),
+                "status": "filtered" if reasons else "eligible",
+                "reason": "; ".join(reasons) if reasons else "passed allocation filters",
+            }
+        )
+    return diagnostics
 
 
 def candidate_row(candidate: MarketCandidate) -> dict[str, Any]:

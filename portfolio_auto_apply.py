@@ -5,6 +5,7 @@ import fcntl
 import json
 import os
 import signal
+import shlex
 import subprocess
 import sys
 import time
@@ -102,7 +103,10 @@ def run(args: argparse.Namespace) -> int:
             stop_process(process, timeout=args.stop_timeout)
 
     for inst_id in plan.reduce_insts:
-        run_reduce_once(report_dir, inst_id)
+        intent = reduce_intents.get(inst_id)
+        if not intent:
+            raise RuntimeError(f"Reduce intent missing for {inst_id}.")
+        run_reduce_once(report_dir, inst_id, intent)
         if args.post_reduce_delay > 0:
             time.sleep(args.post_reduce_delay)
 
@@ -304,29 +308,12 @@ def stop_process(process: BotProcess, *, timeout: float) -> None:
         return
 
 
-def run_reduce_once(report_dir: Path, inst_id: str) -> None:
-    command = [
-        sys.executable,
-        str(PROJECT_ROOT / "portfolio_rebalancer.py"),
-        "--report-dir",
-        str(report_dir),
-        "--inst-id",
-        inst_id,
-        "--log-path",
-        str(PROJECT_ROOT / "data" / "okx" / "portfolio_rebalancer_actions.jsonl"),
-        "--ord-type",
-        "market",
-        "--slippage-bps",
-        "50",
-        "--cancel-pending",
-        "--cancel-algos",
-        "--once",
-        "--live",
-        "--confirm-live",
-        "I_UNDERSTAND",
-    ]
+def run_reduce_once(report_dir: Path, inst_id: str, intent: dict[str, Any]) -> None:
+    command = live_command_from_dry_run(str(intent.get("dry_run_command", "")))
+    if not command:
+        raise RuntimeError(f"Reduce command missing for {inst_id}.")
     print("Running reduce " + " ".join(command))
-    log_event("reduce_once", {"instId": inst_id, "command": command})
+    log_event("reduce_once", {"instId": inst_id, "reportDir": str(report_dir), "command": command})
     completed = subprocess.run(
         command,
         cwd=PROJECT_ROOT,
@@ -345,6 +332,28 @@ def run_reduce_once(report_dir: Path, inst_id: str) -> None:
     )
     if completed.returncode != 0:
         raise RuntimeError(f"Reduce failed for {inst_id}: returnCode={completed.returncode}")
+
+
+def live_command_from_dry_run(dry_run_command: str) -> list[str]:
+    if not dry_run_command:
+        return []
+    parts = shlex.split(dry_run_command)
+    while parts and is_env_assignment(parts[0]):
+        parts = parts[1:]
+    if parts and Path(parts[0]).name in {"python", "python3"}:
+        parts[0] = sys.executable
+    if "--live" not in parts:
+        parts.append("--live")
+    if "--confirm-live" not in parts:
+        parts.extend(["--confirm-live", "I_UNDERSTAND"])
+    return parts
+
+
+def is_env_assignment(value: str) -> bool:
+    if "=" not in value:
+        return False
+    key = value.split("=", 1)[0]
+    return key.replace("_", "A").isalnum() and not key[:1].isdigit()
 
 
 def hot_update_runtime(report_dir: Path, process: BotProcess, intent: dict[str, Any]) -> dict[str, Any]:

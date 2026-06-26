@@ -668,8 +668,7 @@ button:disabled {
   border-left-color: var(--red);
 }
 
-.portfolioPanel,
-.liveBotPanel {
+.portfolioPanel {
   margin-top: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -734,10 +733,6 @@ button:disabled {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 14px;
-}
-
-.liveBotTables {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .portfolioTableCard {
@@ -954,9 +949,9 @@ h2 {
 .runtimeCard,
 .activityPanel,
 .portfolioPanel,
-.liveBotPanel,
 .metricGrid article,
-.commandBand article {
+.commandBand article,
+.qdFlow article {
   border-color: var(--line);
   border-radius: 8px;
   box-shadow: var(--shadow);
@@ -1066,10 +1061,6 @@ button {
   background: #fff;
 }
 
-.liveBotPanel {
-  border-left: 4px solid var(--teal);
-}
-
 .portfolioPanel {
   border-left: 4px solid var(--blue);
 }
@@ -1102,6 +1093,44 @@ button {
   border-radius: 6px;
   padding: 8px;
   background: #fbfdff;
+}
+
+.qdFlow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.qdFlow article {
+  min-width: 0;
+  border: 1px solid var(--line);
+  padding: 12px;
+  background: #f8fbff;
+}
+
+.qdFlow span {
+  color: #566477;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.qdFlow strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.qdFlow p {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .portfolioMetrics {
@@ -1176,6 +1205,10 @@ td {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
+  .qdFlow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .portfolioMetrics {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -1193,6 +1226,7 @@ td {
 
   .commandBand,
   .portfolioControls,
+  .qdFlow,
   .portfolioMetrics,
   .portfolioTables,
   .lowerGrid {

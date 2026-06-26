@@ -16,6 +16,8 @@ const inputs = [
   "rangeDriftWeightBps",
   "rangeDriftMaxBps",
 ];
+const consolePathPrefix = window.location.pathname.startsWith("/console") ? "/console" : "";
+const apiBasePath = `${consolePathPrefix}/api`;
 const storageKey = "okxQuantConsole.params.v1";
 const persistedOnlyInputs = [
   "missedTpOrdType",
@@ -23,6 +25,7 @@ const persistedOnlyInputs = [
   "portfolioTradingMode",
   "portfolioMarketRegimeFilter",
   "portfolioMarketRegimeMinConfidence",
+  "portfolioMarketRegimeMixedPolicy",
 ];
 const persistedCheckboxes = [
   "autoRefresh",
@@ -47,10 +50,12 @@ const ethDefaults = {
   rangeDriftMaxBps: "250",
 };
 let autoTimer = null;
-let botTimer = null;
 let latestData = null;
-let latestEthBot = null;
 let latestPortfolio = null;
+
+function apiUrl(path) {
+  return `${apiBasePath}${path.startsWith("/") ? path : `/${path}`}`;
+}
 let refreshInFlight = false;
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -60,13 +65,11 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("instId").addEventListener("change", () => {
       syncMonitorFromBotForm(selectedBotKey());
       saveParams();
-      refresh();
     });
     document.getElementById("refreshPortfolioBtn").addEventListener("click", refreshPortfolio);
     document.getElementById("runPortfolioBacktestBtn").addEventListener("click", startPortfolioBacktest);
     document.getElementById("startPortfolioLiveBtn")?.addEventListener("click", startPortfolioLive);
     document.getElementById("stopPortfolioLiveBtn")?.addEventListener("click", stopPortfolioLive);
-    document.getElementById("refreshEthBotBtn").addEventListener("click", refreshEthBotStatus);
     document.getElementById("autoRefresh").addEventListener("change", () => {
       saveParams();
       configureTimer();
@@ -74,7 +77,6 @@ window.addEventListener("DOMContentLoaded", () => {
     inputs.forEach((id) =>
       document.getElementById(id)?.addEventListener("change", () => {
         saveParams();
-        refresh();
       }),
     );
     persistedOnlyInputs.forEach((id) => document.getElementById(id)?.addEventListener("change", saveParams));
@@ -82,9 +84,7 @@ window.addEventListener("DOMContentLoaded", () => {
       .filter((id) => !["autoRefresh", "oneWayOpen"].includes(id))
       .forEach((id) => document.getElementById(id)?.addEventListener("change", saveParams));
     syncMonitorFromBotForm(selectedBotKey(), false);
-    refreshEthBotStatus();
     refreshPortfolio();
-    refresh();
     configureTimer();
   } catch (error) {
     console.error(error);
@@ -128,11 +128,8 @@ function saveParams() {
 
 function configureTimer() {
   if (autoTimer) clearInterval(autoTimer);
-  if (botTimer) clearInterval(botTimer);
   if (document.getElementById("autoRefresh").checked) {
-    autoTimer = setInterval(refresh, 8000);
-    botTimer = setInterval(() => {
-      refreshEthBotStatus();
+    autoTimer = setInterval(() => {
       refreshPortfolio();
     }, 8000);
   }
@@ -149,7 +146,7 @@ async function refresh() {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 18000);
   try {
-    const response = await fetch(`/api/snapshot?${params.toString()}`, { cache: "no-store", signal: controller.signal });
+    const response = await fetch(apiUrl(`/snapshot?${params.toString()}`), { cache: "no-store", signal: controller.signal });
     const result = await response.json();
     if (!result.ok) throw new Error(result.error || "snapshot failed");
     latestData = result.data;
@@ -168,16 +165,10 @@ async function refresh() {
 function selectedBotKey() {
   const instId = document.getElementById("instId").value;
   if (portfolioRuntimeConfig(instId) || portfolioBotForInst(instId)) return "portfolio";
-  if (instId === "ETH-USDT-SWAP") return "eth";
   return "portfolio";
 }
 
 function syncMonitorFromBotForm(bot, overwriteInst = true) {
-  if (bot === "eth") {
-    if (overwriteInst) document.getElementById("instId").value = "ETH-USDT-SWAP";
-    applyConfigToMonitorFields({ ...ethDefaults, ...(latestEthBot?.data?.runtimeConfig || {}) });
-    return;
-  }
   const payload = portfolioMonitorConfig(document.getElementById("instId").value);
   applyConfigToMonitorFields(payload);
 }
@@ -218,7 +209,7 @@ function portfolioMonitorConfig(instId) {
 
 function snapshotPayload() {
   const bot = selectedBotKey();
-  const payload = bot === "eth" ? { ...ethDefaults, ...(latestEthBot?.data?.runtimeConfig || {}) } : portfolioMonitorConfig(document.getElementById("instId").value);
+  const payload = bot === "portfolio" ? portfolioMonitorConfig(document.getElementById("instId").value) : { ...ethDefaults };
   const monitorKeys = ["instId", "lower", "upper", "leverage", "gridBps", "minNetBps", "softBps", "hardBps", "mode", "adaptiveWidthBps", "adaptiveMinWidthBps", "adaptiveMaxWidthBps", "adaptiveVolMultiplier", "rangeDriftMode", "rangeDriftWeightBps", "rangeDriftMaxBps", "exchangeStopBps", "exchangeStopTriggerPxType", "exchangeStopRepriceBps"];
   monitorKeys.forEach((key) => {
     const el = document.getElementById(key);
@@ -553,13 +544,12 @@ function renderActionFeed(diagnostics) {
 
 async function refreshPortfolio() {
   try {
-    const response = await fetch("/api/portfolio/latest", { cache: "no-store" });
+    const response = await fetch(apiUrl("/portfolio/latest?includeAccount=1&includeRegimeResearch=1"), { cache: "no-store" });
     const result = await response.json();
     if (!result.ok) throw new Error(result.error || "portfolio latest failed");
     latestPortfolio = result.data;
     renderPortfolio(result.data);
     syncMonitorFromBotForm(selectedBotKey(), false);
-    renderEthBotStatus(displayEthBotResult());
     if (latestData) {
       renderRuntimeSummary(latestData, activeBotResult(latestData));
       drawChart(latestData);
@@ -576,7 +566,7 @@ async function startPortfolioBacktest() {
   button.textContent = "回测启动中";
   try {
     const payload = portfolioBacktestPayload();
-    const response = await fetch("/api/portfolio/backtest/start", {
+    const response = await fetch(apiUrl("/portfolio/backtest/start"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -602,7 +592,7 @@ async function startPortfolioLive() {
     if (summary.tradingMode !== "live") {
       throw new Error("最新组合报告不是直接实盘模式，请先选择“直接实盘”并重新跑组合回测。");
     }
-    const response = await fetch("/api/portfolio/live/start", {
+    const response = await fetch(apiUrl("/portfolio/live/start"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ executeRebalance: true, tradingMode: "live" }),
@@ -624,7 +614,7 @@ async function stopPortfolioLive() {
   button.disabled = true;
   button.textContent = "停止中";
   try {
-    const response = await fetch("/api/portfolio/live/stop", {
+    const response = await fetch(apiUrl("/portfolio/live/stop"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
@@ -649,12 +639,14 @@ function portfolioBacktestPayload() {
     targetSymbols: val("portfolioTargetSymbols"),
     backtestPages: val("portfolioBacktestPages"),
     backtestLimit: val("portfolioBacktestLimit"),
+    allocationMaxRiskEvents: val("portfolioMaxRiskEvents"),
     coreSymbols: val("portfolioCoreSymbols"),
     coreWeightSharePct: val("portfolioCoreShare"),
     satelliteMaxWeightPct: val("portfolioSatelliteMax"),
     satelliteMinWeightPct: val("portfolioSatelliteMin"),
     marketRegimeFilter: val("portfolioMarketRegimeFilter"),
     marketRegimeMinConfidence: val("portfolioMarketRegimeMinConfidence"),
+    marketRegimeMixedPolicy: val("portfolioMarketRegimeMixedPolicy"),
     includeAccount: document.getElementById("portfolioIncludeAccount").checked,
     refresh: document.getElementById("portfolioRefreshData").checked,
   };
@@ -664,9 +656,15 @@ function renderPortfolio(data) {
   const backtest = data?.backtest || {};
   const report = data?.latestReport;
   const live = data?.live || report?.live || {};
+  renderPortfolioAccount(data?.account || {});
   text("portfolioBacktestState", backtest.running ? "运行中" : backtestStateText(backtest.state, backtest.returnCode));
   text("portfolioBacktestLogAt", backtest.lastLogAt ? time(backtest.lastLogAt) : "--");
-  text("portfolioLog", backtest.logTail || "组合回测日志等待中");
+  text("portfolioLog", portfolioBacktestLogText(backtest));
+  const backtestButton = document.getElementById("runPortfolioBacktestBtn");
+  if (backtestButton) {
+    backtestButton.disabled = Boolean(backtest.running);
+    backtestButton.textContent = backtest.running ? "回测运行中" : "跑组合回测";
+  }
   if (!report) {
     text("portfolioReportMeta", backtest.running ? "组合回测运行中，等待报告生成" : "暂无组合报告");
     renderPortfolioEmpty();
@@ -689,20 +687,90 @@ function renderPortfolio(data) {
     startButton.title = summary.tradingMode === "live" ? "启动最新直接实盘报告" : "先用直接实盘模式重新跑组合回测";
   }
   renderPortfolioDigest(report, summary);
-  renderPortfolioRoleTargets(report.rebalance?.targets || [], "core", "portfolioCoreTable");
-  renderPortfolioRoleTargets(report.rebalance?.targets || [], "satellite", "portfolioSatelliteTable");
+  renderPortfolioRoleTargets(report.rebalance?.targets || [], "core", "portfolioCoreTable", report.eligibilityDiagnostics || []);
+  renderPortfolioRoleTargets(report.rebalance?.targets || [], "satellite", "portfolioSatelliteTable", report.eligibilityDiagnostics || []);
   renderPortfolioActions(report.rebalance?.actions || []);
   renderPortfolioAdaptive(summary.adaptivePreview || []);
   renderRegimeResearch(data?.regimeResearch, report.runtimeConfigs || []);
+  renderPortfolioLiveTable(live);
+  renderQuantDingerFlow(report, summary, live, data?.regimeResearch);
+}
+
+function portfolioBacktestLogText(backtest) {
+  const header = portfolioBacktestParameterText(backtest);
+  const logTail = backtest?.logTail || "组合回测日志等待中";
+  return header ? `${header}\n\n${logTail}` : logTail;
+}
+
+function portfolioBacktestParameterText(backtest) {
+  const params = backtest?.parameters || {};
+  const warnings = backtest?.parameterWarnings || [];
+  const keys = Object.keys(params);
+  if (!keys.length && !warnings.length) return "";
+  const parts = [];
+  if (keys.length) {
+    parts.push(
+      [
+        "运行参数",
+        `模式=${params.tradingMode || "--"}`,
+        `候选=${params.topN ?? "--"}`,
+        `目标=${params.targetSymbols ?? "--"}`,
+        `K线=${params.backtestPages ?? "--"}页x${params.backtestLimit ?? "--"}`,
+        `最大风险事件=${params.allocationMaxRiskEvents ?? "--"}`,
+        `核心=${params.coreSymbols ?? "--"}`,
+      ].join(" | "),
+    );
+  }
+  if (warnings.length) {
+    parts.push(`参数已截断: ${warnings.join("; ")}`);
+  }
+  return parts.join("\n");
+}
+
+function renderPortfolioAccount(accountPayload) {
+  if (!accountPayload?.ok) return;
+  const account = accountPayload.account || {};
+  const balance = accountPayload.balance || {};
+  const pnl = accountPayload.pnl || {};
+  const usdt = (balance.details || []).find((item) => item.ccy === "USDT");
+  text("posMode", account.posMode || "--");
+  text("perm", account.perm || "--");
+  text("totalEq", money(balance.totalEq));
+  text("usdtAvail", usdt ? money(usdt.availBal) : "--");
+  text("estimatedTotalPnl", signed(pnl.estimatedTotal, 6));
+  text("netRealizedPnl", signed(pnl.netRealized, 6));
+  text("realizedPnl", signed(pnl.realized, 6));
+  text("unrealizedPnl", signed(pnl.unrealized, 6));
+  text("feesPnl", signed(pnl.fees, 6));
+  text("fillCount", `${pnl.recent24hFillCount ?? 0} / 24h`);
 }
 
 function renderPortfolioEmpty() {
-  ["portfolioCoreSummary", "portfolioSatelliteSummary", "portfolioMlRegime", "portfolioRebalanceTiming", "portfolioAdaptiveProfile", "portfolioLiveState", "portfolioPreflightState", "sidePortfolioLive", "sideReadonlyMode"].forEach((id) => text(id, "--"));
+  [
+    "portfolioCoreSummary",
+    "portfolioSatelliteSummary",
+    "portfolioMlRegime",
+    "portfolioRebalanceTiming",
+    "portfolioAdaptiveProfile",
+    "portfolioLiveState",
+    "portfolioPreflightState",
+    "sidePortfolioLive",
+    "sideReadonlyMode",
+    "qdSignal",
+    "qdSignalDetail",
+    "qdExecute",
+    "qdExecuteDetail",
+    "qdRisk",
+    "qdRiskDetail",
+    "qdObserve",
+    "qdObserveDetail",
+  ].forEach((id) => text(id, "--"));
   html("portfolioCoreTable", '<div class="empty">暂无核心舱</div>');
   html("portfolioSatelliteTable", '<div class="empty">暂无卫星仓</div>');
   html("portfolioActionsTable", '<div class="empty">暂无调仓动作</div>');
   html("portfolioAdaptiveTable", '<div class="empty">暂无自适应参数</div>');
   html("portfolioRegimeResearch", '<div class="empty">暂无状态模型报告</div>');
+  html("portfolioLiveTable", '<div class="empty">暂无组合实盘目标</div>');
   renderPortfolioDigest(null, {});
   const startButton = document.getElementById("startPortfolioLiveBtn");
   if (startButton) {
@@ -726,13 +794,66 @@ function renderPortfolioDigest(report, summary) {
   text("digestSatelliteWeight", satText);
   text("digestActions", actionTextValue);
   text("digestExposure", `${exposureText} · ${mlText}`);
-  text("sideLiveBot", "组合 ETH 实盘");
+  text("sideLiveBot", "组合实盘");
   text("sidePortfolioLive", `${summary.liveRunningCount ?? 0} / ${summary.liveTargetCount ?? 0} 运行`);
   text("sideReadonlyMode", `${modeText(summary.tradingMode)} · ${summary.liveEnabled ? "控制台可写" : "实盘锁定"} · ${mlText}`);
   text("sideTargets", targetText);
   text("sideSatellites", `${summary.satelliteCount ?? 0} 个 · ${fmt(summary.satelliteWeightPct, 2)}%`);
   text("sideExecution", readyText);
   text("sideActions", actionTextValue);
+}
+
+function renderQuantDingerFlow(report, summary, live, research) {
+  const mlText = mlRegimeSummary(summary, report?.product?.mlRegime);
+  const actionTextValue = actionMix(summary.actionsByType);
+  const running = Number(summary.liveRunningCount ?? live?.runningCount ?? 0);
+  const target = Number(summary.liveTargetCount ?? live?.targetCount ?? 0);
+  const preflight = live?.preflightStatus || report?.preflight?.status || "--";
+  const livePlan = live?.livePlanStatus || report?.livePlan?.status || "--";
+  const best = research?.bestVariant || {};
+
+  text("qdSignal", mlText);
+  text("qdSignalDetail", `${trendCheckText(summary)} · 推荐 ${regimeVariantText(best.variant || report?.product?.mlRegime?.mode || "off")}`);
+  text("qdExecute", `${summary.executionReadyCount ?? 0} runtime ready`);
+  text("qdExecuteDetail", `${actionTextValue} · ${modeText(summary.tradingMode)}`);
+  text("qdRisk", `${preflight} / ${livePlan}`);
+  text("qdRiskDetail", `交易所保护止损、单仓止损、现金保留随 runtime config 下发`);
+  text("qdObserve", `${running} / ${target} 运行`);
+  text("qdObserveDetail", `报告 ${report?.name || "--"} · PnL ${signedMoney(live?.pnl?.estimatedTotal || 0)}`);
+
+  text("digestLiveBot", `${running} / ${target} 运行`);
+  text("digestLiveDetail", `${preflight} / ${livePlan} · ${signedMoney(live?.pnl?.estimatedTotal || 0)}`);
+}
+
+function renderPortfolioLiveTable(live) {
+  const bots = live?.bots || [];
+  if (!bots.length) {
+    html("portfolioLiveTable", '<div class="empty">暂无组合实盘目标</div>');
+    return;
+  }
+  html(
+    "portfolioLiveTable",
+    tableHtml(
+      ["合约", "动作", "角色", "状态", "PID", "每单/上限", "风控", "最近原因"],
+      bots.map((bot) => {
+        const runtime = bot.runtimeConfig || {};
+        const diagnostics = bot.diagnostics || {};
+        const sizing = diagnostics.sizing || {};
+        const rolling = diagnostics.rollingAdaptive || {};
+        const summary = diagnostics.summary || {};
+        return [
+          bot.instId,
+          actionText(bot.action),
+          bot.role || runtime.portfolioRole || "--",
+          bot.running ? "运行中" : "未运行",
+          bot.pid || "--",
+          `${firstValue(sizing.orderSz, runtime.orderSz) ?? "--"} / ${firstValue(sizing.maxPosition, runtime.maxPosition) ?? "--"}`,
+          rolling.riskScore ? `${fmt(rolling.riskScore, 3)} · ${fmt(rolling.positionLossSlBps, 0)}bps` : `${fmt(runtime.poolAdaptiveRiskScore, 3)} · ${fmt(runtime.positionLossSlBps, 0)}bps`,
+          translateBotMessage(diagnostics.lastError?.text || diagnostics.lastDecision || summary.detail || "--"),
+        ];
+      }),
+    ),
+  );
 }
 
 function mlRegimeSummary(summary, profile) {
@@ -807,10 +928,10 @@ function renderPortfolioScores(rows) {
   );
 }
 
-function renderPortfolioRoleTargets(targets, role, targetId) {
+function renderPortfolioRoleTargets(targets, role, targetId, diagnostics = []) {
   const rows = targets.filter((target) => target.role === role);
   if (!rows.length) {
-    html(targetId, `<div class="empty">暂无${role === "core" ? "核心舱" : "卫星仓"}</div>`);
+    html(targetId, portfolioEmptyTargetHtml(role, diagnostics));
     return;
   }
   html(
@@ -826,6 +947,33 @@ function renderPortfolioRoleTargets(targets, role, targetId) {
       ]),
     ),
   );
+}
+
+function portfolioEmptyTargetHtml(role, diagnostics) {
+  const title = role === "core" ? "核心舱" : "卫星仓";
+  const filtered = (diagnostics || []).filter((item) => item.status === "filtered").slice(0, 6);
+  if (!filtered.length) return `<div class="empty">暂无${title}</div>`;
+  return [
+    `<div class="empty">暂无${title}：候选未通过组合过滤</div>`,
+    tableHtml(
+      ["排名", "合约", "收益%", "风险事件", "过滤原因"],
+      filtered.map((item) => [
+        item.rank,
+        item.instId,
+        fmt(item.totalReturnPct, 2),
+        item.riskEvents,
+        translateEligibilityReason(item.reason),
+      ]),
+    ),
+  ].join("");
+}
+
+function translateEligibilityReason(reason) {
+  return String(reason || "--")
+    .replace(/risk events (\d+) > max (\d+)/g, "风险事件 $1 > 上限 $2")
+    .replace(/fills (\d+) < min (\d+)/g, "成交 $1 < 最少 $2")
+    .replace(/score ([^ ]+) < min ([^ ;]+)/g, "评分 $1 < 下限 $2")
+    .replace("passed allocation filters", "通过组合过滤");
 }
 
 function renderPortfolioActions(actions) {
@@ -886,7 +1034,7 @@ function renderRegimeResearch(research, runtimeConfigs = []) {
   const activeModes = [...new Set(runtimeConfigs.map((item) => item.marketRegimeFilter || "off"))].join(", ") || "off";
   const summaryRows = [
     ["报告", `${research.name || "--"} · ${research.generatedAt || "--"}`],
-    ["当前实盘开关", activeModes],
+      ["当前实盘开关", `${activeModes} · ${mixedPolicyText(runtimeConfigs[0]?.marketRegimeMixedPolicy)}`],
     ["推荐研究层", regimeVariantText(best.variant)],
     ["收益/回撤变化", `${signed(best.returnDeltaVsBaseline, 2)}% / ${signed(best.drawdownDeltaVsBaseline, 2)}%`],
     ["风险事件变化", signed(best.riskEventDeltaVsBaseline, 0)],
@@ -939,6 +1087,14 @@ function regimeSignalText(signal) {
     trend_up: "上行趋势",
     trend_down: "下行趋势",
   }[signal] || signal || "--";
+}
+
+function mixedPolicyText(policy) {
+  return {
+    pause: "混合暂停",
+    price_anchor: "混合价格锚定",
+    range: "混合双向网格",
+  }[policy] || policy || "混合价格锚定";
 }
 
 function rebalanceReasonText(note, threshold = "2") {
@@ -1016,36 +1172,11 @@ function updateTradeDefaults(data) {
   if (intent === "closeShort") px.value = (upper - step).toFixed(4);
 }
 
-async function refreshEthBotStatus() {
-  try {
-    const response = await fetch("/api/eth-bot/status", { cache: "no-store" });
-    const result = await response.json();
-    latestEthBot = result;
-    renderEthBotStatus(displayEthBotResult());
-    if (document.getElementById("instId")?.value === "ETH-USDT-SWAP") {
-      syncMonitorFromBotForm(selectedBotKey(), false);
-    }
-    if (latestData) {
-      renderRuntimeSummary(latestData, activeBotResult(latestData));
-      drawChart(latestData);
-    }
-  } catch (error) {
-    renderEthBotError(error);
-  }
-}
-
 function activeBotResult(data = latestData) {
   const instId = data?.params?.instId || document.getElementById("instId")?.value;
   const portfolioBot = portfolioBotForInst(instId);
   if (portfolioBot) return { ok: true, data: portfolioBot };
-  if (instId === "ETH-USDT-SWAP") return latestEthBot;
   return null;
-}
-
-function displayEthBotResult() {
-  const portfolioEth = portfolioBotForInst("ETH-USDT-SWAP");
-  if (portfolioEth) return { ok: true, data: portfolioEth };
-  return latestEthBot || { ok: true, data: { running: false, instId: "ETH-USDT-SWAP", runtimeConfig: ethDefaults, diagnostics: {} } };
 }
 
 function portfolioBotForInst(instId) {
@@ -1063,100 +1194,6 @@ function portfolioBotForInst(instId) {
 
 function portfolioRuntimeConfig(instId) {
   return (latestPortfolio?.latestReport?.runtimeConfigs || []).find((item) => item.instId === instId);
-}
-
-function renderEthBotStatus(result) {
-  if (!result.ok) {
-    renderEthBotError(result.error || "ETH 状态接口返回错误");
-    return;
-  }
-  const data = result.data || {};
-  const diagnostics = data.diagnostics || {};
-  const rolling = diagnostics.rollingAdaptive || {};
-  const sizing = diagnostics.sizing || {};
-  const edge = diagnostics.edge || {};
-  const cycle = diagnostics.cycle || {};
-  const openGuard = diagnostics.openGuard || {};
-  const orderPlan = diagnostics.orderPlan || {};
-  const summary = diagnostics.summary || {};
-  const isPortfolio = data.source === "portfolio";
-
-  text("ethBotTitle", isPortfolio ? "组合 ETH 滚动实盘" : "ETH滚动实盘");
-  text("refreshEthBotBtn", isPortfolio ? "刷新组合ETH" : "刷新ETH");
-  text("ethBotMeta", data.running ? `${isPortfolio ? "组合" : "独立"} ETH 机器人运行中 · 只读监控，不控制实盘进程` : `${isPortfolio ? "组合" : "独立"} ETH 机器人未运行 · 只读监控`);
-  text("ethBotState", summary.label || (data.running ? "运行中" : "未运行"));
-  text("ethBotLeverageGrid", rolling.leverage ? `${fmt(rolling.leverage, 0)}x / ${fmt(rolling.gridBps, 2)}bps` : "--");
-  text("ethBotPosition", positionSummary(cycle));
-  text("ethBotSizing", `${sizing.orderSz ?? "--"} / ${sizing.maxPosition ?? "--"}`);
-  text("ethBotEdge", edgeSummary(edge));
-  text("ethBotDecision", translateBotMessage(diagnostics.lastError?.text || diagnostics.lastDecision || summary.detail || "--"));
-  text("ethBotLog", data.logTail || `${isPortfolio ? "组合 ETH" : "ETH"} 实盘日志等待中`);
-  text("digestLiveBot", data.running ? "运行中" : "未运行");
-  text("digestLiveDetail", rolling.leverage ? `${fmt(rolling.leverage, 0)}x · ${fmt(rolling.gridBps, 2)}bps · ${edgeSummary(edge)}` : translateBotMessage(summary.detail || "--"));
-  text("sideLiveBot", data.running ? `${isPortfolio ? "组合" : "ETH"} 运行中` : `${isPortfolio ? "组合" : "ETH"} 未运行`);
-
-  renderEthAdaptiveTable(rolling, sizing);
-  renderEthDecisionTable(cycle, openGuard, orderPlan, edge, diagnostics);
-}
-
-function renderEthAdaptiveTable(rolling, sizing) {
-  if (!rolling && !sizing) {
-    html("ethAdaptiveTable", '<div class="empty">暂无数据</div>');
-    return;
-  }
-  html(
-    "ethAdaptiveTable",
-    tableHtml(
-      ["项目", "当前值"],
-      [
-        ["杠杆", rolling?.leverage ? `${fmt(rolling.leverage, 0)}x` : "--"],
-        ["格距", rolling?.gridBps ? `${fmt(rolling.gridBps, 2)} bps` : "--"],
-        ["每单保证金", rolling?.orderMarginPct ? `${fmt(rolling.orderMarginPct, 2)}%` : "--"],
-        ["单边保证金上限", rolling?.maxMarginPct ? `${fmt(rolling.maxMarginPct, 2)}%` : "--"],
-        ["单笔止盈", rolling?.minTpBps ? `${fmt(rolling.minTpBps, 2)} bps` : "--"],
-        ["单仓止损", rolling?.positionLossSlBps ? `${fmt(rolling.positionLossSlBps, 0)} bps` : "--"],
-        ["交易所保护止损", rolling?.exchangeStopBps ? `${fmt(rolling.exchangeStopBps, 0)} bps` : "--"],
-        ["风险分", rolling?.riskScore ? fmt(rolling.riskScore, 3) : "--"],
-        ["窗口波动", rolling?.avgAbsBps ? `${fmt(rolling.avgAbsBps, 2)} / shock ${fmt(rolling.shockBps, 2)} bps` : "--"],
-        ["最小合约保证金", rolling?.minContractMargin ? `${fmt(rolling.minContractMargin, 4)} USDT` : "--"],
-        ["可用基准", sizing?.basis ? `${fmt(sizing.basis, 4)} USDT` : sizing?.basisMargin ? `${fmt(sizing.basisMargin, 4)} USDT` : "--"],
-      ],
-    ),
-  );
-}
-
-function renderEthDecisionTable(cycle, openGuard, orderPlan, edge, diagnostics) {
-  if (!cycle && !openGuard && !orderPlan && !edge) {
-    html("ethDecisionTable", '<div class="empty">暂无数据</div>');
-    return;
-  }
-  html(
-    "ethDecisionTable",
-    tableHtml(
-      ["项目", "当前值"],
-      [
-        ["区间/步长", cycle?.lower ? `${cycle.lower} - ${cycle.upper} / ${cycle.step}` : "--"],
-        ["状态", cycle?.state || "--"],
-        ["允许开仓", openSidesText(openGuard)],
-        ["目标/已有/缺口", `${orderPlan?.desired ?? "--"} / ${orderPlan?.existing ?? "--"} / ${orderPlan?.missing ?? "--"}`],
-        ["净收益", edgeSummary(edge)],
-        ["最近原因", translateBotMessage(diagnostics?.lastError?.text || diagnostics?.lastDecision || "--")],
-        ["开仓说明", openGuard?.note || "--"],
-      ],
-    ),
-  );
-}
-
-function renderEthBotError(error) {
-  const message = String(error?.message || error);
-  text("ethBotMeta", `ETH 状态读取失败：${message}`);
-  text("ethBotState", "错误");
-  text("ethBotDecision", message);
-  text("digestLiveBot", "错误");
-  text("digestLiveDetail", message);
-  text("sideLiveBot", "ETH 错误");
-  html("ethAdaptiveTable", '<div class="empty">读取失败</div>');
-  html("ethDecisionTable", '<div class="empty">读取失败</div>');
 }
 
 function drawChart(data) {
@@ -1394,6 +1431,10 @@ function signedMoney(value) {
   const num = Number(value || 0);
   if (!Number.isFinite(num)) return "--";
   return `${num >= 0 ? "+" : ""}${num.toFixed(6)} USDT`;
+}
+
+function firstValue(...values) {
+  return values.find((value) => value !== undefined && value !== null && value !== "");
 }
 
 function trendLabel(value) {
