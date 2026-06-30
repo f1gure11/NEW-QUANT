@@ -16,9 +16,12 @@ from auto_grid_bot import (
     exchange_stop_trigger_price,
     fit_missing_orders_to_margin_budget,
     missing_exchange_stops,
+    pnl_breakdown,
     place_one,
+    refresh_pnl_unrealized_baseline,
     reconcile_orders,
     resolve_sizing,
+    run_cycle,
     stale_exchange_stops,
     sync_exchange_protection_stops,
 )
@@ -146,13 +149,27 @@ class FakeClient:
         self.placed: list[dict] = []
         self.cancelled: list[dict] = []
 
+    def place_order(self, **payload):
+        self.placed.append(payload)
+        return {"data": [{"ordId": "new"}]}
+
     def place_algo_order(self, **payload):
         self.placed.append(payload)
         return {"data": [{"algoId": "new"}]}
 
+    def cancel_orders(self, orders):
+        self.cancelled.extend(orders)
+        return {"data": orders}
+
     def cancel_algo_orders(self, orders):
         self.cancelled.extend(orders)
         return {"data": orders}
+
+
+class CycleFakeClient(FakeClient):
+    def cancel_algo_orders(self, orders):
+        self.cancelled.extend(orders)
+        return {"code": "0", "data": orders}
 
 
 class ExchangeProtectionStopsTest(unittest.TestCase):
@@ -273,6 +290,164 @@ class ExchangeProtectionStopsTest(unittest.TestCase):
         self.assertEqual(event["posSide"], "long")
         self.assertEqual(event["triggerPx"], "98.7")
         self.assertEqual(config.exchange_stop_triggers, {})
+
+    def test_pnl_breakdown_subtracts_checkpoint_unrealized_baseline(self) -> None:
+        state = {
+            "positions": [{"upl": "1.80"}],
+            "fills": [{"fillPnl": "0.15", "fee": "-0.01", "fillTime": "2000"}],
+        }
+
+        pnl = pnl_breakdown(state, 1000, unrealized_baseline=Decimal("1.50"))
+
+        self.assertEqual(pnl["rawUnrealized"], Decimal("1.80"))
+        self.assertEqual(pnl["unrealized"], Decimal("0.30"))
+        self.assertEqual(pnl["estimatedTotal"], Decimal("0.44"))
+
+    def test_checkpoint_unrealized_baseline_clears_when_position_closes(self) -> None:
+        config = make_config(
+            pnl_baseline_unrealized=Decimal("2.40"),
+            pnl_baseline_unrealized_by_side={"long": Decimal("2.40")},
+            pnl_baseline_position_size_by_side={"long": Decimal("0.65")},
+        )
+        state = {"positions": [{"instId": "TEST-USDT-SWAP", "posSide": "long", "pos": "0", "upl": "0"}]}
+
+        refresh_pnl_unrealized_baseline(config, state)
+
+        self.assertEqual(config.pnl_baseline_unrealized, Decimal("0"))
+        self.assertEqual(config.pnl_baseline_unrealized_by_side, {})
+        self.assertEqual(config.pnl_baseline_position_size_by_side, {})
+
+    def test_checkpoint_continues_to_exchange_stop_maintenance(self) -> None:
+        config = make_config(
+            lower=Decimal("90"),
+            upper=Decimal("110"),
+            live=True,
+            total_profit_tp=Decimal("0.1"),
+            total_profit_tp_pct=Decimal("0"),
+            total_profit_tp_cap=Decimal("0"),
+            total_profit_action="checkpoint",
+            rolling_adaptive_enabled=False,
+            set_leverage=False,
+        )
+        state = {
+            "meta": {"tickSz": "0.01", "lotSz": "1", "minSz": "1", "ctVal": "1"},
+            "ticker": {"last": "100"},
+            "mark": {"markPx": "100"},
+            "account": {"posMode": "long_short_mode", "perm": "read_only,trade"},
+            "balance": {"totalEq": "100", "details": [{"ccy": "USDT", "availBal": "50", "eq": "100"}]},
+            "positions": [{"instId": "TEST-USDT-SWAP", "posSide": "long", "pos": "2", "avgPx": "100", "upl": "1"}],
+            "pending": [],
+            "pendingAlgos": [],
+            "fills": [],
+            "candles": [],
+            "regimeCandles": [],
+        }
+        client = CycleFakeClient()
+
+        with patch("auto_grid_bot.load_runtime_config"), patch("auto_grid_bot.fetch_state", return_value=state), patch.object(
+            auto_grid_bot,
+            "LOG_PATH",
+            auto_grid_bot.Path("/tmp/test_exchange_protection_stops_actions.jsonl"),
+        ), patch("auto_grid_bot.log_event"), redirect_stdout(StringIO()):
+            result = run_cycle(client, config)
+
+        self.assertFalse(result)
+        self.assertEqual(config.pnl_baseline_unrealized, Decimal("1"))
+        self.assertEqual(len(client.placed), 1)
+        self.assertEqual(client.placed[0]["ord_type"], "conditional")
+
+    def test_closed_checkpointed_position_does_not_trigger_total_loss(self) -> None:
+        config = make_config(
+            lower=Decimal("90"),
+            upper=Decimal("110"),
+            live=True,
+            total_profit_tp=Decimal("0.1"),
+            total_profit_tp_pct=Decimal("0"),
+            total_profit_tp_cap=Decimal("0"),
+            total_profit_action="checkpoint",
+            total_loss_sl=Decimal("0.8"),
+            total_loss_sl_pct=Decimal("0"),
+            total_loss_sl_cap=Decimal("0"),
+            pnl_baseline_unrealized=Decimal("2.40"),
+            pnl_baseline_unrealized_by_side={"long": Decimal("2.40")},
+            pnl_baseline_position_size_by_side={"long": Decimal("0.65")},
+            rolling_adaptive_enabled=False,
+            set_leverage=False,
+        )
+        state = {
+            "meta": {"tickSz": "0.01", "lotSz": "1", "minSz": "1", "ctVal": "1"},
+            "ticker": {"last": "100"},
+            "mark": {"markPx": "100"},
+            "account": {"posMode": "long_short_mode", "perm": "read_only,trade"},
+            "balance": {"totalEq": "100", "details": [{"ccy": "USDT", "availBal": "50", "eq": "100"}]},
+            "positions": [{"instId": "TEST-USDT-SWAP", "posSide": "long", "pos": "0", "avgPx": "", "upl": "0"}],
+            "pending": [],
+            "pendingAlgos": [],
+            "fills": [],
+            "candles": [],
+            "regimeCandles": [],
+        }
+        client = CycleFakeClient()
+
+        with patch("auto_grid_bot.load_runtime_config"), patch("auto_grid_bot.fetch_state", return_value=state), patch.object(
+            auto_grid_bot,
+            "LOG_PATH",
+            auto_grid_bot.Path("/tmp/test_exchange_protection_stops_actions.jsonl"),
+        ), patch("auto_grid_bot.log_event") as log_event, redirect_stdout(StringIO()):
+            result = run_cycle(client, config)
+
+        self.assertFalse(result)
+        self.assertEqual(config.cooldown_reason, "")
+        self.assertEqual(config.pnl_baseline_unrealized, Decimal("0"))
+        self.assertFalse(any(call.args[0] == "total_loss_sl" for call in log_event.call_args_list))
+
+    def test_checkpointed_position_drawdown_still_triggers_total_loss(self) -> None:
+        config = make_config(
+            lower=Decimal("90"),
+            upper=Decimal("110"),
+            live=True,
+            total_profit_tp=Decimal("0.1"),
+            total_profit_tp_pct=Decimal("0"),
+            total_profit_tp_cap=Decimal("0"),
+            total_profit_action="checkpoint",
+            total_loss_sl=Decimal("0.8"),
+            total_loss_sl_pct=Decimal("0"),
+            total_loss_sl_cap=Decimal("0"),
+            risk_cooldown=Decimal("0"),
+            pnl_baseline_unrealized=Decimal("2.40"),
+            pnl_baseline_unrealized_by_side={"long": Decimal("2.40")},
+            pnl_baseline_position_size_by_side={"long": Decimal("0.65")},
+            rolling_adaptive_enabled=False,
+            set_leverage=False,
+        )
+        state = {
+            "meta": {"tickSz": "0.01", "lotSz": "1", "minSz": "1", "ctVal": "1"},
+            "ticker": {"last": "100"},
+            "mark": {"markPx": "100"},
+            "account": {"posMode": "long_short_mode", "perm": "read_only,trade"},
+            "balance": {"totalEq": "100", "details": [{"ccy": "USDT", "availBal": "50", "eq": "100"}]},
+            "positions": [{"instId": "TEST-USDT-SWAP", "posSide": "long", "pos": "0.65", "avgPx": "100", "markPx": "100", "upl": "1.20"}],
+            "pending": [{"clOrdId": "bot", "instId": "TEST-USDT-SWAP", "side": "buy", "posSide": "long"}],
+            "pendingAlgos": [],
+            "fills": [],
+            "candles": [],
+            "regimeCandles": [],
+        }
+        client = CycleFakeClient()
+
+        with patch("auto_grid_bot.load_runtime_config"), patch("auto_grid_bot.fetch_state", return_value=state), patch.object(
+            auto_grid_bot,
+            "LOG_PATH",
+            auto_grid_bot.Path("/tmp/test_exchange_protection_stops_actions.jsonl"),
+        ), patch("auto_grid_bot.log_event") as log_event, redirect_stdout(StringIO()):
+            result = run_cycle(client, config)
+
+        self.assertFalse(result)
+        self.assertTrue(any(call.args[0] == "total_loss_sl" for call in log_event.call_args_list))
+        self.assertEqual(len(client.placed), 1)
+        self.assertTrue(client.placed[0]["reduce_only"])
+        self.assertEqual(client.placed[0]["side"], "sell")
+        self.assertEqual(client.placed[0]["pos_side"], "long")
 
     def test_resolve_sizing_deducts_cash_reserve_from_effective_available(self) -> None:
         config = make_config(
@@ -458,6 +633,30 @@ class OkxAlgoClientTest(unittest.TestCase):
 
         self.assertFalse(placed)
         self.assertGreater(config.open_backoff_until_ms, auto_grid_bot.current_ms())
+
+    def test_pause_new_opens_runtime_cancels_open_orders_but_keeps_reduce_only(self) -> None:
+        pending = [
+            {"clOrdId": "gbopen", "ordId": "1", "side": "buy", "posSide": "long", "px": "99", "sz": "1", "reduceOnly": "false"},
+            {"clOrdId": "gbclose", "ordId": "2", "side": "sell", "posSide": "long", "px": "101", "sz": "1", "reduceOnly": "true"},
+        ]
+        desired = [
+            {"side": "sell", "pos_side": "long", "px": "101", "sz": "1", "reduce_only": True},
+        ]
+
+        stale, missing, matched = reconcile_orders(
+            pending,
+            desired,
+            Decimal("0.1"),
+            lower=Decimal("90"),
+            upper=Decimal("110"),
+            open_sides=set(),
+            open_capacity={"long": Decimal("0"), "short": Decimal("0")},
+            preserve_valid_open=False,
+        )
+
+        self.assertEqual(matched, 1)
+        self.assertEqual([item["clOrdId"] for item in stale], ["gbopen"])
+        self.assertEqual(missing, [])
 
 
 if __name__ == "__main__":

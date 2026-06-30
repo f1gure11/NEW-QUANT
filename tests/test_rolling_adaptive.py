@@ -122,6 +122,29 @@ class RollingAdaptiveTest(unittest.TestCase):
         self.assertEqual(config.max_margin_pct, Decimal("12"))
         self.assertEqual(config.exchange_stop_bps, Decimal("900"))
 
+    def test_bot_raises_runtime_grid_floor_when_tick_fees_would_block_open_orders(self) -> None:
+        config = make_config(
+            rolling_adaptive_enabled=True,
+            set_leverage=False,
+            grid_bps=Decimal("8"),
+            min_net_bps=Decimal("1"),
+            ord_type="post_only",
+            adaptive_min_width_bps=Decimal("260"),
+            rolling_adaptive_min_grid_bps=Decimal("8"),
+            rolling_adaptive_max_grid_bps=Decimal("36"),
+        )
+        state = {
+            "meta": {"tickSz": "0.00001"},
+            "fee": {"makerU": "-0.0002", "takerU": "-0.0005"},
+        }
+
+        with patch.object(auto_grid_bot, "log_event"):
+            note = auto_grid_bot.apply_executable_grid_floor(config, state, Decimal("0.0755"))
+
+        self.assertIn("executable_grid_floor", note)
+        self.assertGreaterEqual(config.grid_bps, Decimal("9.2715"))
+        self.assertEqual(config.grid_bps, config.rolling_adaptive_min_grid_bps)
+
     def test_live_rolling_adaptive_requires_leverage_sync(self) -> None:
         config = make_config(
             rolling_adaptive_enabled=True,

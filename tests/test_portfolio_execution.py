@@ -14,6 +14,7 @@ from portfolio_execution import (
     ExecutionConfig,
     backtest_risk_reward_values,
     build_execution_intents,
+    executable_grid_floor_bps,
     pool_adaptive_runtime_values,
     runtime_config_for_target,
     write_execution_bundle,
@@ -151,6 +152,48 @@ class PortfolioExecutionTest(unittest.TestCase):
         self.assertEqual(quiet["gridBps"], volatile["gridBps"])
         self.assertEqual(quiet["minTpBps"], volatile["minTpBps"])
         self.assertLess(Decimal(quiet["poolAdaptiveRiskScore"]), Decimal(volatile["poolAdaptiveRiskScore"]))
+
+    def test_runtime_config_raises_grid_floor_for_low_price_tick_after_fees(self) -> None:
+        item = target("DOGE-USDT-SWAP")
+        item.last = Decimal("0.07559")
+        low_price_candidate = candidate("DOGE-USDT-SWAP")
+        low_price_candidate.last = Decimal("0.07559")
+        low_price_candidate.tick_sz = Decimal("0.00001")
+        low_price_candidate.ct_val = Decimal("1000")
+        low_price_candidate.lot_sz = Decimal("0.01")
+        low_price_candidate.min_sz = Decimal("0.01")
+
+        runtime = runtime_config_for_target(
+            item,
+            low_price_candidate,
+            SimpleNamespace(outer_range_bps=Decimal("1200")),
+            ExecutionConfig(
+                min_net_bps=Decimal("1"),
+                maker_fee_bps=Decimal("2"),
+                taker_fee_bps=Decimal("5"),
+                rolling_adaptive_min_grid_bps=Decimal("8"),
+                rolling_adaptive_max_grid_bps=Decimal("36"),
+            ),
+        )
+
+        self.assertGreater(Decimal(runtime["rollingAdaptiveMinGridBps"]), Decimal("8"))
+        self.assertGreaterEqual(Decimal(runtime["gridBps"]), Decimal(runtime["rollingAdaptiveMinGridBps"]))
+        self.assertIn("tick/fees", runtime["gridExecutableNote"])
+
+    def test_executable_grid_floor_matches_doge_tick_rounding(self) -> None:
+        floor = executable_grid_floor_bps(
+            midpoint=Decimal("0.0755"),
+            tick=Decimal("0.00001"),
+            lower=Decimal("0.07452"),
+            upper=Decimal("0.07648"),
+            min_net_bps=Decimal("1"),
+            maker_fee_bps=Decimal("2"),
+            taker_fee_bps=Decimal("5"),
+            ord_type="post_only",
+        )
+
+        self.assertEqual(floor["required_step"], Decimal("0.00007"))
+        self.assertGreaterEqual(floor["required_grid_bps"], Decimal("9.2715"))
 
     def test_pool_adaptive_runtime_values_match_rolling_limits(self) -> None:
         values = pool_adaptive_runtime_values(volatile_target(), ExecutionConfig())

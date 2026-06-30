@@ -8,6 +8,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from socket import timeout as SocketTimeout
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -142,6 +143,8 @@ class OkxRestClient:
                 okx_msg=self._okx_field(parsed_error, "msg"),
                 response=parsed_error or error_payload,
             ) from exc
+        except (TimeoutError, SocketTimeout) as exc:
+            raise OkxApiError(f"OKX network timeout: {exc}") from exc
         except URLError as exc:
             raise OkxApiError(f"OKX network error: {exc.reason}") from exc
 

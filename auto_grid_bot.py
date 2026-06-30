@@ -114,6 +114,7 @@ class BotConfig:
     rolling_adaptive_max_total_profit_tp_pct: Decimal
     rolling_adaptive_min_total_loss_sl_pct: Decimal
     rolling_adaptive_max_total_loss_sl_pct: Decimal
+    pause_new_opens: bool = False
     runtime_config_mtime: float = 0.0
     cooldown_until_ms: int = 0
     cooldown_reason: str = ""
@@ -128,6 +129,9 @@ class BotConfig:
     backoff_until_ms: int = 0
     backoff_seconds: float = 0.0
     open_backoff_until_ms: int = 0
+    pnl_baseline_unrealized: Decimal = Decimal("0")
+    pnl_baseline_unrealized_by_side: dict[str, Decimal] = field(default_factory=dict)
+    pnl_baseline_position_size_by_side: dict[str, Decimal] = field(default_factory=dict)
 
 
 def main() -> None:
@@ -287,7 +291,7 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
             config.recenter_pending = False
         print(f"Risk cooldown ended reason={config.cooldown_reason}. Resuming grid.")
         config.cooldown_reason = ""
-        config.bot_started_ms = now_ms
+        reset_pnl_session(config, now_ms)
 
     step = grid_step(config, tick)
     midpoint = (config.lower + config.upper) / Decimal("2")
@@ -298,6 +302,9 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
 
     bot_orders = [order for order in state["pending"] if is_bot_order(order)]
     effective_lower, effective_upper, range_note = effective_range(config, state, mark_px, tick)
+    edge_floor_note = apply_executable_grid_floor(config, state, mark_px, lower=effective_lower, upper=effective_upper)
+    if edge_floor_note:
+        print(edge_floor_note)
     step = grid_step(config, tick, effective_lower, effective_upper)
     midpoint = (effective_lower + effective_upper) / Decimal("2")
     soft_lower = round_to_tick(effective_lower * (Decimal("1") - config.soft_bps / Decimal("10000")), tick)
@@ -323,8 +330,13 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
         enter_risk_cooldown(config, f"exchange_stop_{triggered_exchange_stop['posSide']}")
         return False
 
-    pnl = pnl_breakdown(state, config.bot_started_ms)
-    estimated_total = pnl["estimatedTotal"]
+    refresh_pnl_unrealized_baseline(config, state)
+    raw_pnl = pnl_breakdown(state, config.bot_started_ms)
+    checkpoint_pnl = pnl_breakdown(state, config.bot_started_ms, unrealized_baseline=config.pnl_baseline_unrealized)
+    profit_pnl = checkpoint_pnl if config.total_profit_action == "checkpoint" else raw_pnl
+    loss_pnl = checkpoint_pnl if config.total_profit_action == "checkpoint" else raw_pnl
+    estimated_profit_total = profit_pnl["estimatedTotal"]
+    estimated_loss_total = loss_pnl["estimatedTotal"]
     profit_threshold, profit_note = pnl_threshold(
         state,
         fixed=config.total_profit_tp,
@@ -337,35 +349,43 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
         pct=config.total_loss_sl_pct,
         cap=config.total_loss_sl_cap,
     )
-    if profit_threshold > 0 and estimated_total >= profit_threshold:
+    if profit_threshold > 0 and estimated_profit_total >= profit_threshold:
         print(
-            f"Total profit TP hit: estimated_total={estimated_total} "
+            f"Total profit TP hit: estimated_total={estimated_profit_total} "
             f"target={profit_threshold} ({profit_note}) "
-            f"unrealized={pnl['unrealized']} session_realized={pnl['sessionRealized']} "
-            f"session_fees={pnl['sessionFees']} fills={pnl['sessionFillCount']} action={config.total_profit_action}."
+            f"unrealized={profit_pnl['unrealized']} session_realized={profit_pnl['sessionRealized']} "
+            f"session_fees={profit_pnl['sessionFees']} fills={profit_pnl['sessionFillCount']} action={config.total_profit_action}."
         )
-        log_event("total_profit_tp", {"target": profit_threshold, "note": profit_note, **pnl})
+        log_event("total_profit_tp", {"target": profit_threshold, "note": profit_note, **profit_pnl})
         if config.total_profit_action == "close":
             closed = risk_close_all_positions(client, config, state["positions"], tick, bot_orders, reason="total_profit_tp")
             if closed:
                 enter_risk_cooldown(config, "total_profit_tp")
             else:
                 print("Total profit TP close was not confirmed; retrying next cycle without cooldown.")
-        else:
-            config.bot_started_ms = now_ms
-            log_event("profit_checkpoint", {"live": config.live, "target": profit_threshold, **pnl})
-            print("Profit checkpoint recorded: session PnL baseline reset, grid continues.")
-        return False
+            return False
+        set_pnl_unrealized_baseline(config, state)
+        config.bot_started_ms = now_ms
+        log_event(
+            "profit_checkpoint",
+            {
+                "live": config.live,
+                "target": profit_threshold,
+                "newUnrealizedBaseline": config.pnl_baseline_unrealized,
+                **profit_pnl,
+            },
+        )
+        print("Profit checkpoint recorded: session PnL baseline reset, grid maintenance continues.")
 
-    if loss_threshold > 0 and estimated_total <= -loss_threshold:
+    if loss_threshold > 0 and estimated_loss_total <= -loss_threshold:
         print(
-            f"Total loss hard SL hit: estimated_total={estimated_total} "
+            f"Total loss hard SL hit: estimated_total={estimated_loss_total} "
             f"target=-{loss_threshold} ({loss_note}) "
-            f"unrealized={pnl['unrealized']} session_realized={pnl['sessionRealized']} "
-            f"session_fees={pnl['sessionFees']} fills={pnl['sessionFillCount']}. Closing all positions."
+            f"unrealized={loss_pnl['unrealized']} session_realized={loss_pnl['sessionRealized']} "
+            f"session_fees={loss_pnl['sessionFees']} fills={loss_pnl['sessionFillCount']}. Closing all positions."
         )
         closed = risk_close_all_positions(client, config, state["positions"], tick, bot_orders, reason="total_loss_sl")
-        log_event("total_loss_sl", {"target": loss_threshold, "note": loss_note, **pnl})
+        log_event("total_loss_sl", {"target": loss_threshold, "note": loss_note, **loss_pnl})
         if closed:
             enter_risk_cooldown(config, "total_loss_sl")
         else:
@@ -446,6 +466,11 @@ def run_cycle(client: OkxRestClient, config: BotConfig) -> bool:
     print(f"sizing order_sz={order_sz} max_position={max_position} {sizing_note}")
     allow_open = True
     preserve_valid_open = True
+    if config.pause_new_opens:
+        print("Runtime pauseNewOpens active: close orders will still be maintained and open orders canceled.")
+        log_event("pause_new_opens", {"live": config.live, "instId": config.inst_id})
+        allow_open = False
+        preserve_valid_open = False
     if order_sz <= 0 or max_position <= 0:
         print("Open sizing resolved to zero: close orders will still be maintained.")
         allow_open = False
@@ -1556,11 +1581,14 @@ def apply_rolling_adaptive_config(
     config.exchange_stop_bps = result.exchange_stop_bps
     config.total_profit_tp_pct = result.total_profit_tp_pct
     config.total_loss_sl_pct = result.total_loss_sl_pct
+    edge_floor = apply_executable_grid_floor(config, state, mark_px)
 
     if result.tradeable_min_contract:
         note = result.note
     else:
         note = f"{result.note} min contract exceeds adaptive max margin cap; open sizing may resolve to zero"
+    if edge_floor:
+        note = f"{note}; {edge_floor}"
     print(
         f"rolling_adaptive leverage={plain(config.leverage)}x grid={plain(config.grid_bps)}bps "
         f"order_margin={plain(config.order_margin_pct)}% max_margin={plain(config.max_margin_pct)}% "
@@ -1594,6 +1622,99 @@ def apply_rolling_adaptive_config(
     elif config.set_leverage and not config.live and leverage_needs_sync:
         set_leverage(client, config)
         config.rolling_adaptive_last_leverage = config.leverage
+
+
+def apply_executable_grid_floor(
+    config: BotConfig,
+    state: dict[str, Any],
+    mark_px: Decimal,
+    *,
+    lower: Decimal | None = None,
+    upper: Decimal | None = None,
+) -> str:
+    meta = state.get("meta", {})
+    tick = dec(meta.get("tickSz"), Decimal("0"))
+    if tick <= 0 or mark_px <= 0:
+        return ""
+    fee = state.get("fee", {})
+    maker_bps = abs(dec(fee.get("makerU") or fee.get("maker"), Decimal("0"))) * Decimal("10000")
+    taker_bps = abs(dec(fee.get("takerU") or fee.get("taker"), Decimal("0"))) * Decimal("10000")
+    required_grid_bps, required_step, gross_bps = executable_grid_floor(
+        config,
+        mark_px=mark_px,
+        tick=tick,
+        maker_bps=maker_bps,
+        taker_bps=taker_bps,
+        lower=lower,
+        upper=upper,
+    )
+    if required_grid_bps <= config.grid_bps and required_grid_bps <= config.rolling_adaptive_min_grid_bps:
+        return ""
+
+    old_grid_bps = config.grid_bps
+    old_min_grid_bps = config.rolling_adaptive_min_grid_bps
+    config.grid_bps = max(config.grid_bps, required_grid_bps)
+    config.rolling_adaptive_min_grid_bps = max(config.rolling_adaptive_min_grid_bps, required_grid_bps)
+    config.rolling_adaptive_max_grid_bps = max(config.rolling_adaptive_max_grid_bps, config.rolling_adaptive_min_grid_bps)
+    note = (
+        f"executable_grid_floor grid {plain(old_grid_bps)}->{plain(config.grid_bps)}bps "
+        f"rolling_min {plain(old_min_grid_bps)}->{plain(config.rolling_adaptive_min_grid_bps)}bps "
+        f"step={plain(required_step)} gross={plain(gross_bps)}bps"
+    )
+    log_event(
+        "executable_grid_floor",
+        {
+            "live": config.live,
+            "oldGridBps": old_grid_bps,
+            "newGridBps": config.grid_bps,
+            "oldRollingMinGridBps": old_min_grid_bps,
+            "newRollingMinGridBps": config.rolling_adaptive_min_grid_bps,
+            "requiredStep": required_step,
+            "grossBps": gross_bps,
+            "makerBps": maker_bps,
+            "takerBps": taker_bps,
+            "minNetBps": config.min_net_bps,
+        },
+    )
+    return note
+
+
+def executable_grid_floor(
+    config: BotConfig,
+    *,
+    mark_px: Decimal,
+    tick: Decimal,
+    maker_bps: Decimal,
+    taker_bps: Decimal,
+    lower: Decimal | None = None,
+    upper: Decimal | None = None,
+) -> tuple[Decimal, Decimal, Decimal]:
+    if mark_px <= 0 or tick <= 0:
+        return Decimal("1"), tick, Decimal("0")
+    if lower is None or upper is None:
+        lower = round_to_tick(mark_px * (Decimal("1") - config.adaptive_min_width_bps / Decimal("20000")), tick)
+        upper = round_to_tick(mark_px * (Decimal("1") + config.adaptive_min_width_bps / Decimal("20000")), tick)
+    if lower <= 0:
+        lower = tick
+    if upper <= lower:
+        upper = lower + tick
+
+    midpoint = (lower + upper) / Decimal("2")
+    open_fee_bps = taker_bps if config.ord_type == "limit" else maker_bps
+    required_gross_bps = max(Decimal("0"), open_fee_bps) + max(Decimal("0"), maker_bps, taker_bps)
+    required_gross_bps += max(Decimal("0"), config.min_net_bps)
+    required_step = max(tick, midpoint * required_gross_bps / Decimal("10000"))
+    span = upper - lower
+    max_grids = max(1, int((span / tick).to_integral_value(rounding=ROUND_HALF_UP)))
+
+    for grid_count in range(max_grids, 0, -1):
+        step = round_to_tick(span / Decimal(grid_count), tick)
+        if step >= required_step:
+            gross_bps = step / midpoint * Decimal("10000")
+            return gross_bps.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP).normalize(), step, gross_bps
+
+    gross_bps = span / midpoint * Decimal("10000")
+    return gross_bps.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP).normalize(), span, gross_bps
 
 
 def rolling_adaptive_limits(config: BotConfig) -> RollingAdaptiveLimits:
@@ -1734,6 +1855,8 @@ def apply_runtime_config(config: BotConfig, payload: dict[str, Any]) -> None:
         config.recenter_on_cooldown = bool(payload["recenterOnCooldown"])
     if "oneWayOpen" in payload:
         config.one_way_open = bool(payload["oneWayOpen"])
+    if "pauseNewOpens" in payload:
+        config.pause_new_opens = bool(payload["pauseNewOpens"])
     if "setLeverage" in payload:
         config.set_leverage = bool(payload["setLeverage"])
     if "rollingAdaptiveEnabled" in payload:
@@ -1786,21 +1909,77 @@ def position_summary(positions: list[dict[str, Any]]) -> dict[str, Decimal]:
     return result
 
 
-def estimated_total_pnl(state: dict[str, Any], since_ms: int) -> Decimal:
+def set_pnl_unrealized_baseline(config: BotConfig, state: dict[str, Any]) -> None:
+    by_side: dict[str, Decimal] = {}
+    size_by_side: dict[str, Decimal] = {}
+    for item in state.get("positions", []):
+        pos_side = str(item.get("posSide") or "")
+        if pos_side not in {"long", "short"}:
+            continue
+        size = abs(dec(item.get("pos"), Decimal("0")))
+        if size <= 0:
+            continue
+        by_side[pos_side] = by_side.get(pos_side, Decimal("0")) + dec(item.get("upl"), Decimal("0"))
+        size_by_side[pos_side] = size_by_side.get(pos_side, Decimal("0")) + size
+    config.pnl_baseline_unrealized_by_side = by_side
+    config.pnl_baseline_position_size_by_side = size_by_side
+    config.pnl_baseline_unrealized = sum(by_side.values(), Decimal("0"))
+
+
+def refresh_pnl_unrealized_baseline(config: BotConfig, state: dict[str, Any]) -> None:
+    if not config.pnl_baseline_unrealized_by_side:
+        return
+    current_sizes = position_summary(state.get("positions", []))
+    by_side: dict[str, Decimal] = {}
+    size_by_side: dict[str, Decimal] = {}
+    for pos_side, baseline in config.pnl_baseline_unrealized_by_side.items():
+        baseline_size = config.pnl_baseline_position_size_by_side.get(pos_side, Decimal("0"))
+        current_size = current_sizes.get(pos_side, Decimal("0"))
+        if baseline_size <= 0 or current_size <= 0:
+            continue
+        ratio = min(Decimal("1"), current_size / baseline_size)
+        by_side[pos_side] = baseline * ratio
+        size_by_side[pos_side] = min(current_size, baseline_size)
+    config.pnl_baseline_unrealized_by_side = by_side
+    config.pnl_baseline_position_size_by_side = size_by_side
+    config.pnl_baseline_unrealized = sum(by_side.values(), Decimal("0"))
+
+
+def reset_pnl_session(config: BotConfig, now_ms: int | None = None) -> None:
+    config.bot_started_ms = current_ms() if now_ms is None else now_ms
+    config.pnl_baseline_unrealized = Decimal("0")
+    config.pnl_baseline_unrealized_by_side = {}
+    config.pnl_baseline_position_size_by_side = {}
+
+
+def estimated_total_pnl(
+    state: dict[str, Any],
+    since_ms: int,
+    *,
+    unrealized_baseline: Decimal = Decimal("0"),
+) -> Decimal:
     unrealized = sum(dec(item.get("upl"), Decimal("0")) for item in state.get("positions", []))
     session_fills = [item for item in state.get("fills", []) if fill_time_ms(item) >= since_ms]
     realized = sum(dec(item.get("fillPnl"), Decimal("0")) for item in session_fills)
     fees = sum(dec(item.get("fee"), Decimal("0")) for item in session_fills)
-    return unrealized + realized + fees
+    return unrealized - unrealized_baseline + realized + fees
 
 
-def pnl_breakdown(state: dict[str, Any], since_ms: int) -> dict[str, Decimal | int]:
-    unrealized = sum(dec(item.get("upl"), Decimal("0")) for item in state.get("positions", []))
+def pnl_breakdown(
+    state: dict[str, Any],
+    since_ms: int,
+    *,
+    unrealized_baseline: Decimal = Decimal("0"),
+) -> dict[str, Decimal | int]:
+    raw_unrealized = sum(dec(item.get("upl"), Decimal("0")) for item in state.get("positions", []))
+    unrealized = raw_unrealized - unrealized_baseline
     session_fills = [item for item in state.get("fills", []) if fill_time_ms(item) >= since_ms]
     realized = sum(dec(item.get("fillPnl"), Decimal("0")) for item in session_fills)
     fees = sum(dec(item.get("fee"), Decimal("0")) for item in session_fills)
     return {
         "unrealized": unrealized,
+        "rawUnrealized": raw_unrealized,
+        "unrealizedBaseline": unrealized_baseline,
         "sessionRealized": realized,
         "sessionFees": fees,
         "sessionFillCount": len(session_fills),
@@ -1931,7 +2110,7 @@ def handle_price_hard_stop(
 def enter_risk_cooldown(config: BotConfig, reason: str) -> None:
     if config.risk_cooldown <= 0:
         print(f"Risk event {reason}: cooldown disabled, continuing next cycle.")
-        config.bot_started_ms = current_ms()
+        reset_pnl_session(config)
         return
     config.cooldown_until_ms = current_ms() + int(config.risk_cooldown * 1000)
     config.cooldown_reason = reason

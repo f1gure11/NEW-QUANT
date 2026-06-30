@@ -24,7 +24,7 @@ class AllocationConfig:
     satellite_max_weight_pct: Decimal = Decimal("12")
     satellite_min_weight_pct: Decimal = Decimal("3")
     default_equity: Decimal = Decimal("100")
-    rebalance_threshold_pct: Decimal = Decimal("2")
+    rebalance_threshold_pct: Decimal = Decimal("1")
     close_missing: bool = True
 
 

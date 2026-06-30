@@ -42,6 +42,7 @@ from portfolio_allocator import (
     fetch_current_exposures,
 )
 from portfolio_execution import ExecutionConfig, intent_to_dict, write_execution_bundle
+from portfolio_tail_hedge import TailHedgeConfig, build_tail_hedge_plan, write_tail_hedge_outputs
 from scoring import ScoreWeights, score_backtest, score_to_dict, weights_to_dict
 
 
@@ -150,6 +151,7 @@ class PortfolioBacktestConfig:
     market_regime_min_confidence: Decimal = Decimal("0.52")
     market_regime_mixed_policy: str = "price_anchor"
     ml_profile: MlRegimeProfile | None = None
+    tail_hedge: TailHedgeConfig | None = None
     trend_filter: str = "off"
     trend_lookback: int = 8
     trend_threshold_bps: Decimal = Decimal("70")
@@ -196,6 +198,29 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--market-regime-model-path", default="")
     parser.add_argument("--market-regime-min-confidence", default="0.52")
     parser.add_argument("--market-regime-mixed-policy", choices=["pause", "price_anchor", "range"], default="price_anchor")
+    parser.add_argument("--tail-hedge-mode", choices=["off", "plan", "dynamic"], default="plan")
+    parser.add_argument("--tail-hedge-inst-id", default="")
+    parser.add_argument("--tail-hedge-ratio", default="0.35")
+    parser.add_argument("--tail-hedge-stress-ratio", default="0.70")
+    parser.add_argument("--tail-hedge-full-ratio", default="1")
+    parser.add_argument("--tail-hedge-trigger-net-exposure-pct", default="120")
+    parser.add_argument("--tail-hedge-trigger-shock-bps", default="120")
+    parser.add_argument("--tail-hedge-trigger-trend-bps", default="350")
+    parser.add_argument("--tail-hedge-trigger-risk-events", type=int, default=8)
+    parser.add_argument("--tail-hedge-stress-net-exposure-pct", default="180")
+    parser.add_argument("--tail-hedge-stress-shock-bps", default="180")
+    parser.add_argument("--tail-hedge-stress-trend-bps", default="550")
+    parser.add_argument("--tail-hedge-stress-risk-events", type=int, default=40)
+    parser.add_argument("--tail-hedge-full-net-exposure-pct", default="240")
+    parser.add_argument("--tail-hedge-full-shock-bps", default="260")
+    parser.add_argument("--tail-hedge-full-trend-bps", default="800")
+    parser.add_argument("--tail-hedge-full-risk-events", type=int, default=80)
+    parser.add_argument("--tail-hedge-min-notional", default="10")
+    parser.add_argument("--tail-hedge-max-margin-pct", default="20")
+    parser.add_argument("--tail-hedge-stress-max-margin-pct", default="40")
+    parser.add_argument("--tail-hedge-full-max-margin-pct", default="100")
+    parser.add_argument("--tail-hedge-leverage", default="3")
+    parser.add_argument("--tail-hedge-ord-type", choices=["market", "limit"], default="market")
     parser.add_argument("--trend-filter", choices=["off", "auto", "compare"], default="off")
     parser.add_argument("--allow-dual-open", dest="one_way_open", action="store_false")
     parser.add_argument("--one-way-open", dest="one_way_open", action="store_true")
@@ -212,7 +237,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--core-weight-share-pct", default="70")
     parser.add_argument("--satellite-max-weight-pct", default="12")
     parser.add_argument("--satellite-min-weight-pct", default="3")
-    parser.add_argument("--rebalance-threshold-pct", default="2")
+    parser.add_argument("--rebalance-threshold-pct", default="1")
     parser.add_argument("--close-missing", dest="close_missing", action="store_true", default=True, help="Dry-run exit actions for current holdings not in target portfolio.")
     parser.add_argument("--no-close-missing", dest="close_missing", action="store_false", help="Ignore current holdings not in target portfolio.")
     return parser.parse_args()
@@ -268,6 +293,31 @@ def config_from_args(args: argparse.Namespace) -> PortfolioBacktestConfig:
         market_regime_min_confidence=market_regime_min_confidence,
         market_regime_mixed_policy=args.market_regime_mixed_policy,
         ml_profile=ml_profile,
+        tail_hedge=TailHedgeConfig(
+            mode=args.tail_hedge_mode,
+            hedge_inst_id=args.tail_hedge_inst_id,
+            hedge_ratio=dec(args.tail_hedge_ratio),
+            stress_hedge_ratio=dec(args.tail_hedge_stress_ratio),
+            full_hedge_ratio=dec(args.tail_hedge_full_ratio),
+            trigger_net_exposure_pct=dec(args.tail_hedge_trigger_net_exposure_pct),
+            trigger_shock_bps=dec(args.tail_hedge_trigger_shock_bps),
+            trigger_trend_bps=dec(args.tail_hedge_trigger_trend_bps),
+            trigger_risk_events=args.tail_hedge_trigger_risk_events,
+            stress_net_exposure_pct=dec(args.tail_hedge_stress_net_exposure_pct),
+            stress_shock_bps=dec(args.tail_hedge_stress_shock_bps),
+            stress_trend_bps=dec(args.tail_hedge_stress_trend_bps),
+            stress_risk_events=args.tail_hedge_stress_risk_events,
+            full_hedge_net_exposure_pct=dec(args.tail_hedge_full_net_exposure_pct),
+            full_hedge_shock_bps=dec(args.tail_hedge_full_shock_bps),
+            full_hedge_trend_bps=dec(args.tail_hedge_full_trend_bps),
+            full_hedge_risk_events=args.tail_hedge_full_risk_events,
+            min_hedge_notional=dec(args.tail_hedge_min_notional),
+            max_hedge_margin_pct=dec(args.tail_hedge_max_margin_pct),
+            stress_hedge_max_margin_pct=dec(args.tail_hedge_stress_max_margin_pct),
+            full_hedge_max_margin_pct=dec(args.tail_hedge_full_max_margin_pct),
+            hedge_leverage=dec(args.tail_hedge_leverage),
+            ord_type=args.tail_hedge_ord_type,
+        ),
         trend_filter=args.trend_filter,
         one_way_open=args.one_way_open,
         include_account=args.include_account,
@@ -709,13 +759,26 @@ def write_portfolio_outputs(
         execution_config=ExecutionConfig(
             trading_mode=config.trading_mode,
             cash_reserve_pct=config.allocation.cash_reserve_pct,
+            maker_fee_bps=config.maker_fee_bps,
+            taker_fee_bps=config.taker_fee_bps,
             market_regime_filter=effective_market_regime_filter(config),
             market_regime_model_path=effective_market_regime_model_path(config),
             market_regime_min_confidence=config.market_regime_min_confidence,
         ),
     )
 
-    write_summary(output_dir / "summary.md", generated_at, candidates, rows, targets, actions, intents, config)
+    hedge_plan = build_tail_hedge_plan(
+        targets=targets,
+        current_exposures=current_exposures,
+        candidates=candidates,
+        score_rows=rows,
+        equity=config.starting_equity,
+        config=config.tail_hedge or TailHedgeConfig(),
+        generated_at=generated_at,
+    )
+    write_tail_hedge_outputs(output_dir, hedge_plan)
+
+    write_summary(output_dir / "summary.md", generated_at, candidates, rows, targets, actions, intents, hedge_plan, config)
     return output_dir
 
 
@@ -736,6 +799,7 @@ def write_summary(
     targets: list[Any],
     actions: list[Any],
     intents: list[Any],
+    hedge_plan: Any,
     config: PortfolioBacktestConfig,
 ) -> None:
     lines = [
@@ -753,6 +817,7 @@ def write_summary(
         f"- Trading mode: `{config.trading_mode}`",
         f"- ML regime gate: `{effective_market_regime_filter(config)}` model `{effective_market_regime_model_path(config) or 'none'}` min confidence `{plain(config.market_regime_min_confidence)}` mixed policy `{config.market_regime_mixed_policy}`",
         f"- Portfolio shape: core `{config.allocation.core_symbols}` symbols / `{plain(config.allocation.core_weight_share_pct)}`% of deployed capital, satellites max `{plain(config.allocation.satellite_max_weight_pct)}`%",
+        f"- Tail hedge: mode `{hedge_plan.mode}` status `{hedge_plan.status}` level `{hedge_plan.target_hedge_level}` ratio `{plain(hedge_plan.target_hedge_ratio)}` net `{plain(hedge_plan.net_notional)}` / `{plain(hedge_plan.net_exposure_pct)}`%",
         "",
         "## Run Parameters",
         "",
@@ -894,6 +959,39 @@ def write_summary(
             )
         lines.append("")
 
+    lines.extend(["## Tail Hedge Plan", ""])
+    lines.extend(
+        [
+            "| Status | Level | Hedge Ratio | Target Hedge | Net Notional | Net % | Shock bps | Trend bps | Risk Events | Note |",
+            "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+            (
+                f"| {hedge_plan.status} | {hedge_plan.target_hedge_level} | "
+                f"{plain(hedge_plan.target_hedge_ratio)} | {plain(hedge_plan.target_hedge_notional)} | "
+                f"{plain(hedge_plan.net_notional)} | "
+                f"{plain(hedge_plan.net_exposure_pct)} | {plain(hedge_plan.max_shock_bps)} | "
+                f"{plain(hedge_plan.max_abs_trend_bps)} | {hedge_plan.total_risk_events} | {hedge_plan.note} |"
+            ),
+            "",
+        ]
+    )
+    if hedge_plan.trigger_reasons:
+        for reason in hedge_plan.trigger_reasons:
+            lines.append(f"- {reason}")
+        lines.append("")
+    if hedge_plan.actions:
+        lines.extend(
+            [
+                "| Instrument | Action | Side | Pos Side | Size | Target Notional | Hedge Ratio | Level | Status |",
+                "| --- | --- | --- | --- | ---: | ---: | ---: | --- | --- |",
+            ]
+        )
+        for action in hedge_plan.actions:
+            lines.append(
+                f"| {action.inst_id} | {action.action} | {action.side} | {action.pos_side} | {plain(action.sz)} | "
+                f"{plain(action.target_notional)} | {plain(action.target_hedge_ratio)} | {action.hedge_level} | {action.status} |"
+            )
+        lines.append("")
+
     failed_rows = [row for row in rows if row.get("status") != "ok"]
     if failed_rows:
         lines.extend(["## Skipped Or Failed", ""])
@@ -910,6 +1008,9 @@ def write_summary(
             "- `rebalance_plan.csv`: sortable dry-run action table.",
             "- `execution_intents.json`: dry-run execution bundle and generated one-cycle bot commands.",
             "- `execution_intents.csv`: sortable dry-run execution intent table.",
+            "- `hedge_plan.json`: portfolio tail hedge diagnostics and scheduled/manual hedge action draft.",
+            "- `hedge_plan.csv`: sortable tail hedge action draft.",
+            "- `hedge_plan.md`: human-readable tail hedge plan.",
             "- `runtime_configs/`: generated runtime config drafts for enter/increase/hold targets.",
             "- `summary.md`: this human-readable summary.",
         ]

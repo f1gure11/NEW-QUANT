@@ -7,6 +7,7 @@ preflight checks, and manual confirmation. The current product layer integrates:
 
 - adaptive grid backtests for OKX USDT swaps
 - hot-contract portfolio selection and rebalance planning
+- dynamic portfolio tail hedging with an extreme-risk full-hedge tier
 - RF/HMM market-regime research models under `reports/regime_model/`
 - rolling adaptive runtime configs for grid, sizing, TP/SL, and exchange stops
 - a web console branded as 豆包 Quant
@@ -14,7 +15,7 @@ preflight checks, and manual confirmation. The current product layer integrates:
 Core commands:
 
 ```bash
-PYTHONPATH=. .venv/bin/python portfolio_backtest.py --market-regime-filter auto --trend-filter compare
+PYTHONPATH=. .venv/bin/python portfolio_backtest.py --market-regime-filter auto --trend-filter auto
 PYTHONPATH=. .venv/bin/python regime_research.py
 PYTHONPATH=. .venv/bin/python -m unittest discover -s tests
 ```

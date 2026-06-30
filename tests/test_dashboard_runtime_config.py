@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import dashboard_server
+from portfolio_live_plan import LivePlanItem
 
 
 class DashboardRuntimeConfigTest(unittest.TestCase):
@@ -110,6 +111,17 @@ class DashboardRuntimeConfigTest(unittest.TestCase):
 
         self.assertIn("KillMode=process", unit)
         self.assertNotIn("KillMode=control-group", unit)
+
+    def test_portfolio_live_plan_lookup_prefers_ready_duplicate(self) -> None:
+        items = [
+            LivePlanItem("ETH-USDT-SWAP", "ready", "python auto_grid_bot.py", "eth.service", "ready"),
+            LivePlanItem("ETH-USDT-SWAP", "review_only", "", "", "reduce only"),
+        ]
+
+        by_inst = dashboard_server.portfolio_live_plan_items_by_inst(items)
+
+        self.assertEqual(by_inst["ETH-USDT-SWAP"].status, "ready")
+        self.assertEqual(by_inst["ETH-USDT-SWAP"].live_command, "python auto_grid_bot.py")
 
     def test_parse_bot_diagnostics_extracts_rolling_adaptive(self) -> None:
         diagnostics = dashboard_server.parse_bot_diagnostics(

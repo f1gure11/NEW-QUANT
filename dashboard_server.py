@@ -2372,7 +2372,7 @@ def start_portfolio_live(payload: dict[str, Any]) -> dict[str, Any]:
         requested or None,
         allow_blocked_preflight=bool(payload.get("allowBlocked")),
     )
-    live_plan_by_inst = {item.inst_id: item for item in live_plan_items if item.inst_id}
+    live_plan_by_inst = portfolio_live_plan_items_by_inst(live_plan_items)
 
     reduce_results = []
     stopped_for_reduce = []
@@ -2454,6 +2454,23 @@ def start_portfolio_live(payload: dict[str, Any]) -> dict[str, Any]:
         "mode": "live",
     }
     return status
+
+
+def portfolio_live_plan_items_by_inst(live_plan_items: list[Any]) -> dict[str, Any]:
+    by_inst: dict[str, Any] = {}
+    for item in live_plan_items:
+        inst_id = str(getattr(item, "inst_id", "") or "")
+        if not inst_id:
+            continue
+        current = by_inst.get(inst_id)
+        if current is None:
+            by_inst[inst_id] = item
+            continue
+        current_status = str(getattr(current, "status", "") or "")
+        item_status = str(getattr(item, "status", "") or "")
+        if current_status != "ready" and item_status == "ready":
+            by_inst[inst_id] = item
+    return by_inst
 
 
 def portfolio_preflight_block_reasons(preflight_checks: list[Any]) -> dict[str, list[str]]:

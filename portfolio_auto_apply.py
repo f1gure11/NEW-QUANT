@@ -155,7 +155,9 @@ def require_live_guard(args: argparse.Namespace) -> None:
 def resolve_report_dir(value: str) -> Path:
     if value:
         path = Path(value)
-        if not path.is_absolute():
+        if not path.is_absolute() and path.exists():
+            path = path.resolve()
+        elif not path.is_absolute():
             path = REPORT_ROOT / path
         if not path.exists():
             raise FileNotFoundError(f"Portfolio report not found: {path}")

@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import portfolio_auto_apply
-from portfolio_auto_apply import BotProcess, build_apply_plan, hot_update_runtime, live_command_from_dry_run, run
+from portfolio_auto_apply import BotProcess, build_apply_plan, hot_update_runtime, live_command_from_dry_run, resolve_report_dir, run
 
 
 class PortfolioAutoApplyTest(unittest.TestCase):
@@ -123,6 +123,23 @@ class PortfolioAutoApplyTest(unittest.TestCase):
         self.assertEqual(result["instId"], "AAA-USDT-SWAP")
         self.assertEqual(saved["interval"], "8")
         self.assertEqual(saved["autoAppliedFromReport"], str(root))
+
+    def test_resolve_report_dir_accepts_existing_relative_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            report = root / "reports" / "portfolio" / "run"
+            report.mkdir(parents=True)
+            with patch.object(portfolio_auto_apply, "REPORT_ROOT", root / "reports" / "portfolio"):
+                cwd = Path.cwd()
+                try:
+                    import os
+
+                    os.chdir(root)
+                    resolved = resolve_report_dir("reports/portfolio/run")
+                finally:
+                    os.chdir(cwd)
+
+        self.assertEqual(resolved, report.resolve())
 
     def test_live_command_from_dry_run_reuses_report_reduce_command(self) -> None:
         command = live_command_from_dry_run(

@@ -31,6 +31,8 @@ class ExecutionConfig:
     initial_order_margin_pct: Decimal = Decimal("25")
     initial_max_margin_pct: Decimal = Decimal("75")
     min_net_bps: Decimal = Decimal("1")
+    maker_fee_bps: Decimal = Decimal("2")
+    taker_fee_bps: Decimal = Decimal("5")
     max_open_orders_per_side: int = 5
     max_actions_per_cycle: int = 4
     interval: Decimal = Decimal("8")
@@ -301,6 +303,22 @@ def runtime_config_for_target(
         upper = lower + candidate.tick_sz
     adaptive = pool_adaptive_runtime_values(target, execution_config)
     risk_reward = backtest_risk_reward_values(target, adaptive, execution_config)
+    grid_floor = executable_grid_floor_bps(
+        midpoint=(lower + upper) / Decimal("2"),
+        tick=candidate.tick_sz,
+        lower=lower,
+        upper=upper,
+        min_net_bps=execution_config.min_net_bps,
+        maker_fee_bps=execution_config.maker_fee_bps,
+        taker_fee_bps=execution_config.taker_fee_bps,
+        ord_type=execution_config.ord_type,
+    )
+    initial_grid_bps = max(execution_config.initial_grid_bps, grid_floor["required_grid_bps"])
+    rolling_min_grid_bps = max(
+        execution_config.rolling_adaptive_min_grid_bps,
+        grid_floor["required_grid_bps"],
+    )
+    rolling_max_grid_bps = max(execution_config.rolling_adaptive_max_grid_bps, rolling_min_grid_bps)
 
     return {
         "instId": target.inst_id,
@@ -309,8 +327,13 @@ def runtime_config_for_target(
         "lower": plain(lower),
         "upper": plain(upper),
         "leverage": plain(execution_config.initial_leverage),
-        "gridBps": plain(execution_config.initial_grid_bps),
+        "gridBps": plain(initial_grid_bps),
         "minNetBps": plain(execution_config.min_net_bps),
+        "gridExecutableMinBps": plain(grid_floor["required_grid_bps"]),
+        "gridExecutableMinStep": plain(grid_floor["required_step"]),
+        "gridExecutableTickBps": plain(grid_floor["tick_bps"]),
+        "gridExecutableFeeBps": plain(grid_floor["fee_bps"]),
+        "gridExecutableNote": grid_floor["note"],
         "softBps": plain(dec(getattr(strategy_config, "soft_bps", Decimal("45")))),
         "hardBps": plain(dec(getattr(strategy_config, "hard_bps", Decimal("80")))),
         "mode": "adaptive",
@@ -380,8 +403,8 @@ def runtime_config_for_target(
         "rollingAdaptiveHighVolBps": plain(execution_config.rolling_adaptive_high_vol_bps),
         "rollingAdaptiveMinLeverage": plain(execution_config.rolling_adaptive_min_leverage),
         "rollingAdaptiveMaxLeverage": plain(execution_config.rolling_adaptive_max_leverage),
-        "rollingAdaptiveMinGridBps": plain(execution_config.rolling_adaptive_min_grid_bps),
-        "rollingAdaptiveMaxGridBps": plain(execution_config.rolling_adaptive_max_grid_bps),
+        "rollingAdaptiveMinGridBps": plain(rolling_min_grid_bps),
+        "rollingAdaptiveMaxGridBps": plain(rolling_max_grid_bps),
         "rollingAdaptiveGridVolMultiplier": plain(execution_config.rolling_adaptive_grid_vol_multiplier),
         "rollingAdaptiveMinWidthBps": plain(execution_config.rolling_adaptive_min_width_bps),
         "rollingAdaptiveMaxWidthBps": plain(execution_config.rolling_adaptive_max_width_bps),
@@ -430,6 +453,61 @@ def runtime_config_for_target(
 def runtime_trend_filter(target: TargetAllocation) -> str:
     selected = str(getattr(target, "selected_trend_filter", "") or "off").strip()
     return selected if selected in {"off", "auto"} else "off"
+
+
+def executable_grid_floor_bps(
+    *,
+    midpoint: Decimal,
+    tick: Decimal,
+    lower: Decimal,
+    upper: Decimal,
+    min_net_bps: Decimal,
+    maker_fee_bps: Decimal,
+    taker_fee_bps: Decimal,
+    ord_type: str,
+) -> dict[str, Any]:
+    if midpoint <= 0 or tick <= 0 or upper <= lower:
+        return {
+            "required_grid_bps": Decimal("1"),
+            "required_step": tick,
+            "tick_bps": Decimal("0"),
+            "fee_bps": Decimal("0"),
+            "note": "invalid range; using fallback minimum grid",
+        }
+
+    open_fee_bps = taker_fee_bps if ord_type == "limit" else maker_fee_bps
+    fee_bps = max(Decimal("0"), open_fee_bps) + max(Decimal("0"), maker_fee_bps, taker_fee_bps)
+    required_net_bps = max(Decimal("0"), min_net_bps)
+    required_gross_bps = fee_bps + required_net_bps
+    tick_bps = tick / midpoint * Decimal("10000")
+    required_step = max(tick, midpoint * required_gross_bps / Decimal("10000"))
+
+    span = upper - lower
+    max_grids = max(1, int((span / tick).to_integral_value(rounding=ROUND_HALF_UP)))
+    for grid_count in range(max_grids, 0, -1):
+        step = round_to_tick(span / Decimal(grid_count), tick)
+        if step >= required_step:
+            gross_bps = step / midpoint * Decimal("10000")
+            note = (
+                f"min executable grid from tick/fees: gross={plain(gross_bps)}bps "
+                f"fees={plain(fee_bps)}bps min_net={plain(required_net_bps)}bps"
+            )
+            return {
+                "required_grid_bps": q(gross_bps),
+                "required_step": step,
+                "tick_bps": tick_bps,
+                "fee_bps": fee_bps,
+                "note": note,
+            }
+
+    gross_bps = span / midpoint * Decimal("10000")
+    return {
+        "required_grid_bps": q(gross_bps),
+        "required_step": span,
+        "tick_bps": tick_bps,
+        "fee_bps": fee_bps,
+        "note": "range allows only one grid step at required net edge",
+    }
 
 
 def pool_adaptive_runtime_values(

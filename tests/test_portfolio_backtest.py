@@ -203,13 +203,16 @@ class PortfolioBacktestTest(unittest.TestCase):
             with (Path(output_dir) / "scores.csv").open("r", encoding="utf-8", newline="") as file:
                 scores = list(csv.DictReader(file))
             rebalance = json.loads((Path(output_dir) / "rebalance_plan.json").read_text(encoding="utf-8"))
+            hedge = json.loads((Path(output_dir) / "hedge_plan.json").read_text(encoding="utf-8"))
             summary = (Path(output_dir) / "summary.md").read_text(encoding="utf-8")
 
         self.assertEqual(candidates["candidateCount"], 0)
         self.assertEqual(scores, [])
         self.assertEqual(rebalance["targets"], [])
         self.assertEqual(rebalance["actions"], [])
+        self.assertEqual(hedge["status"], "no_account")
         self.assertIn("No candidates completed a backtest.", summary)
+        self.assertIn("## Tail Hedge Plan", summary)
 
     def test_execution_runtime_uses_portfolio_cash_reserve_pct(self) -> None:
         config = PortfolioBacktestConfig(
@@ -244,8 +247,10 @@ class PortfolioBacktestTest(unittest.TestCase):
                 output_dir = run_portfolio_backtest(FakeClient(), config, tmpdir)
             runtime_path = Path(output_dir) / "runtime_configs" / "aaa_usdt_swap.json"
             runtime = json.loads(runtime_path.read_text(encoding="utf-8"))
+            hedge = json.loads((Path(output_dir) / "hedge_plan.json").read_text(encoding="utf-8"))
 
         self.assertEqual(runtime["cashReservePct"], "3")
+        self.assertEqual(hedge["mode"], "plan")
 
     def test_summary_explains_filtered_candidates_when_no_targets(self) -> None:
         config = PortfolioBacktestConfig(
