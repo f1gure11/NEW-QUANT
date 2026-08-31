@@ -1,0 +1,1848 @@
+{
+  "generatedAt": "2026-08-11T16:52:41Z",
+  "mode": "read_only_development_only_pure_stock_monte_carlo",
+  "registryId": "qqq-pure-stock-mc-registry-6c8f1e715a78797a",
+  "registrySha256": "2ff517acbc92e35a1e31d95d44f3568ac92266f60823ace79a7486f8f94003ce",
+  "study": {
+    "strategyKey": "qqq_pure_stock_factor_monte_carlo",
+    "modelId": "qqq-pure-stock-mc-development-v1",
+    "status": "preregistered_development_only",
+    "paperOrLiveAuthorized": false,
+    "hypothesis": "A pure long_short stock book using the locked point_in_time monthly factor weights at 100 percent factor gross may offer a useful return distribution at 2x while higher leverage exposes liquidation and ruin risk; fixed and trailing profit exits are evaluated as a frozen family.",
+    "source": {
+      "sourceModelId": "qqq-pit-1fda3d7e14f137bf",
+      "weightsPath": "reports/qqq_active_enhancement/qqq-pit-20260808-v5/monthly_weights.csv",
+      "weightsSha256": "a92d07f484cbb68bab790e31d4fca0089e7f26c6fce30f3d45a12ef4017df8a0",
+      "lockedModelPath": "reports/qqq_active_enhancement/qqq-pit-20260808-v5/locked_model.json",
+      "lockedModelSha256": "674d68a3f68d90cc54c03fc1e6efd338ce0ad18df29d155e8abbe97e696fc718",
+      "trackingPath": "config/tradfi_index_tracking.json",
+      "trackingSha256": "f48594719eaa988ee971cc4de6ef77da114704553f4de2bf17cbdccbfbd3f3fc",
+      "priceRoot": "data/qqq_active_enhancement/prices",
+      "priceField": "adj_close",
+      "priceObservation": "completed_underlying_daily_close",
+      "signalStart": "2024-07-31",
+      "signalEnd": "2026-06-30",
+      "returnStart": "2024-08-01",
+      "returnEnd": "2026-07-31",
+      "initialPriceDate": "2026-07-31",
+      "sourceEpisodes": 24,
+      "limitations": [
+        "underlying_adjusted_closes_are_not_historical_okx_contract_candles",
+        "daily_closes_cannot_observe_intraday_stop_or_profit_touch_order",
+        "today_constituent_and_current_contract_survivorship_bias_remains",
+        "the_factor_model_and_source_window_were_already_inspected"
+      ]
+    },
+    "universe": {
+      "rule": "symbols_in_the_frozen_weight_file_during_the_source_window_that_are_validated_current_category_3_okx_equity_contracts",
+      "excludedMappings": {
+        "DASH": "DASH_USDT_SWAP_is_category_1_Dash_crypto_not_DoorDash_equity"
+      },
+      "symbols": [
+        "AAPL",
+        "ADBE",
+        "ALAB",
+        "AMAT",
+        "AMD",
+        "AMZN",
+        "APP",
+        "AVGO",
+        "COST",
+        "CRWD",
+        "CSCO",
+        "GOOGL",
+        "INTC",
+        "KLAC",
+        "LITE",
+        "LRCX",
+        "META",
+        "MRVL",
+        "MSFT",
+        "MSTR",
+        "MU",
+        "NVDA",
+        "PLTR",
+        "QCOM",
+        "RKLB",
+        "TER",
+        "TSLA",
+        "TTWO",
+        "WDC"
+      ]
+    },
+    "portfolio": {
+      "initialEquityUsdt": 100.0,
+      "qqqOrSpyCoreWeight": 0.0,
+      "factorGrossTarget": 1.0,
+      "leverageScenarios": [
+        2.0,
+        3.0,
+        5.0,
+        10.0
+      ],
+      "weightRule": "drop_excluded_symbols_then_divide_each_locked_signed_active_weight_by_the_sum_of_absolute_remaining_weights_for_that_signal_date",
+      "rebalance": "monthly_before_the_first_return_of_each_sampled_source_episode",
+      "postExitReentry": "none_until_the_next_monthly_factor_rebalance",
+      "syntheticContractValueUnderlyingShares": 1.0,
+      "syntheticQuantityIncrement": 0.01,
+      "quantityRounding": "absolute_quantity_floor_to_increment",
+      "executability": "synthetic_only_the_forced_0_01_increment_overrides_real_okx_ctVal_lotSz_and_minSz"
+    },
+    "exits": {
+      "decisionPrice": "completed_daily_close",
+      "executionPrice": "next_completed_daily_close",
+      "monthlyRebalancePrecedence": "a_new_monthly_factor_target_supersedes_a_pending_prior_cohort_exit",
+      "hardStopLossPct": 15.0,
+      "adversePrecedence": "hard_stop_is_evaluated_before_the_profit_rule_on_each_completed_close",
+      "variants": [
+        {
+          "key": "fixed_take_profit_10pct",
+          "type": "fixed_take_profit",
+          "takeProfitPct": 10.0
+        },
+        {
+          "key": "trailing_profit_6pct_4pct",
+          "type": "trailing_take_profit",
+          "activationPct": 6.0,
+          "givebackPercentagePoints": 4.0
+        }
+      ]
+    },
+    "monteCarlo": {
+      "method": "synchronized_monthly_episode_bootstrap_with_replacement",
+      "paths": 4000,
+      "horizonMonths": 24,
+      "seed": 20260811,
+      "sameRandomDrawsAcrossScenarios": true,
+      "episodePairing": "each_sampled_block_keeps_one_locked_factor_target_with_its_actual_following_month_cross_sectional_return_path",
+      "fundingSampling": "independent_synchronized_daily_vectors_bootstrapped_from_data_pipeline_load_funding",
+      "fundingMinimumSymbolCoverageRatio": 0.8,
+      "missingFundingFill": 0.0,
+      "tradingDayToCalendarFundingMultiplier": 1.4
+    },
+    "costs": {
+      "profiles": [
+        {
+          "key": "base",
+          "perSideBps": 10.0
+        },
+        {
+          "key": "stress",
+          "perSideBps": 20.0
+        }
+      ],
+      "funding": "signed_realized_rate_vectors_from_the_okx_data_lake",
+      "shortBorrow": "not_added_separately_because_the_contract_funding_proxy_is_used"
+    },
+    "margin": {
+      "mode": "synthetic_cross_margin_proxy",
+      "maintenanceMarginPctOfGross": 5.0,
+      "liquidationPenaltyBpsOfGross": 50.0,
+      "check": "completed_daily_close_after_pnl_and_funding_before_pending_exit_execution",
+      "ruinDefinition": "equity_less_than_or_equal_to_zero_before_or_after_modeled_liquidation",
+      "drawdownRiskThresholdsPct": [
+        50.0,
+        90.0
+      ],
+      "limitation": "actual_okx_instrument_tiers_mark_prices_intraday_liquidation_and_insurance_fund_behavior_are_not_recreated"
+    },
+    "requiredOutputs": [
+      "all_exit_leverage_cost_combinations",
+      "gross_and_net_of_cost_results",
+      "terminal_equity_and_return_percentiles_1_5_50_95_99",
+      "ruin_probability",
+      "liquidation_proxy_probability",
+      "drawdown_50_and_90_probability",
+      "maximum_drawdown_percentiles",
+      "stop_and_profit_exit_counts",
+      "turnover_cost_and_funding",
+      "realized_gross_and_position_count",
+      "chronological_source_split_diagnostics"
+    ]
+  },
+  "data": {
+    "symbols": 29,
+    "symbolList": [
+      "AAPL",
+      "ADBE",
+      "ALAB",
+      "AMAT",
+      "AMD",
+      "AMZN",
+      "APP",
+      "AVGO",
+      "COST",
+      "CRWD",
+      "CSCO",
+      "GOOGL",
+      "INTC",
+      "KLAC",
+      "LITE",
+      "LRCX",
+      "META",
+      "MRVL",
+      "MSFT",
+      "MSTR",
+      "MU",
+      "NVDA",
+      "PLTR",
+      "QCOM",
+      "RKLB",
+      "TER",
+      "TSLA",
+      "TTWO",
+      "WDC"
+    ],
+    "episodes": 24,
+    "signalDates": [
+      "2024-07-31",
+      "2024-08-30",
+      "2024-09-30",
+      "2024-10-31",
+      "2024-11-29",
+      "2024-12-31",
+      "2025-01-31",
+      "2025-02-28",
+      "2025-03-31",
+      "2025-04-30",
+      "2025-05-30",
+      "2025-06-30",
+      "2025-07-31",
+      "2025-08-29",
+      "2025-09-30",
+      "2025-10-31",
+      "2025-11-28",
+      "2025-12-31",
+      "2026-01-30",
+      "2026-02-27",
+      "2026-03-31",
+      "2026-04-30",
+      "2026-05-29",
+      "2026-06-30"
+    ],
+    "sourceTradingDays": 501,
+    "episodeTradingDaysMin": 19,
+    "episodeTradingDaysMax": 23,
+    "rawFactorGrossMin": 0.10857542589132,
+    "rawFactorGrossMax": 0.1930343611517854,
+    "normalizedMaxSingleNameWeightPct": 13.815280830686632,
+    "episodeFingerprint": "978641842b7b6a04adb0be35a1bba8b642c79ec622eee7d5e790d166ee61ad62",
+    "fundingDays": 50,
+    "fundingStart": "2026-06-23",
+    "fundingEnd": "2026-08-11",
+    "fundingObservedSymbolsMin": 24,
+    "fundingObservedSymbolsMax": 29,
+    "fundingFingerprint": "4f7d6ae58e66c917b41e35e96a54c383bb8113ee55de4f4ec2c44a0d72e626b3"
+  },
+  "sourceSplitDiagnostics": {
+    "train": {
+      "signalStart": "2024-07-31",
+      "signalEnd": "2025-06-30",
+      "episodes": 12,
+      "tradingDays": 250,
+      "factorGrossOneTotalReturnPct": 0.09960818061129917,
+      "factorGrossOneAnnualizedReturnPct": 0.10040544597105239,
+      "annualizedVolatilityPct": 11.583503929943136,
+      "maxDrawdownPct": 10.869533022079192,
+      "positiveEpisodePct": 50.0
+    },
+    "validation": {
+      "signalStart": "2025-07-31",
+      "signalEnd": "2025-12-31",
+      "episodes": 6,
+      "tradingDays": 126,
+      "factorGrossOneTotalReturnPct": 28.26279940329406,
+      "factorGrossOneAnnualizedReturnPct": 64.51345710769651,
+      "annualizedVolatilityPct": 13.128375558294591,
+      "maxDrawdownPct": 4.279056854767671,
+      "positiveEpisodePct": 83.33333333333334
+    },
+    "test": {
+      "signalStart": "2026-01-30",
+      "signalEnd": "2026-06-30",
+      "episodes": 6,
+      "tradingDays": 125,
+      "factorGrossOneTotalReturnPct": 17.214736102603112,
+      "factorGrossOneAnnualizedReturnPct": 37.74255790894334,
+      "annualizedVolatilityPct": 15.985631887539176,
+      "maxDrawdownPct": 6.299867775129142,
+      "positiveEpisodePct": 66.66666666666666
+    }
+  },
+  "scenarios": [
+    {
+      "exitVariant": "fixed_take_profit_10pct",
+      "leverage": 2.0,
+      "costProfile": "base",
+      "perSideBps": 10.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 69.44545806071508,
+          "p05": 77.45972124816144,
+          "p50": 104.28039610966991,
+          "p95": 142.47741484609134,
+          "p99": 162.72592073340235
+        },
+        "grossReturnPct": {
+          "p01": -27.295402552361537,
+          "p05": -19.282885815576254,
+          "p50": 7.724070390009536,
+          "p95": 46.705456244664276,
+          "p99": 67.70436847422762
+        },
+        "netReturnPct": {
+          "p01": -30.55454193928491,
+          "p05": -22.540278751838557,
+          "p50": 4.280396109669904,
+          "p95": 42.477414846091335,
+          "p99": 62.72592073340235
+        },
+        "maxDrawdownPct": {
+          "p01": 8.967995020878366,
+          "p05": 10.760558781998336,
+          "p50": 18.50280130154338,
+          "p95": 31.919092934372898,
+          "p99": 38.01945007303597
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 78.26225,
+        "meanFixedProfitExits": 135.026,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 4.871297185586938,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 1.3259549964179416,
+        "meanPricePnlUsdt": 10.021775711867823,
+        "meanTurnoverUsdt": 4871.297185586937,
+        "meanRebalanceGrossMultiple": 1.305068346936269,
+        "meanRebalancePositions": 16.148322916666665,
+        "accountingResidualMaxAbsUsdt": 7.673861546209082e-13
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 102.78663535626377,
+          "p05": 102.78663535626377,
+          "p50": 102.78663535626377,
+          "p95": 102.78663535626377,
+          "p99": 102.78663535626377
+        },
+        "grossReturnPct": {
+          "p01": 5.881235153551691,
+          "p05": 5.881235153551691,
+          "p50": 5.881235153551691,
+          "p95": 5.881235153551691,
+          "p99": 5.881235153551691
+        },
+        "netReturnPct": {
+          "p01": 2.786635356263778,
+          "p05": 2.786635356263778,
+          "p50": 2.786635356263778,
+          "p95": 2.786635356263778,
+          "p99": 2.786635356263778
+        },
+        "maxDrawdownPct": {
+          "p01": 14.480585207966563,
+          "p05": 14.480585207966563,
+          "p50": 14.480585207966563,
+          "p95": 14.480585207966563,
+          "p99": 14.480585207966563
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 78.0,
+        "meanFixedProfitExits": 134.0,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 4.381722827010365,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 1.2871230297224125,
+        "meanPricePnlUsdt": 5.881235153551691,
+        "meanTurnoverUsdt": 4381.722827010364,
+        "meanRebalanceGrossMultiple": 1.3225017050741494,
+        "meanRebalancePositions": 16.375,
+        "accountingResidualMaxAbsUsdt": 4.263256414560601e-14
+      }
+    },
+    {
+      "exitVariant": "fixed_take_profit_10pct",
+      "leverage": 2.0,
+      "costProfile": "stress",
+      "perSideBps": 20.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 65.87253360750199,
+          "p05": 74.39059042258344,
+          "p50": 99.20626682436351,
+          "p95": 136.18425418801982,
+          "p99": 154.2476145625174
+        },
+        "grossReturnPct": {
+          "p01": -27.32833911446699,
+          "p05": -18.76209694673336,
+          "p50": 7.383528768913205,
+          "p95": 45.837989616227055,
+          "p99": 64.78416112736912
+        },
+        "netReturnPct": {
+          "p01": -34.12746639249799,
+          "p05": -25.609409577416553,
+          "p50": -0.7937331756364907,
+          "p95": 36.18425418801983,
+          "p99": 54.24761456251739
+        },
+        "maxDrawdownPct": {
+          "p01": 9.460273973306068,
+          "p05": 11.313699271715846,
+          "p50": 19.830498489997222,
+          "p95": 33.98956263725059,
+          "p99": 40.22502722119337
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 77.47,
+        "meanFixedProfitExits": 133.3605,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 9.443218913918008,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 1.2877374381425397,
+        "meanPricePnlUsdt": 9.574831051180448,
+        "meanTurnoverUsdt": 4721.609456959003,
+        "meanRebalanceGrossMultiple": 1.29527180718332,
+        "meanRebalancePositions": 15.944916666666668,
+        "accountingResidualMaxAbsUsdt": 6.252776074688882e-13
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 92.85034824608121,
+          "p05": 92.85034824608121,
+          "p50": 92.85034824608121,
+          "p95": 92.85034824608121,
+          "p99": 92.85034824608121
+        },
+        "grossReturnPct": {
+          "p01": -0.3781985707433084,
+          "p05": -0.3781985707433084,
+          "p50": -0.3781985707433084,
+          "p95": -0.3781985707433084,
+          "p99": -0.3781985707433084
+        },
+        "netReturnPct": {
+          "p01": -7.149651753918784,
+          "p05": -7.149651753918784,
+          "p50": -7.149651753918784,
+          "p95": -7.149651753918784,
+          "p99": -7.149651753918784
+        },
+        "maxDrawdownPct": {
+          "p01": 16.712938328177128,
+          "p05": 16.712938328177128,
+          "p50": 16.712938328177128,
+          "p95": 16.712938328177128,
+          "p99": 16.712938328177128
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 78.0,
+        "meanFixedProfitExits": 125.0,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 8.057475097011393,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 1.2860219138360804,
+        "meanPricePnlUsdt": -0.3781985707433084,
+        "meanTurnoverUsdt": 4028.737548505695,
+        "meanRebalanceGrossMultiple": 1.27577605196141,
+        "meanRebalancePositions": 15.708333333333334,
+        "accountingResidualMaxAbsUsdt": 1.7053025658242404e-13
+      }
+    },
+    {
+      "exitVariant": "fixed_take_profit_10pct",
+      "leverage": 3.0,
+      "costProfile": "base",
+      "perSideBps": 10.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 56.43703923808076,
+          "p05": 68.65922350993208,
+          "p50": 111.48398810147299,
+          "p95": 187.01636867399807,
+          "p99": 237.53983482764292
+        },
+        "grossReturnPct": {
+          "p01": -38.95542599375054,
+          "p05": -26.224768110380985,
+          "p50": 17.736541002765037,
+          "p95": 95.24783915689359,
+          "p99": 147.6783340294089
+        },
+        "netReturnPct": {
+          "p01": -43.56296076191924,
+          "p05": -31.340776490067928,
+          "p50": 11.483988101472997,
+          "p95": 87.01636867399809,
+          "p99": 137.5398348276429
+        },
+        "maxDrawdownPct": {
+          "p01": 13.28312205183432,
+          "p05": 16.17075990531036,
+          "p50": 27.133189386096262,
+          "p95": 45.2155786288566,
+          "p99": 52.85608230220414
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 1.9,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 91.54975,
+        "meanFixedProfitExits": 163.7385,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 8.822406923946172,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 2.246224154864298,
+        "meanPricePnlUsdt": 24.409422406376244,
+        "meanTurnoverUsdt": 8822.40692394617,
+        "meanRebalanceGrossMultiple": 2.2366735578960153,
+        "meanRebalancePositions": 19.40021875,
+        "accountingResidualMaxAbsUsdt": 8.810729923425242e-13
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 124.82183510939598,
+          "p05": 124.82183510939598,
+          "p50": 124.82183510939598,
+          "p95": 124.82183510939598,
+          "p99": 124.82183510939598
+        },
+        "grossReturnPct": {
+          "p01": 31.298571916552582,
+          "p05": 31.298571916552582,
+          "p50": 31.298571916552582,
+          "p95": 31.298571916552582,
+          "p99": 31.298571916552582
+        },
+        "netReturnPct": {
+          "p01": 24.821835109395973,
+          "p05": 24.821835109395973,
+          "p50": 24.821835109395973,
+          "p95": 24.821835109395973,
+          "p99": 24.821835109395973
+        },
+        "maxDrawdownPct": {
+          "p01": 18.97145936139036,
+          "p05": 18.97145936139036,
+          "p50": 18.97145936139036,
+          "p95": 18.97145936139036,
+          "p99": 18.97145936139036
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 98.0,
+        "meanFixedProfitExits": 171.0,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 8.520990379951783,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 2.044253572794871,
+        "meanPricePnlUsdt": 31.298571916552582,
+        "meanTurnoverUsdt": 8520.990379951789,
+        "meanRebalanceGrossMultiple": 2.331650991832858,
+        "meanRebalancePositions": 20.708333333333332,
+        "accountingResidualMaxAbsUsdt": 2.984279490192421e-13
+      }
+    },
+    {
+      "exitVariant": "fixed_take_profit_10pct",
+      "leverage": 3.0,
+      "costProfile": "stress",
+      "perSideBps": 20.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 52.324941569177504,
+          "p05": 63.70927388225648,
+          "p50": 102.74946208651019,
+          "p95": 172.50134551999832,
+          "p99": 213.4000326597857
+        },
+        "grossReturnPct": {
+          "p01": -37.19224005578838,
+          "p05": -25.24241647506484,
+          "p50": 16.58568311107372,
+          "p95": 91.9852544825387,
+          "p99": 137.29725580343273
+        },
+        "netReturnPct": {
+          "p01": -47.675058430822496,
+          "p05": -36.29072611774352,
+          "p50": 2.7494620865101904,
+          "p95": 72.50134551999832,
+          "p99": 113.40003265978568
+        },
+        "maxDrawdownPct": {
+          "p01": 14.085372305377815,
+          "p05": 16.865550406411927,
+          "p50": 28.98680286989851,
+          "p95": 48.20873657761555,
+          "p99": 54.88781241854374
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 3.55,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 90.366,
+        "meanFixedProfitExits": 161.22625,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 16.769609175008817,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 2.1431904085400513,
+        "meanPricePnlUsdt": 22.828056522321045,
+        "meanTurnoverUsdt": 8384.804587504408,
+        "meanRebalanceGrossMultiple": 2.2169934390525743,
+        "meanRebalancePositions": 19.123875,
+        "accountingResidualMaxAbsUsdt": 9.094947017729282e-13
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 103.60106400255815,
+          "p05": 103.60106400255815,
+          "p50": 103.60106400255815,
+          "p95": 103.60106400255815,
+          "p99": 103.60106400255815
+        },
+        "grossReturnPct": {
+          "p01": 16.78638179899917,
+          "p05": 16.78638179899917,
+          "p50": 16.78638179899917,
+          "p95": 16.78638179899917,
+          "p99": 16.78638179899917
+        },
+        "netReturnPct": {
+          "p01": 3.601064002558152,
+          "p05": 3.601064002558152,
+          "p50": 3.601064002558152,
+          "p95": 3.601064002558152,
+          "p99": 3.601064002558152
+        },
+        "maxDrawdownPct": {
+          "p01": 21.540446877968108,
+          "p05": 21.540446877968108,
+          "p50": 21.540446877968108,
+          "p95": 21.540446877968108,
+          "p99": 21.540446877968108
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 97.0,
+        "meanFixedProfitExits": 167.0,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 15.218000539682258,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 2.032682743241484,
+        "meanPricePnlUsdt": 16.78638179899917,
+        "meanTurnoverUsdt": 7609.000269841131,
+        "meanRebalanceGrossMultiple": 2.2832053946270014,
+        "meanRebalancePositions": 20.333333333333332,
+        "accountingResidualMaxAbsUsdt": 2.4158453015843406e-13
+      }
+    },
+    {
+      "exitVariant": "fixed_take_profit_10pct",
+      "leverage": 5.0,
+      "costProfile": "base",
+      "perSideBps": 10.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 35.42844920298256,
+          "p05": 50.714070720426385,
+          "p50": 123.23919350302,
+          "p95": 332.00615237822495,
+          "p99": 488.23300203765774
+        },
+        "grossReturnPct": {
+          "p01": -57.47579198066382,
+          "p05": -40.09526409427525,
+          "p50": 36.543869020928895,
+          "p95": 256.8721118502644,
+          "p99": 422.5031245136602
+        },
+        "netReturnPct": {
+          "p01": -64.57155079701744,
+          "p05": -49.285929279573615,
+          "p50": 23.239193503020005,
+          "p95": 232.00615237822493,
+          "p99": 388.2330020376578
+        },
+        "maxDrawdownPct": {
+          "p01": 21.459278186355558,
+          "p05": 25.98158587158254,
+          "p50": 42.32160327962042,
+          "p95": 66.08460896404175,
+          "p99": 73.76298700880331
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 28.65,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 105.06025,
+        "meanFixedProfitExits": 191.80575,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 18.75157237129294,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 4.376757628976175,
+        "meanPricePnlUsdt": 64.23713682012246,
+        "meanTurnoverUsdt": 18751.57237129294,
+        "meanRebalanceGrossMultiple": 4.173021592707213,
+        "meanRebalancePositions": 22.4225625,
+        "accountingResidualMaxAbsUsdt": 1.7053025658242404e-12
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 133.7638582503436,
+          "p05": 133.7638582503436,
+          "p50": 133.7638582503436,
+          "p95": 133.7638582503436,
+          "p99": 133.7638582503436
+        },
+        "grossReturnPct": {
+          "p01": 46.66755695655279,
+          "p05": 46.66755695655279,
+          "p50": 46.66755695655279,
+          "p95": 46.66755695655279,
+          "p99": 46.66755695655279
+        },
+        "netReturnPct": {
+          "p01": 33.76385825034358,
+          "p05": 33.76385825034358,
+          "p50": 33.76385825034358,
+          "p95": 33.76385825034358,
+          "p99": 33.76385825034358
+        },
+        "maxDrawdownPct": {
+          "p01": 29.614317422459536,
+          "p05": 29.614317422459536,
+          "p50": 29.614317422459536,
+          "p95": 29.614317422459536,
+          "p99": 29.614317422459536
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 111.0,
+        "meanFixedProfitExits": 199.0,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 16.500103144926214,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 3.5964044387172365,
+        "meanPricePnlUsdt": 46.66755695655279,
+        "meanTurnoverUsdt": 16500.10314492622,
+        "meanRebalanceGrossMultiple": 4.321767958826479,
+        "meanRebalancePositions": 23.291666666666668,
+        "accountingResidualMaxAbsUsdt": 2.2737367544323206e-13
+      }
+    },
+    {
+      "exitVariant": "fixed_take_profit_10pct",
+      "leverage": 5.0,
+      "costProfile": "stress",
+      "perSideBps": 20.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 30.891994356473706,
+          "p05": 43.54047906220719,
+          "p50": 105.92099599417018,
+          "p95": 279.98157139966685,
+          "p99": 407.1112393624346
+        },
+        "grossReturnPct": {
+          "p01": -52.73995654651669,
+          "p05": -37.39375297364264,
+          "p50": 33.5920944207469,
+          "p95": 226.49973397519986,
+          "p99": 372.84637273969406
+        },
+        "netReturnPct": {
+          "p01": -69.1080056435263,
+          "p05": -56.45952093779281,
+          "p50": 5.920995994170186,
+          "p95": 179.98157139966688,
+          "p99": 307.1112393624346
+        },
+        "maxDrawdownPct": {
+          "p01": 22.59357608956892,
+          "p05": 27.125801319272334,
+          "p50": 45.14341454985086,
+          "p95": 68.97098177529253,
+          "p99": 76.08136063239381
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 36.875,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 103.265,
+        "meanFixedProfitExits": 188.09425,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 34.228330272300475,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 4.021400615452991,
+        "meanPricePnlUsdt": 57.651887293666896,
+        "meanTurnoverUsdt": 17114.165136150234,
+        "meanRebalanceGrossMultiple": 4.130992359620341,
+        "meanRebalancePositions": 22.017229166666663,
+        "accountingResidualMaxAbsUsdt": 1.1368683772161603e-12
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 119.1899633701297,
+          "p05": 119.1899633701297,
+          "p50": 119.1899633701297,
+          "p95": 119.1899633701297,
+          "p99": 119.1899633701297
+        },
+        "grossReturnPct": {
+          "p01": 46.163990591508,
+          "p05": 46.163990591508,
+          "p50": 46.163990591508,
+          "p95": 46.163990591508,
+          "p99": 46.163990591508
+        },
+        "netReturnPct": {
+          "p01": 19.189963370129703,
+          "p05": 19.189963370129703,
+          "p50": 19.189963370129703,
+          "p95": 19.189963370129703,
+          "p99": 19.189963370129703
+        },
+        "maxDrawdownPct": {
+          "p01": 33.50709659194383,
+          "p05": 33.50709659194383,
+          "p50": 33.50709659194383,
+          "p95": 33.50709659194383,
+          "p99": 33.50709659194383
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 109.0,
+        "meanFixedProfitExits": 196.0,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 30.533098139828507,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 3.5590709184502294,
+        "meanPricePnlUsdt": 46.163990591508,
+        "meanTurnoverUsdt": 15266.54906991425,
+        "meanRebalanceGrossMultiple": 4.2432406688973385,
+        "meanRebalancePositions": 22.958333333333332,
+        "accountingResidualMaxAbsUsdt": 1.4210854715202004e-14
+      }
+    },
+    {
+      "exitVariant": "fixed_take_profit_10pct",
+      "leverage": 10.0,
+      "costProfile": "base",
+      "perSideBps": 10.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 8.290675597150098,
+          "p05": 17.732629393679716,
+          "p50": 124.8376231775012,
+          "p95": 1052.6661829440131,
+          "p99": 2291.108641813253
+        },
+        "grossReturnPct": {
+          "p01": -80.5801991552273,
+          "p05": -69.65035594504305,
+          "p50": 59.029458044729544,
+          "p95": 1075.1651707433482,
+          "p99": 2416.782821408773
+        },
+        "netReturnPct": {
+          "p01": -91.7093244028499,
+          "p05": -82.26737060632028,
+          "p50": 24.83762317750121,
+          "p95": 952.6661829440133,
+          "p99": 2191.108641813253
+        },
+        "maxDrawdownPct": {
+          "p01": 40.47138892916214,
+          "p05": 47.80994075577314,
+          "p50": 72.03501045334028,
+          "p95": 91.58788971197829,
+          "p99": 95.27212086898167
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 92.95,
+        "drawdownAtLeast90ProbabilityPct": 8.05,
+        "meanStopExits": 116.2795,
+        "meanFixedProfitExits": 212.953,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 58.57712957762267,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 12.294490152385137,
+        "meanPricePnlUsdt": 228.04763701258798,
+        "meanTurnoverUsdt": 58577.12957762267,
+        "meanRebalanceGrossMultiple": 8.98069564978982,
+        "meanRebalancePositions": 24.630364583333332,
+        "accountingResidualMaxAbsUsdt": 5.9117155615240335e-12
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 132.50346388675948,
+          "p05": 132.50346388675948,
+          "p50": 132.50346388675948,
+          "p95": 132.50346388675948,
+          "p99": 132.50346388675948
+        },
+        "grossReturnPct": {
+          "p01": 69.59194781107892,
+          "p05": 69.59194781107892,
+          "p50": 69.59194781107892,
+          "p95": 69.59194781107892,
+          "p99": 69.59194781107892
+        },
+        "netReturnPct": {
+          "p01": 32.50346388675949,
+          "p05": 32.50346388675949,
+          "p50": 32.50346388675949,
+          "p95": 32.50346388675949,
+          "p99": 32.50346388675949
+        },
+        "maxDrawdownPct": {
+          "p01": 62.811472324730666,
+          "p05": 62.811472324730666,
+          "p50": 62.811472324730666,
+          "p95": 62.811472324730666,
+          "p99": 62.811472324730666
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 100.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 122.0,
+        "meanFixedProfitExits": 229.0,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 44.486886152782205,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 7.3984022284625945,
+        "meanPricePnlUsdt": 69.59194781107892,
+        "meanTurnoverUsdt": 44486.886152782194,
+        "meanRebalanceGrossMultiple": 9.395996898191001,
+        "meanRebalancePositions": 26.0,
+        "accountingResidualMaxAbsUsdt": 1.7053025658242404e-13
+      }
+    },
+    {
+      "exitVariant": "fixed_take_profit_10pct",
+      "leverage": 10.0,
+      "costProfile": "stress",
+      "perSideBps": 20.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 6.113437324989741,
+          "p05": 12.63986379314377,
+          "p50": 85.98554302390507,
+          "p95": 744.0631786845887,
+          "p99": 1644.7301629449441
+        },
+        "grossReturnPct": {
+          "p01": -74.77540970517967,
+          "p05": -62.92537687038786,
+          "p50": 49.34450508507345,
+          "p95": 856.2551544090813,
+          "p99": 1941.3329666524533
+        },
+        "netReturnPct": {
+          "p01": -93.88656267501025,
+          "p05": -87.36013620685623,
+          "p50": -14.01445697609493,
+          "p95": 644.0631786845887,
+          "p99": 1544.7301629449444
+        },
+        "maxDrawdownPct": {
+          "p01": 42.42257846600491,
+          "p05": 50.545157024783656,
+          "p50": 75.73086415830812,
+          "p95": 93.37800057285662,
+          "p99": 96.10509335771259
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 95.3,
+        "drawdownAtLeast90ProbabilityPct": 12.9,
+        "meanStopExits": 113.063,
+        "meanFixedProfitExits": 206.62375,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 96.07844499345698,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 10.18121933290989,
+        "meanPricePnlUsdt": 184.38716930431744,
+        "meanTurnoverUsdt": 48039.22249672849,
+        "meanRebalanceGrossMultiple": 8.86101694280151,
+        "meanRebalancePositions": 23.96347916666667,
+        "accountingResidualMaxAbsUsdt": 1.000444171950221e-11
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 114.85042241479832,
+          "p05": 114.85042241479832,
+          "p50": 114.85042241479832,
+          "p95": 114.85042241479832,
+          "p99": 114.85042241479832
+        },
+        "grossReturnPct": {
+          "p01": 88.14438607427161,
+          "p05": 88.14438607427161,
+          "p50": 88.14438607427161,
+          "p95": 88.14438607427161,
+          "p99": 88.14438607427161
+        },
+        "netReturnPct": {
+          "p01": 14.850422414798325,
+          "p05": 14.850422414798325,
+          "p50": 14.850422414798325,
+          "p95": 14.850422414798325,
+          "p99": 14.850422414798325
+        },
+        "maxDrawdownPct": {
+          "p01": 62.24814946839269,
+          "p05": 62.24814946839269,
+          "p50": 62.24814946839269,
+          "p95": 62.24814946839269,
+          "p99": 62.24814946839269
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 100.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 118.0,
+        "meanFixedProfitExits": 225.0,
+        "meanTrailingProfitExits": 0.0,
+        "meanTransactionCostUsdt": 79.88159382388527,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 6.587630164411964,
+        "meanPricePnlUsdt": 88.14438607427161,
+        "meanTurnoverUsdt": 39940.79691194259,
+        "meanRebalanceGrossMultiple": 9.396397637860115,
+        "meanRebalancePositions": 25.666666666666668,
+        "accountingResidualMaxAbsUsdt": 1.4210854715202004e-14
+      }
+    },
+    {
+      "exitVariant": "trailing_profit_6pct_4pct",
+      "leverage": 2.0,
+      "costProfile": "base",
+      "perSideBps": 10.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 71.4383330735028,
+          "p05": 81.06873303497599,
+          "p50": 114.32422233496973,
+          "p95": 165.04164151306136,
+          "p99": 193.48057245119577
+        },
+        "grossReturnPct": {
+          "p01": -25.712965736316004,
+          "p05": -15.294607631619018,
+          "p50": 18.29332250428482,
+          "p95": 69.77758853578368,
+          "p99": 99.29763022435006
+        },
+        "netReturnPct": {
+          "p01": -28.561666926497185,
+          "p05": -18.93126696502401,
+          "p50": 14.324222334969738,
+          "p95": 65.04164151306135,
+          "p99": 93.48057245119578
+        },
+        "maxDrawdownPct": {
+          "p01": 8.956094884526788,
+          "p05": 10.736660508885974,
+          "p50": 18.15383290913742,
+          "p95": 31.60259033544378,
+          "p99": 38.21146532161875
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.025,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 75.77675,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 160.3095,
+        "meanTransactionCostUsdt": 5.365637345793257,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 1.244659546454706,
+        "meanPricePnlUsdt": 21.769021946633124,
+        "meanTurnoverUsdt": 5365.637345793258,
+        "meanRebalanceGrossMultiple": 1.3287344721315721,
+        "meanRebalancePositions": 16.565208333333334,
+        "accountingResidualMaxAbsUsdt": 8.810729923425242e-13
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 104.24675908077315,
+          "p05": 104.24675908077315,
+          "p50": 104.24675908077315,
+          "p95": 104.24675908077315,
+          "p99": 104.24675908077315
+        },
+        "grossReturnPct": {
+          "p01": 7.50044857402312,
+          "p05": 7.50044857402312,
+          "p50": 7.50044857402312,
+          "p95": 7.50044857402312,
+          "p99": 7.50044857402312
+        },
+        "netReturnPct": {
+          "p01": 4.246759080773144,
+          "p05": 4.246759080773144,
+          "p50": 4.246759080773144,
+          "p95": 4.246759080773144,
+          "p99": 4.246759080773144
+        },
+        "maxDrawdownPct": {
+          "p01": 18.266957082294077,
+          "p05": 18.266957082294077,
+          "p50": 18.266957082294077,
+          "p95": 18.266957082294077,
+          "p99": 18.266957082294077
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 74.0,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 150.0,
+        "meanTransactionCostUsdt": 4.367465110738261,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 1.1137756174883389,
+        "meanPricePnlUsdt": 7.50044857402312,
+        "meanTurnoverUsdt": 4367.46511073826,
+        "meanRebalanceGrossMultiple": 1.295224842154244,
+        "meanRebalancePositions": 15.958333333333334,
+        "accountingResidualMaxAbsUsdt": 5.684341886080802e-14
+      }
+    },
+    {
+      "exitVariant": "trailing_profit_6pct_4pct",
+      "leverage": 2.0,
+      "costProfile": "stress",
+      "perSideBps": 20.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 67.90912292438696,
+          "p05": 77.56200533736295,
+          "p50": 108.52318119247612,
+          "p95": 156.22730881006348,
+          "p99": 182.0560038252964
+        },
+        "grossReturnPct": {
+          "p01": -24.798347031892686,
+          "p05": -14.91027792390854,
+          "p50": 17.32255812985863,
+          "p95": 67.87145007801851,
+          "p99": 94.0935868360189
+        },
+        "netReturnPct": {
+          "p01": -32.09087707561304,
+          "p05": -22.437994662637045,
+          "p50": 8.523181192476114,
+          "p95": 56.22730881006349,
+          "p99": 82.05600382529639
+        },
+        "maxDrawdownPct": {
+          "p01": 9.453233767810792,
+          "p05": 11.198483686749883,
+          "p50": 19.36733467557167,
+          "p95": 33.467859458339376,
+          "p99": 40.122700829238994
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.05,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 75.02,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 158.2455,
+        "meanTransactionCostUsdt": 10.382767959270502,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 1.2090690197725658,
+        "meanPricePnlUsdt": 20.984605314348855,
+        "meanTurnoverUsdt": 5191.38397963525,
+        "meanRebalanceGrossMultiple": 1.3188222698866092,
+        "meanRebalancePositions": 16.35446875,
+        "accountingResidualMaxAbsUsdt": 8.526512829121202e-13
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 100.32631078830691,
+          "p05": 100.32631078830691,
+          "p50": 100.32631078830691,
+          "p95": 100.32631078830691,
+          "p99": 100.32631078830691
+        },
+        "grossReturnPct": {
+          "p01": 7.731065963155256,
+          "p05": 7.731065963155256,
+          "p50": 7.731065963155256,
+          "p95": 7.731065963155256,
+          "p99": 7.731065963155256
+        },
+        "netReturnPct": {
+          "p01": 0.32631078830691607,
+          "p05": 0.32631078830691607,
+          "p50": 0.32631078830691607,
+          "p95": 0.32631078830691607,
+          "p99": 0.32631078830691607
+        },
+        "maxDrawdownPct": {
+          "p01": 18.99997220151142,
+          "p05": 18.99997220151142,
+          "p50": 18.99997220151142,
+          "p95": 18.99997220151142,
+          "p99": 18.99997220151142
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 74.0,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 147.0,
+        "meanTransactionCostUsdt": 8.506061642918876,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 1.1013064680707583,
+        "meanPricePnlUsdt": 7.731065963155256,
+        "meanTurnoverUsdt": 4253.030821459435,
+        "meanRebalanceGrossMultiple": 1.2894093664590354,
+        "meanRebalancePositions": 15.708333333333334,
+        "accountingResidualMaxAbsUsdt": 2.2737367544323206e-13
+      }
+    },
+    {
+      "exitVariant": "trailing_profit_6pct_4pct",
+      "leverage": 3.0,
+      "costProfile": "base",
+      "perSideBps": 10.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 59.916222528683164,
+          "p05": 74.82785538214827,
+          "p50": 129.34847518933367,
+          "p95": 236.05320003927747,
+          "p99": 303.61250593696974
+        },
+        "grossReturnPct": {
+          "p01": -34.87258069018038,
+          "p05": -19.479911730833486,
+          "p50": 36.93679466331565,
+          "p95": 146.77063195590068,
+          "p99": 215.26363117842283
+        },
+        "netReturnPct": {
+          "p01": -40.08377747131684,
+          "p05": -25.172144617851725,
+          "p50": 29.348475189333644,
+          "p95": 136.0532000392775,
+          "p99": 203.61250593696974
+        },
+        "maxDrawdownPct": {
+          "p01": 13.319418089380122,
+          "p05": 15.968184208754876,
+          "p50": 26.744533449516606,
+          "p95": 44.71468231772855,
+          "p99": 52.180112972548685
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 1.9,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 89.1835,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 193.9585,
+        "meanTransactionCostUsdt": 10.097686805680704,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 2.124560686287006,
+        "meanPricePnlUsdt": 47.08617216308849,
+        "meanTurnoverUsdt": 10097.686805680703,
+        "meanRebalanceGrossMultiple": 2.284399171752465,
+        "meanRebalancePositions": 19.944020833333337,
+        "accountingResidualMaxAbsUsdt": 9.663381206337363e-13
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 124.92097765470076,
+          "p05": 124.92097765470076,
+          "p50": 124.92097765470076,
+          "p95": 124.92097765470076,
+          "p99": 124.92097765470076
+        },
+        "grossReturnPct": {
+          "p01": 31.62352426669907,
+          "p05": 31.62352426669907,
+          "p50": 31.62352426669907,
+          "p95": 31.62352426669907,
+          "p99": 31.62352426669907
+        },
+        "netReturnPct": {
+          "p01": 24.92097765470076,
+          "p05": 24.92097765470076,
+          "p50": 24.92097765470076,
+          "p95": 24.92097765470076,
+          "p99": 24.92097765470076
+        },
+        "maxDrawdownPct": {
+          "p01": 20.722213507032933,
+          "p05": 20.722213507032933,
+          "p50": 20.722213507032933,
+          "p95": 20.722213507032933,
+          "p99": 20.722213507032933
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 92.0,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 196.0,
+        "meanTransactionCostUsdt": 8.395417571357745,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 1.6928709593594338,
+        "meanPricePnlUsdt": 31.62352426669907,
+        "meanTurnoverUsdt": 8395.417571357753,
+        "meanRebalanceGrossMultiple": 2.2834899118352214,
+        "meanRebalancePositions": 20.5,
+        "accountingResidualMaxAbsUsdt": 1.4210854715202004e-14
+      }
+    },
+    {
+      "exitVariant": "trailing_profit_6pct_4pct",
+      "leverage": 3.0,
+      "costProfile": "stress",
+      "perSideBps": 20.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 55.60584885299257,
+          "p05": 67.89670942237065,
+          "p50": 118.14638474154263,
+          "p95": 216.1771704925245,
+          "p99": 277.0316883191166
+        },
+        "grossReturnPct": {
+          "p01": -33.636260427830344,
+          "p05": -19.036622586814556,
+          "p50": 34.66602447825244,
+          "p95": 138.8457918839722,
+          "p99": 205.47486806358188
+        },
+        "netReturnPct": {
+          "p01": -44.39415114700742,
+          "p05": -32.10329057762935,
+          "p50": 18.146384741542633,
+          "p95": 116.17717049252454,
+          "p99": 177.03168831911665
+        },
+        "maxDrawdownPct": {
+          "p01": 13.848654124241772,
+          "p05": 16.67440275542584,
+          "p50": 28.421345554132465,
+          "p95": 47.36953170296727,
+          "p99": 54.92461082554345
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 3.35,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 88.031,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 191.2285,
+        "meanTransactionCostUsdt": 19.13893953391384,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 2.027478737725032,
+        "meanPricePnlUsdt": 44.32735895868518,
+        "meanTurnoverUsdt": 9569.469766956921,
+        "meanRebalanceGrossMultiple": 2.2646336412611765,
+        "meanRebalancePositions": 19.665364583333336,
+        "accountingResidualMaxAbsUsdt": 1.1937117960769683e-12
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 119.80028072764325,
+          "p05": 119.80028072764325,
+          "p50": 119.80028072764325,
+          "p95": 119.80028072764325,
+          "p99": 119.80028072764325
+        },
+        "grossReturnPct": {
+          "p01": 34.61247751385718,
+          "p05": 34.61247751385718,
+          "p50": 34.61247751385718,
+          "p95": 34.61247751385718,
+          "p99": 34.61247751385718
+        },
+        "netReturnPct": {
+          "p01": 19.800280727643262,
+          "p05": 19.800280727643262,
+          "p50": 19.800280727643262,
+          "p95": 19.800280727643262,
+          "p99": 19.800280727643262
+        },
+        "maxDrawdownPct": {
+          "p01": 20.48698012764329,
+          "p05": 20.48698012764329,
+          "p50": 20.48698012764329,
+          "p95": 20.48698012764329,
+          "p99": 20.48698012764329
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 92.0,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 196.0,
+        "meanTransactionCostUsdt": 16.50995955425853,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 1.6977627680446177,
+        "meanPricePnlUsdt": 34.61247751385718,
+        "meanTurnoverUsdt": 8254.979777129267,
+        "meanRebalanceGrossMultiple": 2.284595456540378,
+        "meanRebalancePositions": 20.458333333333332,
+        "accountingResidualMaxAbsUsdt": 1.4210854715202004e-14
+      }
+    },
+    {
+      "exitVariant": "trailing_profit_6pct_4pct",
+      "leverage": 5.0,
+      "costProfile": "base",
+      "perSideBps": 10.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 38.709397067457715,
+          "p05": 57.4719316672004,
+          "p50": 161.54420962463615,
+          "p95": 488.91306215204355,
+          "p99": 785.3911910470092
+        },
+        "grossReturnPct": {
+          "p01": -52.12289919757361,
+          "p05": -31.881509665835242,
+          "p50": 78.8214582933093,
+          "p95": 421.9542966553864,
+          "p99": 724.7386541088117
+        },
+        "netReturnPct": {
+          "p01": -61.29060293254229,
+          "p05": -42.5280683327996,
+          "p50": 61.54420962463616,
+          "p95": 388.91306215204355,
+          "p99": 685.3911910470092
+        },
+        "maxDrawdownPct": {
+          "p01": 21.41573683815098,
+          "p05": 26.2357587020069,
+          "p50": 42.16468245770633,
+          "p95": 65.06089899644155,
+          "p99": 74.08441612517754
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 29.125,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 102.9255,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 223.155,
+        "meanTransactionCostUsdt": 23.336784400816157,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 4.298743215556218,
+        "meanPricePnlUsdt": 124.10144049264863,
+        "meanTurnoverUsdt": 23336.784400816156,
+        "meanRebalanceGrossMultiple": 4.272841587359028,
+        "meanRebalancePositions": 23.117197916666665,
+        "accountingResidualMaxAbsUsdt": 2.7284841053187847e-12
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 153.63520349685547,
+          "p05": 153.63520349685547,
+          "p50": 153.63520349685547,
+          "p95": 153.63520349685547,
+          "p99": 153.63520349685547
+        },
+        "grossReturnPct": {
+          "p01": 67.64154653646234,
+          "p05": 67.64154653646234,
+          "p50": 67.64154653646234,
+          "p95": 67.64154653646234,
+          "p99": 67.64154653646234
+        },
+        "netReturnPct": {
+          "p01": 53.63520349685547,
+          "p05": 53.63520349685547,
+          "p50": 53.63520349685547,
+          "p95": 53.63520349685547,
+          "p99": 53.63520349685547
+        },
+        "maxDrawdownPct": {
+          "p01": 38.6012222929052,
+          "p05": 38.6012222929052,
+          "p50": 38.6012222929052,
+          "p95": 38.6012222929052,
+          "p99": 38.6012222929052
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 105.0,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 221.0,
+        "meanTransactionCostUsdt": 16.832352673792517,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 2.8260096341855827,
+        "meanPricePnlUsdt": 67.64154653646234,
+        "meanTurnoverUsdt": 16832.352673792517,
+        "meanRebalanceGrossMultiple": 4.289383926264672,
+        "meanRebalancePositions": 23.041666666666668,
+        "accountingResidualMaxAbsUsdt": 5.684341886080802e-14
+      }
+    },
+    {
+      "exitVariant": "trailing_profit_6pct_4pct",
+      "leverage": 5.0,
+      "costProfile": "stress",
+      "perSideBps": 20.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 33.94202553542959,
+          "p05": 48.6142228014562,
+          "p50": 135.95688983922653,
+          "p95": 418.27291199591735,
+          "p99": 634.3682838923332
+        },
+        "grossReturnPct": {
+          "p01": -48.98555274798442,
+          "p05": -30.8068951288336,
+          "p50": 69.84005413638747,
+          "p95": 384.471937767736,
+          "p99": 611.9434599897431
+        },
+        "netReturnPct": {
+          "p01": -66.0579744645704,
+          "p05": -51.3857771985438,
+          "p50": 35.956889839226534,
+          "p95": 318.27291199591735,
+          "p99": 534.3682838923332
+        },
+        "maxDrawdownPct": {
+          "p01": 22.35054076763322,
+          "p05": 27.36060080450164,
+          "p50": 44.765492463431755,
+          "p95": 68.28985800058537,
+          "p99": 76.08463405297793
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 35.75,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 101.22175,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 219.4645,
+        "meanTransactionCostUsdt": 42.24840669081542,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 3.9443866084043218,
+        "meanPricePnlUsdt": 110.72720791085442,
+        "meanTurnoverUsdt": 21124.20334540771,
+        "meanRebalanceGrossMultiple": 4.233209467230863,
+        "meanRebalancePositions": 22.724270833333332,
+        "accountingResidualMaxAbsUsdt": 1.8189894035458565e-12
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 143.50295311244773,
+          "p05": 143.50295311244773,
+          "p50": 143.50295311244773,
+          "p95": 143.50295311244773,
+          "p99": 143.50295311244773
+        },
+        "grossReturnPct": {
+          "p01": 72.9943539181436,
+          "p05": 72.9943539181436,
+          "p50": 72.9943539181436,
+          "p95": 72.9943539181436,
+          "p99": 72.9943539181436
+        },
+        "netReturnPct": {
+          "p01": 43.50295311244772,
+          "p05": 43.50295311244772,
+          "p50": 43.50295311244772,
+          "p95": 43.50295311244772,
+          "p99": 43.50295311244772
+        },
+        "maxDrawdownPct": {
+          "p01": 41.462633371242696,
+          "p05": 41.462633371242696,
+          "p50": 41.462633371242696,
+          "p95": 41.462633371242696,
+          "p99": 41.462633371242696
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 0.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 104.0,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 219.0,
+        "meanTransactionCostUsdt": 32.15874265510776,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 2.6673418494118786,
+        "meanPricePnlUsdt": 72.9943539181436,
+        "meanTurnoverUsdt": 16079.371327553892,
+        "meanRebalanceGrossMultiple": 4.275198025239464,
+        "meanRebalancePositions": 22.875,
+        "accountingResidualMaxAbsUsdt": 2.842170943040401e-14
+      }
+    },
+    {
+      "exitVariant": "trailing_profit_6pct_4pct",
+      "leverage": 10.0,
+      "costProfile": "base",
+      "perSideBps": 10.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 9.028729533677193,
+          "p05": 19.275685183303718,
+          "p50": 205.43915466168914,
+          "p95": 2160.6617881019124,
+          "p99": 5385.273005234341
+        },
+        "grossReturnPct": {
+          "p01": -79.66991478499615,
+          "p05": -65.49015693972115,
+          "p50": 156.26442214920297,
+          "p95": 2276.498536035578,
+          "p99": 5676.5314520118245
+        },
+        "netReturnPct": {
+          "p01": -90.9712704663228,
+          "p05": -80.72431481669629,
+          "p50": 105.43915466168912,
+          "p95": 2060.6617881019124,
+          "p99": 5285.273005234341
+        },
+        "maxDrawdownPct": {
+          "p01": 40.50777365533382,
+          "p05": 48.585152301158885,
+          "p50": 72.19546665702731,
+          "p95": 92.20603375682614,
+          "p99": 95.65984680786259
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 93.825,
+        "drawdownAtLeast90ProbabilityPct": 8.625,
+        "meanStopExits": 113.2335,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 243.92075,
+        "meanTransactionCostUsdt": 92.96079389136774,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 14.59982342486338,
+        "meanPricePnlUsdt": 541.4767836347933,
+        "meanTurnoverUsdt": 92960.79389136774,
+        "meanRebalanceGrossMultiple": 9.183169787214137,
+        "meanRebalancePositions": 25.318479166666666,
+        "accountingResidualMaxAbsUsdt": 1.8189894035458565e-11
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 216.3726333296224,
+          "p05": 216.3726333296224,
+          "p50": 216.3726333296224,
+          "p95": 216.3726333296224,
+          "p99": 216.3726333296224
+        },
+        "grossReturnPct": {
+          "p01": 164.2581598432031,
+          "p05": 164.2581598432031,
+          "p50": 164.2581598432031,
+          "p95": 164.2581598432031,
+          "p99": 164.2581598432031
+        },
+        "netReturnPct": {
+          "p01": 116.3726333296224,
+          "p05": 116.3726333296224,
+          "p50": 116.3726333296224,
+          "p95": 116.3726333296224,
+          "p99": 116.3726333296224
+        },
+        "maxDrawdownPct": {
+          "p01": 62.35186240034677,
+          "p05": 62.35186240034677,
+          "p50": 62.35186240034677,
+          "p95": 62.35186240034677,
+          "p99": 62.35186240034677
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 100.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 113.0,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 250.0,
+        "meanTransactionCostUsdt": 53.42587419030997,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 5.540347676729182,
+        "meanPricePnlUsdt": 164.2581598432031,
+        "meanTurnoverUsdt": 53425.87419030997,
+        "meanRebalanceGrossMultiple": 9.401861706869054,
+        "meanRebalancePositions": 25.958333333333332,
+        "accountingResidualMaxAbsUsdt": 8.526512829121202e-14
+      }
+    },
+    {
+      "exitVariant": "trailing_profit_6pct_4pct",
+      "leverage": 10.0,
+      "costProfile": "stress",
+      "perSideBps": 20.0,
+      "monteCarlo": {
+        "paths": 4000,
+        "terminalEquityUsdt": {
+          "p01": 6.959813660766185,
+          "p05": 13.574681974874608,
+          "p50": 136.95918879921598,
+          "p95": 1550.403054418343,
+          "p99": 3818.215234521853
+        },
+        "grossReturnPct": {
+          "p01": -74.26966015604997,
+          "p05": -58.06107588689365,
+          "p50": 127.76078170650264,
+          "p95": 1829.6029176167485,
+          "p99": 4763.618488278919
+        },
+        "netReturnPct": {
+          "p01": -93.04018633923383,
+          "p05": -86.42531802512539,
+          "p50": 36.95918879921598,
+          "p95": 1450.403054418343,
+          "p99": 3718.2152345218524
+        },
+        "maxDrawdownPct": {
+          "p01": 42.2030286195543,
+          "p05": 50.65014100664875,
+          "p50": 75.66085133067068,
+          "p95": 93.56262534793669,
+          "p99": 96.1049820369343
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 95.45,
+        "drawdownAtLeast90ProbabilityPct": 13.05,
+        "meanStopExits": 110.5145,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 238.18225,
+        "meanTransactionCostUsdt": 149.472945258695,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 11.915708638433419,
+        "meanPricePnlUsdt": 431.86353096710997,
+        "meanTurnoverUsdt": 74736.47262934748,
+        "meanRebalanceGrossMultiple": 9.088390303296851,
+        "meanRebalancePositions": 24.7233125,
+        "accountingResidualMaxAbsUsdt": 2.1827872842550278e-11
+      },
+      "chronologicalReplay": {
+        "paths": 1,
+        "terminalEquityUsdt": {
+          "p01": 155.1745190780243,
+          "p05": 155.1745190780243,
+          "p50": 155.1745190780243,
+          "p95": 155.1745190780243,
+          "p99": 155.1745190780243
+        },
+        "grossReturnPct": {
+          "p01": 134.3886290053725,
+          "p05": 134.3886290053725,
+          "p50": 134.3886290053725,
+          "p95": 134.3886290053725,
+          "p99": 134.3886290053725
+        },
+        "netReturnPct": {
+          "p01": 55.17451907802431,
+          "p05": 55.17451907802431,
+          "p50": 55.17451907802431,
+          "p95": 55.17451907802431,
+          "p99": 55.17451907802431
+        },
+        "maxDrawdownPct": {
+          "p01": 68.98428320761641,
+          "p05": 68.98428320761641,
+          "p50": 68.98428320761641,
+          "p95": 68.98428320761641,
+          "p99": 68.98428320761641
+        },
+        "ruinProbabilityPct": 0.0,
+        "liquidationProbabilityPct": 0.0,
+        "drawdownAtLeast50ProbabilityPct": 100.0,
+        "drawdownAtLeast90ProbabilityPct": 0.0,
+        "meanStopExits": 113.0,
+        "meanFixedProfitExits": 0.0,
+        "meanTrailingProfitExits": 245.0,
+        "meanTransactionCostUsdt": 83.79685429596275,
+        "meanLiquidationPenaltyUsdt": 0.0,
+        "meanFundingPnlUsdt": 4.582744368614577,
+        "meanPricePnlUsdt": 134.3886290053725,
+        "meanTurnoverUsdt": 41898.42714798137,
+        "meanRebalanceGrossMultiple": 9.29559724857644,
+        "meanRebalancePositions": 25.416666666666668,
+        "accountingResidualMaxAbsUsdt": 2.842170943040401e-14
+      }
+    }
+  ],
+  "decision": {
+    "classification": "development_only",
+    "newValidation": false,
+    "paperOrLiveAuthorized": false,
+    "parameterSelectionAllowed": false
+  }
+}

@@ -1,0 +1,2029 @@
+{
+  "generatedAt": "2026-08-08T04:43:10Z",
+  "mode": "read_only_qqq_point_in_time_active_enhancement",
+  "config": {
+    "primaryRebalance": "monthly",
+    "diagnosticRebalance": "biweekly",
+    "factors": [
+      "12-1_momentum",
+      "quality",
+      "value",
+      "low_residual_volatility"
+    ],
+    "factorWeights": "equal",
+    "secAvailabilityRule": "filed_date_strictly_before_rebalance_date",
+    "activeGrossLimitPct": 20.0,
+    "singleStockLimitPct": 1.5,
+    "trackingErrorLimitPct": 3.0,
+    "minPriceHistoryDays": 504,
+    "baseTransactionCostBps": 5.0,
+    "baseShortBorrowBpsAnnual": 100.0,
+    "stressTransactionCostBps": 10.0,
+    "stressShortBorrowBpsAnnual": 300.0,
+    "currentLiquidityMinimumTurnoverUsdt": 5000000.0,
+    "currentLiquidityMaximumSpreadBps": 5.0
+  },
+  "universe": {
+    "nasdaqConstituentDate": "Aug 6, 2026",
+    "nasdaqConstituents": 102,
+    "mappedTradfiContracts": 40,
+    "domesticSecMappedUniverse": 35,
+    "excludedMappings": {
+      "ARM": {
+        "symbol": "ARM",
+        "companyName": "Arm Holdings plc American Depositary Shares",
+        "nasdaqMarketCap": "300,670,092,558",
+        "cik": 1973239,
+        "secEntityName": "ARM HOLDINGS PLC /UK",
+        "stateOfIncorporation": "X0",
+        "sic": "3674",
+        "sicDescription": "Semiconductors & Related Devices",
+        "industry": "information_technology",
+        "contract": "ARM-USDT-SWAP",
+        "contractEligibleNow": false,
+        "reasons": [
+          "foreign_or_unclear_incorporation:X0"
+        ]
+      },
+      "ASML": {
+        "symbol": "ASML",
+        "companyName": "ASML Holding N.V. New York Registry Shares",
+        "nasdaqMarketCap": "671,008,300,588",
+        "cik": 937966,
+        "secEntityName": "ASML HOLDING NV",
+        "stateOfIncorporation": "",
+        "sic": "3559",
+        "sicDescription": "Special Industry Machinery, NEC",
+        "industry": "industrial_other",
+        "contract": "ASML-USDT-SWAP",
+        "contractEligibleNow": false,
+        "reasons": [
+          "foreign_or_unclear_incorporation:P7"
+        ]
+      },
+      "NBIS": {
+        "symbol": "NBIS",
+        "companyName": "Nebius Group N.V. Class A Ordinary Shares",
+        "nasdaqMarketCap": "47,725,243,526",
+        "cik": 1513845,
+        "secEntityName": "Nebius Group N.V.",
+        "stateOfIncorporation": "P7",
+        "sic": "7370",
+        "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+        "industry": "information_technology",
+        "contract": "NBIS-USDT-SWAP",
+        "contractEligibleNow": true,
+        "reasons": [
+          "foreign_or_unclear_incorporation:P7"
+        ]
+      },
+      "SHOP": {
+        "symbol": "SHOP",
+        "companyName": "Shopify Inc. Class A Subordinate Voting Shares",
+        "nasdaqMarketCap": "196,406,077,059",
+        "cik": 1594805,
+        "secEntityName": "SHOPIFY INC.",
+        "stateOfIncorporation": "Z4",
+        "sic": "7372",
+        "sicDescription": "Services-Prepackaged Software",
+        "industry": "information_technology",
+        "contract": "SHOP-USDT-SWAP",
+        "contractEligibleNow": false,
+        "reasons": [
+          "foreign_or_unclear_incorporation:Z4"
+        ]
+      },
+      "STX": {
+        "symbol": "STX",
+        "companyName": "Seagate Technology Holdings PLC Ordinary Shares (Ireland)",
+        "nasdaqMarketCap": "184,207,598,450",
+        "cik": 1137789,
+        "secEntityName": "Seagate Technology Holdings plc",
+        "stateOfIncorporation": "",
+        "sic": "3572",
+        "sicDescription": "Computer Storage Devices",
+        "industry": "information_technology",
+        "contract": "STX-USDT-SWAP",
+        "contractEligibleNow": false,
+        "reasons": [
+          "foreign_or_unclear_incorporation:U0"
+        ]
+      }
+    },
+    "backtestUniverse": 32,
+    "currentlyLiquidStocks": 12,
+    "qqqContractEligible": true,
+    "priceExclusions": {
+      "CRWV": "insufficient_price_history",
+      "SNDK": "insufficient_price_history",
+      "SPCX": "insufficient_price_history"
+    },
+    "secExclusions": {}
+  },
+  "researchUniverse": {
+    "AAPL": {
+      "symbol": "AAPL",
+      "companyName": "Apple Inc. Common Stock",
+      "nasdaqMarketCap": "4,572,794,419,400",
+      "cik": 320193,
+      "secEntityName": "Apple Inc.",
+      "stateOfIncorporation": "CA",
+      "sic": "3571",
+      "sicDescription": "Electronic Computers",
+      "industry": "information_technology",
+      "contract": "AAPL-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "ADBE": {
+      "symbol": "ADBE",
+      "companyName": "Adobe Inc. Common Stock",
+      "nasdaqMarketCap": "105,420,975,000",
+      "cik": 796343,
+      "secEntityName": "ADOBE INC.",
+      "stateOfIncorporation": "DE",
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "industry": "information_technology",
+      "contract": "ADBE-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "ALAB": {
+      "symbol": "ALAB",
+      "companyName": "Astera Labs, Inc. Common Stock",
+      "nasdaqMarketCap": "57,973,517,204",
+      "cik": 1736297,
+      "secEntityName": "Astera Labs, Inc.",
+      "stateOfIncorporation": "DE",
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "industry": "information_technology",
+      "contract": "ALAB-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 598,
+      "priceStart": "2024-03-20",
+      "priceEnd": "2026-08-07"
+    },
+    "AMAT": {
+      "symbol": "AMAT",
+      "companyName": "Applied Materials, Inc. Common Stock",
+      "nasdaqMarketCap": "428,055,287,090",
+      "cik": 6951,
+      "secEntityName": "APPLIED MATERIALS INC /DE",
+      "stateOfIncorporation": "DC",
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "industry": "information_technology",
+      "contract": "AMAT-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "AMD": {
+      "symbol": "AMD",
+      "companyName": "Advanced Micro Devices, Inc. Common Stock",
+      "nasdaqMarketCap": "789,073,136,301",
+      "cik": 2488,
+      "secEntityName": "ADVANCED MICRO DEVICES INC",
+      "stateOfIncorporation": "DE",
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "industry": "information_technology",
+      "contract": "AMD-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "AMZN": {
+      "symbol": "AMZN",
+      "companyName": "Amazon.com, Inc. Common Stock",
+      "nasdaqMarketCap": "2,960,627,349,243",
+      "cik": 1018724,
+      "secEntityName": "AMAZON COM INC",
+      "stateOfIncorporation": "DE",
+      "sic": "5961",
+      "sicDescription": "Retail-Catalog & Mail-Order Houses",
+      "industry": "consumer",
+      "contract": "AMZN-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "APP": {
+      "symbol": "APP",
+      "companyName": "Applovin Corporation Class A Common Stock",
+      "nasdaqMarketCap": "116,056,966,800",
+      "cik": 1751008,
+      "secEntityName": "AppLovin Corp",
+      "stateOfIncorporation": "DE",
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "industry": "information_technology",
+      "contract": "APP-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 1335,
+      "priceStart": "2021-04-15",
+      "priceEnd": "2026-08-07"
+    },
+    "AVGO": {
+      "symbol": "AVGO",
+      "companyName": "Broadcom Inc. Common Stock",
+      "nasdaqMarketCap": "2,035,102,505,496",
+      "cik": 1730168,
+      "secEntityName": "Broadcom Inc.",
+      "stateOfIncorporation": "",
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "industry": "information_technology",
+      "contract": "AVGO-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "COST": {
+      "symbol": "COST",
+      "companyName": "Costco Wholesale Corporation Common Stock",
+      "nasdaqMarketCap": "420,338,080,007",
+      "cik": 909832,
+      "secEntityName": "COSTCO WHOLESALE CORP /NEW",
+      "stateOfIncorporation": "WA",
+      "sic": "5331",
+      "sicDescription": "Retail-Variety Stores",
+      "industry": "consumer",
+      "contract": "COST-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "CRWD": {
+      "symbol": "CRWD",
+      "companyName": "CrowdStrike Holdings, Inc. Class A Common Stock",
+      "nasdaqMarketCap": "218,335,154,818",
+      "cik": 1535527,
+      "secEntityName": "CrowdStrike Holdings, Inc.",
+      "stateOfIncorporation": "DE",
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "industry": "information_technology",
+      "contract": "CRWD-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 1799,
+      "priceStart": "2019-06-12",
+      "priceEnd": "2026-08-07"
+    },
+    "CSCO": {
+      "symbol": "CSCO",
+      "companyName": "Cisco Systems, Inc. Common Stock (DE)",
+      "nasdaqMarketCap": "478,608,411,371",
+      "cik": 858877,
+      "secEntityName": "CISCO SYSTEMS, INC.",
+      "stateOfIncorporation": "DE",
+      "sic": "3576",
+      "sicDescription": "Computer Communications Equipment",
+      "industry": "information_technology",
+      "contract": "CSCO-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "DASH": {
+      "symbol": "DASH",
+      "companyName": "DoorDash, Inc. Class A Common Stock",
+      "nasdaqMarketCap": "93,704,518,134",
+      "cik": 1792789,
+      "secEntityName": "DoorDash, Inc.",
+      "stateOfIncorporation": "DE",
+      "sic": "7389",
+      "sicDescription": "Services-Business Services, NEC",
+      "industry": "information_technology",
+      "contract": "DASH-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 1421,
+      "priceStart": "2020-12-09",
+      "priceEnd": "2026-08-07"
+    },
+    "GOOGL": {
+      "symbol": "GOOGL",
+      "companyName": "Alphabet Inc. Class A Common Stock",
+      "nasdaqMarketCap": "4,333,089,000,000",
+      "cik": 1652044,
+      "secEntityName": "Alphabet Inc.",
+      "stateOfIncorporation": "DE",
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "industry": "information_technology",
+      "contract": "GOOGL-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "INTC": {
+      "symbol": "INTC",
+      "companyName": "Intel Corporation Common Stock",
+      "nasdaqMarketCap": "512,722,600,000",
+      "cik": 50863,
+      "secEntityName": "INTEL CORP",
+      "stateOfIncorporation": "DE",
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "industry": "information_technology",
+      "contract": "INTC-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "ISRG": {
+      "symbol": "ISRG",
+      "companyName": "Intuitive Surgical, Inc. Common Stock",
+      "nasdaqMarketCap": "133,825,253,575",
+      "cik": 1035267,
+      "secEntityName": "INTUITIVE SURGICAL INC",
+      "stateOfIncorporation": "DE",
+      "sic": "3842",
+      "sicDescription": "Orthopedic, Prosthetic & Surgical Appliances & Supplies",
+      "industry": "health_care",
+      "contract": "ISRG-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "KLAC": {
+      "symbol": "KLAC",
+      "companyName": "KLA Corporation Common Stock",
+      "nasdaqMarketCap": "258,786,181,853",
+      "cik": 319201,
+      "secEntityName": "KLA CORP",
+      "stateOfIncorporation": "DE",
+      "sic": "3827",
+      "sicDescription": "Optical Instruments & Lenses",
+      "industry": "industrial_other",
+      "contract": "KLAC-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "LITE": {
+      "symbol": "LITE",
+      "companyName": "Lumentum Holdings Inc. Common Stock",
+      "nasdaqMarketCap": "69,255,226,000",
+      "cik": 1633978,
+      "secEntityName": "Lumentum Holdings Inc.",
+      "stateOfIncorporation": "DE",
+      "sic": "3669",
+      "sicDescription": "Communications Equipment, NEC",
+      "industry": "information_technology",
+      "contract": "LITE-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "LRCX": {
+      "symbol": "LRCX",
+      "companyName": "Lam Research Corporation Common Stock",
+      "nasdaqMarketCap": "389,365,280,850",
+      "cik": 707549,
+      "secEntityName": "LAM RESEARCH CORP",
+      "stateOfIncorporation": "DE",
+      "sic": "3559",
+      "sicDescription": "Special Industry Machinery, NEC",
+      "industry": "industrial_other",
+      "contract": "LRCX-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "META": {
+      "symbol": "META",
+      "companyName": "Meta Platforms, Inc. Class A Common Stock",
+      "nasdaqMarketCap": "1,508,378,435,823",
+      "cik": 1326801,
+      "secEntityName": "Meta Platforms, Inc.",
+      "stateOfIncorporation": "DE",
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "industry": "information_technology",
+      "contract": "META-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "MRVL": {
+      "symbol": "MRVL",
+      "companyName": "Marvell Technology, Inc. Common Stock",
+      "nasdaqMarketCap": "191,547,632,039",
+      "cik": 1835632,
+      "secEntityName": "Marvell Technology, Inc.",
+      "stateOfIncorporation": "DE",
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "industry": "information_technology",
+      "contract": "MRVL-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "MSFT": {
+      "symbol": "MSFT",
+      "companyName": "Microsoft Corporation Common Stock",
+      "nasdaqMarketCap": "3,712,698,490,045",
+      "cik": 789019,
+      "secEntityName": "MICROSOFT CORP",
+      "stateOfIncorporation": "WA",
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "industry": "information_technology",
+      "contract": "MSFT-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "MSTR": {
+      "symbol": "MSTR",
+      "companyName": "Strategy Inc Common Stock Class A",
+      "nasdaqMarketCap": "38,426,417,358",
+      "cik": 1050446,
+      "secEntityName": "Strategy Inc",
+      "stateOfIncorporation": "DE",
+      "sic": "6199",
+      "sicDescription": "Finance Services",
+      "industry": "industrial_other",
+      "contract": "MSTR-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "MU": {
+      "symbol": "MU",
+      "companyName": "Micron Technology, Inc. Common Stock",
+      "nasdaqMarketCap": "991,121,547,523",
+      "cik": 723125,
+      "secEntityName": "MICRON TECHNOLOGY INC",
+      "stateOfIncorporation": "DE",
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "industry": "information_technology",
+      "contract": "MU-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "NFLX": {
+      "symbol": "NFLX",
+      "companyName": "Netflix, Inc. Common Stock",
+      "nasdaqMarketCap": "308,714,487,579",
+      "cik": 1065280,
+      "secEntityName": "NETFLIX INC",
+      "stateOfIncorporation": "DE",
+      "sic": "7841",
+      "sicDescription": "Services-Video Tape Rental",
+      "industry": "communication_media",
+      "contract": "NFLX-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "NVDA": {
+      "symbol": "NVDA",
+      "companyName": "NVIDIA Corporation Common Stock",
+      "nasdaqMarketCap": "5,419,832,000,000",
+      "cik": 1045810,
+      "secEntityName": "NVIDIA CORP",
+      "stateOfIncorporation": "DE",
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "industry": "information_technology",
+      "contract": "NVDA-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "PLTR": {
+      "symbol": "PLTR",
+      "companyName": "Palantir Technologies Inc. Class A Common Stock",
+      "nasdaqMarketCap": "413,177,219,095",
+      "cik": 1321655,
+      "secEntityName": "Palantir Technologies Inc.",
+      "stateOfIncorporation": "",
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "industry": "information_technology",
+      "contract": "PLTR-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 1470,
+      "priceStart": "2020-09-30",
+      "priceEnd": "2026-08-07"
+    },
+    "QCOM": {
+      "symbol": "QCOM",
+      "companyName": "QUALCOMM Incorporated Common Stock",
+      "nasdaqMarketCap": "176,292,265,979",
+      "cik": 804328,
+      "secEntityName": "QUALCOMM INC/DE",
+      "stateOfIncorporation": "DE",
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "industry": "information_technology",
+      "contract": "QCOM-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "RKLB": {
+      "symbol": "RKLB",
+      "companyName": "Rocket Lab Corporation Common Stock",
+      "nasdaqMarketCap": "47,947,592,954",
+      "cik": 1819994,
+      "secEntityName": "Rocket Lab Corp",
+      "stateOfIncorporation": "",
+      "sic": "3760",
+      "sicDescription": "Guided Missiles & Space Vehicles & Parts",
+      "industry": "consumer",
+      "contract": "RKLB-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 1431,
+      "priceStart": "2020-11-24",
+      "priceEnd": "2026-08-07"
+    },
+    "TER": {
+      "symbol": "TER",
+      "companyName": "Teradyne, Inc. Common Stock",
+      "nasdaqMarketCap": "59,301,609,883",
+      "cik": 97210,
+      "secEntityName": "TERADYNE, INC",
+      "stateOfIncorporation": "MA",
+      "sic": "3825",
+      "sicDescription": "Instruments For Meas & Testing of  Electricity & Elec Signals",
+      "industry": "industrial_other",
+      "contract": "TER-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "TSLA": {
+      "symbol": "TSLA",
+      "companyName": "Tesla, Inc. Common Stock",
+      "nasdaqMarketCap": "1,297,742,282,721",
+      "cik": 1318605,
+      "secEntityName": "Tesla, Inc.",
+      "stateOfIncorporation": "TX",
+      "sic": "3711",
+      "sicDescription": "Motor Vehicles & Passenger Car Bodies",
+      "industry": "consumer",
+      "contract": "TSLA-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "TTWO": {
+      "symbol": "TTWO",
+      "companyName": "Take-Two Interactive Software, Inc. Common Stock",
+      "nasdaqMarketCap": "45,766,832,430",
+      "cik": 946581,
+      "secEntityName": "TAKE TWO INTERACTIVE SOFTWARE INC",
+      "stateOfIncorporation": "DE",
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "industry": "information_technology",
+      "contract": "TTWO-USDT-SWAP",
+      "contractEligibleNow": false,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    },
+    "WDC": {
+      "symbol": "WDC",
+      "companyName": "Western Digital Corporation Common Stock",
+      "nasdaqMarketCap": "149,695,449,493",
+      "cik": 106040,
+      "secEntityName": "WESTERN DIGITAL CORP",
+      "stateOfIncorporation": "DE",
+      "sic": "3572",
+      "sicDescription": "Computer Storage Devices",
+      "industry": "information_technology",
+      "contract": "WDC-USDT-SWAP",
+      "contractEligibleNow": true,
+      "priceRows": 2514,
+      "priceStart": "2016-08-08",
+      "priceEnd": "2026-08-07"
+    }
+  },
+  "contractSnapshot": {
+    "AAPL": {
+      "symbol": "AAPL",
+      "contract": "AAPL-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-03-04T08:15:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 313.1,
+      "spreadBps": 0.31938167707289583,
+      "quoteTurnover24hUsdt": 4614117.1280000005,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "ADBE": {
+      "symbol": "ADBE",
+      "contract": "ADBE-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-06-03T09:30:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 264.48,
+      "spreadBps": 10.596828520608163,
+      "quoteTurnover24hUsdt": 150883.19520000002,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "ALAB": {
+      "symbol": "ALAB",
+      "contract": "ALAB-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-06-16T09:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 329.31,
+      "spreadBps": 3.6447576236181676,
+      "quoteTurnover24hUsdt": 247874.93010000003,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "AMAT": {
+      "symbol": "AMAT",
+      "contract": "AMAT-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-05-28T09:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 539.45,
+      "spreadBps": 19.277823088899748,
+      "quoteTurnover24hUsdt": 260651.45100000003,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "AMD": {
+      "symbol": "AMD",
+      "contract": "AMD-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-03-11T10:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 480.72,
+      "spreadBps": 0.20801913776048475,
+      "quoteTurnover24hUsdt": 13515899.484000001,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "AMZN": {
+      "symbol": "AMZN",
+      "contract": "AMZN-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-02-26T07:30:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 274.12,
+      "spreadBps": 0.3647970816230153,
+      "quoteTurnover24hUsdt": 3466469.4372,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "APP": {
+      "symbol": "APP",
+      "contract": "APP-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-07-17T11:45:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 349.19,
+      "spreadBps": 0.28652063664859406,
+      "quoteTurnover24hUsdt": 451865.82759999996,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "ARM": {
+      "symbol": "ARM",
+      "contract": "ARM-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-04-29T06:15:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 282.17,
+      "spreadBps": 4.6069068164500395,
+      "quoteTurnover24hUsdt": 4359478.5311,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "ASML": {
+      "symbol": "ASML",
+      "contract": "ASML-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-06-03T09:45:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 1736.13,
+      "spreadBps": 5.528425320188176,
+      "quoteTurnover24hUsdt": 632305.4905200001,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "AVGO": {
+      "symbol": "AVGO",
+      "contract": "AVGO-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-04-29T06:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 427.15,
+      "spreadBps": 5.152104166179417,
+      "quoteTurnover24hUsdt": 782906.1489999999,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "COST": {
+      "symbol": "COST",
+      "contract": "COST-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-04-27T14:15:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 946.94,
+      "spreadBps": 9.828321417815298,
+      "quoteTurnover24hUsdt": 114955.67518,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "CRWV": {
+      "symbol": "CRWV",
+      "contract": "CRWV-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-04-10T12:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 91.51,
+      "spreadBps": 3.2792261026399014,
+      "quoteTurnover24hUsdt": 2973489.336,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "CRWD": {
+      "symbol": "CRWD",
+      "contract": "CRWD-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-05-26T09:30:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 215.26,
+      "spreadBps": 7.8983436708707915,
+      "quoteTurnover24hUsdt": 309864.6174,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "CSCO": {
+      "symbol": "CSCO",
+      "contract": "CSCO-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-05-19T09:45:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 121.53,
+      "spreadBps": 20.539785564638702,
+      "quoteTurnover24hUsdt": 86742.0375,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "DASH": {
+      "symbol": "DASH",
+      "contract": "DASH-USDT-SWAP",
+      "state": "live",
+      "instCategory": "1",
+      "listTime": "2025-11-06T03:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 30.8,
+      "spreadBps": 3.2462262619698135,
+      "quoteTurnover24hUsdt": 25866.807119999998,
+      "fundingRate": 5e-05,
+      "nextFundingTime": "2026-08-08T12:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "not_tradfi_category",
+        "turnover_below_limit"
+      ]
+    },
+    "GOOGL": {
+      "symbol": "GOOGL",
+      "contract": "GOOGL-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-03-04T07:45:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 355.72,
+      "spreadBps": 1.6863406408095074,
+      "quoteTurnover24hUsdt": 8151892.9520000005,
+      "fundingRate": 4.32328793103e-05,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "INTC": {
+      "symbol": "INTC",
+      "contract": "INTC-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-02-26T07:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 101.3,
+      "spreadBps": 0.9873130275959043,
+      "quoteTurnover24hUsdt": 44459516.48,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "ISRG": {
+      "symbol": "ISRG",
+      "contract": "ISRG-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-06-11T09:30:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 380.16,
+      "spreadBps": 7.365319865320644,
+      "quoteTurnover24hUsdt": 17171.827200000003,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "KLAC": {
+      "symbol": "KLAC",
+      "contract": "KLAC-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-06-23T09:45:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 198.74,
+      "spreadBps": 14.08946812257843,
+      "quoteTurnover24hUsdt": 70459.2922,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "LITE": {
+      "symbol": "LITE",
+      "contract": "LITE-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-05-08T09:15:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 893.6,
+      "spreadBps": 0.11191252916710114,
+      "quoteTurnover24hUsdt": 14839380.744,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "LRCX": {
+      "symbol": "LRCX",
+      "contract": "LRCX-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-06-23T10:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 310.07,
+      "spreadBps": 20.296718697143817,
+      "quoteTurnover24hUsdt": 118651.38620000001,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "META": {
+      "symbol": "META",
+      "contract": "META-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-03-04T08:30:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 593.35,
+      "spreadBps": 0.16847070715564005,
+      "quoteTurnover24hUsdt": 2919347.2685,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "MRVL": {
+      "symbol": "MRVL",
+      "contract": "MRVL-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-05-12T10:30:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 217.71,
+      "spreadBps": 0.4593371764552642,
+      "quoteTurnover24hUsdt": 27280695.825,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "MSFT": {
+      "symbol": "MSFT",
+      "contract": "MSFT-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-03-04T08:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 499.98,
+      "spreadBps": 1.199976000480036,
+      "quoteTurnover24hUsdt": 3848356.0596000003,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "MSTR": {
+      "symbol": "MSTR",
+      "contract": "MSTR-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-02-25T10:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 100.73,
+      "spreadBps": 0.9927036283308587,
+      "quoteTurnover24hUsdt": 23988096.0396,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "MU": {
+      "symbol": "MU",
+      "contract": "MU-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-03-04T07:15:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 877.34,
+      "spreadBps": 0.11398154638753617,
+      "quoteTurnover24hUsdt": 321036366.8542,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "NBIS": {
+      "symbol": "NBIS",
+      "contract": "NBIS-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-05-19T09:15:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 189.68,
+      "spreadBps": 3.6862476631819256,
+      "quoteTurnover24hUsdt": 10326575.631199999,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "NFLX": {
+      "symbol": "NFLX",
+      "contract": "NFLX-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-03-11T10:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 74.1,
+      "spreadBps": 4.046671612598791,
+      "quoteTurnover24hUsdt": 228096.10199999996,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "NVDA": {
+      "symbol": "NVDA",
+      "contract": "NVDA-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-03-04T07:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 223.53,
+      "spreadBps": 0.44735723712129666,
+      "quoteTurnover24hUsdt": 14753125.294499999,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "PLTR": {
+      "symbol": "PLTR",
+      "contract": "PLTR-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-02-26T07:15:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 171.29,
+      "spreadBps": 1.7513646049214007,
+      "quoteTurnover24hUsdt": 9423937.2976,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "QCOM": {
+      "symbol": "QCOM",
+      "contract": "QCOM-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-05-19T09:30:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 167.97,
+      "spreadBps": 4.168279393812677,
+      "quoteTurnover24hUsdt": 509980.4358,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "QQQ": {
+      "symbol": "QQQ",
+      "contract": "QQQ-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-03-04T08:45:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 722.72,
+      "spreadBps": 0.13836521498482693,
+      "quoteTurnover24hUsdt": 18981207.3104,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "RKLB": {
+      "symbol": "RKLB",
+      "contract": "RKLB-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-05-12T10:15:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 83.59,
+      "spreadBps": 1.1969597223042556,
+      "quoteTurnover24hUsdt": 6170525.1946,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "SHOP": {
+      "symbol": "SHOP",
+      "contract": "SHOP-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-08-06T11:30:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 151.56,
+      "spreadBps": 3.9577836411611,
+      "quoteTurnover24hUsdt": 657582.4656,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "SNDK": {
+      "symbol": "SNDK",
+      "contract": "SNDK-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-03-04T07:30:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 1214.99,
+      "spreadBps": 0.08230622029252377,
+      "quoteTurnover24hUsdt": 1929558188.0219402,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "SPCX": {
+      "symbol": "SPCX",
+      "contract": "SPCX-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-05-07T09:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 132.25,
+      "spreadBps": 0.7560579140376765,
+      "quoteTurnover24hUsdt": 1014458800.855,
+      "fundingRate": -0.000286521441454,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "STX": {
+      "symbol": "STX",
+      "contract": "STX-USDT-SWAP",
+      "state": "live",
+      "instCategory": "1",
+      "listTime": "2023-02-21T08:55:58Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 0.1309,
+      "spreadBps": 7.636502481864584,
+      "quoteTurnover24hUsdt": 5539400.02,
+      "fundingRate": 0.0001,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "not_tradfi_category",
+        "spread_above_limit"
+      ]
+    },
+    "TER": {
+      "symbol": "TER",
+      "contract": "TER-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-06-16T09:15:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 380.08,
+      "spreadBps": 23.91370044805406,
+      "quoteTurnover24hUsdt": 81257.3032,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "spread_above_limit",
+        "turnover_below_limit"
+      ]
+    },
+    "TSLA": {
+      "symbol": "TSLA",
+      "contract": "TSLA-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-02-25T09:00:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 329.95,
+      "spreadBps": 0.30306244601844884,
+      "quoteTurnover24hUsdt": 17899563.134,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    },
+    "TTWO": {
+      "symbol": "TTWO",
+      "contract": "TTWO-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-07-06T10:15:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 246.69,
+      "spreadBps": 2.8402751009320815,
+      "quoteTurnover24hUsdt": 492319.233,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": false,
+      "reasons": [
+        "turnover_below_limit"
+      ]
+    },
+    "WDC": {
+      "symbol": "WDC",
+      "contract": "WDC-USDT-SWAP",
+      "state": "live",
+      "instCategory": "3",
+      "listTime": "2026-05-12T10:45:00Z",
+      "capturedAt": "2026-08-08T04:41:37Z",
+      "last": 434.14,
+      "spreadBps": 1.1514502515921416,
+      "quoteTurnover24hUsdt": 5915083.6962,
+      "fundingRate": 0.0,
+      "nextFundingTime": "2026-08-08T16:00:00Z",
+      "eligible": true,
+      "reasons": []
+    }
+  },
+  "results": {
+    "monthly": {
+      "base": {
+        "segments": {
+          "train": {
+            "days": 1346,
+            "start": "2017-09-01",
+            "end": "2023-01-06",
+            "benchmarkTotalReturnPct": 91.11675273013992,
+            "portfolioTotalReturnPct": 93.8613546056449,
+            "benchmarkAnnualReturnPct": 12.892514487775731,
+            "portfolioAnnualReturnPct": 13.194287998565613,
+            "annualizedActiveReturnPct": 0.26149920588867376,
+            "realizedTrackingErrorPct": 1.1883211301405427,
+            "informationRatio": 0.2200576925344635,
+            "benchmarkVolatilityPct": 25.47946571078444,
+            "portfolioVolatilityPct": 25.45836709628774,
+            "benchmarkMaxDrawdownPct": 35.11872731588581,
+            "portfolioMaxDrawdownPct": 34.49761474189297,
+            "portfolioBetaToQQQ": 0.9980847099106923,
+            "averageGrossPct": 10.791703507848096,
+            "transactionCostPct": 0.10497343665892252,
+            "shortBorrowCostPct": 0.288207002411975,
+            "positiveActiveDayPct": 50.74294205052006
+          },
+          "validation": {
+            "days": 449,
+            "start": "2023-01-09",
+            "end": "2024-10-21",
+            "benchmarkTotalReturnPct": 86.38375784408667,
+            "portfolioTotalReturnPct": 85.57495383178954,
+            "benchmarkAnnualReturnPct": 41.829239092056355,
+            "portfolioAnnualReturnPct": 41.48348342397505,
+            "annualizedActiveReturnPct": -0.21027915365461514,
+            "realizedTrackingErrorPct": 1.3918235574130395,
+            "informationRatio": -0.15108176071215354,
+            "benchmarkVolatilityPct": 17.81813754412242,
+            "portfolioVolatilityPct": 18.011256267584336,
+            "benchmarkMaxDrawdownPct": 13.55774038477744,
+            "portfolioMaxDrawdownPct": 13.740962574065751,
+            "portfolioBetaToQQQ": 1.0078462571255968,
+            "averageGrossPct": 14.297541833448394,
+            "transactionCostPct": 0.044559987559923554,
+            "shortBorrowCostPct": 0.1273729421273478,
+            "positiveActiveDayPct": 48.775055679287306
+          },
+          "test": {
+            "days": 449,
+            "start": "2024-10-22",
+            "end": "2026-08-07",
+            "benchmarkTotalReturnPct": 47.266437328257105,
+            "portfolioTotalReturnPct": 55.205151883795665,
+            "benchmarkAnnualReturnPct": 24.264700892442814,
+            "portfolioAnnualReturnPct": 27.981010748802838,
+            "annualizedActiveReturnPct": 2.972391791100606,
+            "realizedTrackingErrorPct": 1.8935739252463495,
+            "informationRatio": 1.5697257717117672,
+            "benchmarkVolatilityPct": 22.489400511914475,
+            "portfolioVolatilityPct": 22.58394314800584,
+            "benchmarkMaxDrawdownPct": 22.768305343420923,
+            "portfolioMaxDrawdownPct": 22.961696647593154,
+            "portfolioBetaToQQQ": 1.0006680174068296,
+            "averageGrossPct": 13.595499726368265,
+            "transactionCostPct": 0.04626267178208672,
+            "shortBorrowCostPct": 0.12111863843530458,
+            "positiveActiveDayPct": 54.342984409799556
+          },
+          "full": {
+            "days": 2244,
+            "start": "2017-09-01",
+            "end": "2026-08-07",
+            "benchmarkTotalReturnPct": 424.57863881106033,
+            "portfolioTotalReturnPct": 458.3631354848824,
+            "benchmarkAnnualReturnPct": 20.457638729845208,
+            "portfolioAnnualReturnPct": 21.3049016864846,
+            "annualizedActiveReturnPct": 0.7095216155701448,
+            "realizedTrackingErrorPct": 1.3982345638868683,
+            "informationRatio": 0.5074410502325076,
+            "benchmarkVolatilityPct": 23.537137852826636,
+            "portfolioVolatilityPct": 23.57099212788061,
+            "benchmarkMaxDrawdownPct": 35.11872731588581,
+            "portfolioMaxDrawdownPct": 34.49761474189297,
+            "portfolioBetaToQQQ": 0.9996748643059941,
+            "averageGrossPct": 12.054192772692167,
+            "transactionCostPct": 0.1957960960009328,
+            "shortBorrowCostPct": 0.5366985829746274,
+            "positiveActiveDayPct": 51.06951871657755
+          }
+        },
+        "testActiveBootstrap": {
+          "lower95Pct": 0.9990505319853623,
+          "medianPct": 3.457898021414718,
+          "upper95Pct": 6.581933372075005,
+          "months": 23
+        },
+        "rebalances": 108
+      },
+      "stress": {
+        "segments": {
+          "train": {
+            "days": 1346,
+            "start": "2017-09-01",
+            "end": "2023-01-06",
+            "benchmarkTotalReturnPct": 91.11675273013992,
+            "portfolioTotalReturnPct": 92.54531395506815,
+            "benchmarkAnnualReturnPct": 12.892514487775731,
+            "portfolioAnnualReturnPct": 13.050023503126983,
+            "annualizedActiveReturnPct": 0.1339288973792504,
+            "realizedTrackingErrorPct": 1.188811826305829,
+            "informationRatio": 0.11265777679502692,
+            "benchmarkVolatilityPct": 25.47946571078444,
+            "portfolioVolatilityPct": 25.458398069799305,
+            "benchmarkMaxDrawdownPct": 35.11872731588581,
+            "portfolioMaxDrawdownPct": 34.58740577806797,
+            "portfolioBetaToQQQ": 0.9980850261606783,
+            "averageGrossPct": 10.791703507848096,
+            "transactionCostPct": 0.20994687331784503,
+            "shortBorrowCostPct": 0.8646210072359252,
+            "positiveActiveDayPct": 50.52005943536404
+          },
+          "validation": {
+            "days": 449,
+            "start": "2023-01-09",
+            "end": "2024-10-21",
+            "benchmarkTotalReturnPct": 86.38375784408667,
+            "portfolioTotalReturnPct": 85.02090529903094,
+            "benchmarkAnnualReturnPct": 41.829239092056355,
+            "portfolioAnnualReturnPct": 41.24625148739551,
+            "annualizedActiveReturnPct": -0.37826374095368903,
+            "realizedTrackingErrorPct": 1.3915903769822904,
+            "informationRatio": -0.2718211818724749,
+            "benchmarkVolatilityPct": 17.81813754412242,
+            "portfolioVolatilityPct": 18.011527289010925,
+            "benchmarkMaxDrawdownPct": 13.55774038477744,
+            "portfolioMaxDrawdownPct": 13.756067635195436,
+            "portfolioBetaToQQQ": 1.0078626546722784,
+            "averageGrossPct": 14.297541833448394,
+            "transactionCostPct": 0.08911997511984711,
+            "shortBorrowCostPct": 0.3821188263820434,
+            "positiveActiveDayPct": 48.775055679287306
+          },
+          "test": {
+            "days": 449,
+            "start": "2024-10-22",
+            "end": "2026-08-07",
+            "benchmarkTotalReturnPct": 47.266437328257105,
+            "portfolioTotalReturnPct": 54.75844822183189,
+            "benchmarkAnnualReturnPct": 24.264700892442814,
+            "portfolioAnnualReturnPct": 27.774145461728516,
+            "annualizedActiveReturnPct": 2.810471998092857,
+            "realizedTrackingErrorPct": 1.8937215892008121,
+            "informationRatio": 1.484099887818743,
+            "benchmarkVolatilityPct": 22.489400511914475,
+            "portfolioVolatilityPct": 22.583909090251332,
+            "benchmarkMaxDrawdownPct": 22.768305343420923,
+            "portfolioMaxDrawdownPct": 22.979750867240757,
+            "portfolioBetaToQQQ": 1.000665943786752,
+            "averageGrossPct": 13.595499726368265,
+            "transactionCostPct": 0.09252534356417344,
+            "shortBorrowCostPct": 0.3633559153059138,
+            "positiveActiveDayPct": 54.12026726057907
+          },
+          "full": {
+            "days": 2244,
+            "start": "2017-09-01",
+            "end": "2026-08-07",
+            "benchmarkTotalReturnPct": 424.57863881106033,
+            "portfolioTotalReturnPct": 451.3255526406471,
+            "benchmarkAnnualReturnPct": 20.457638729845208,
+            "portfolioAnnualReturnPct": 21.132236434281282,
+            "annualizedActiveReturnPct": 0.5669918909661129,
+            "realizedTrackingErrorPct": 1.3984556949838252,
+            "informationRatio": 0.4054414401542201,
+            "benchmarkVolatilityPct": 23.537137852826636,
+            "portfolioVolatilityPct": 23.571021754574662,
+            "benchmarkMaxDrawdownPct": 35.11872731588581,
+            "portfolioMaxDrawdownPct": 34.58740577806797,
+            "portfolioBetaToQQQ": 0.9996755666807692,
+            "averageGrossPct": 12.054192772692167,
+            "transactionCostPct": 0.3915921920018656,
+            "shortBorrowCostPct": 1.6100957489238823,
+            "positiveActiveDayPct": 50.89126559714795
+          }
+        },
+        "rebalances": 108
+      },
+      "ic": {
+        "train": {
+          "periods": 64,
+          "momentum": {
+            "meanIc": -0.018370260689281655,
+            "tStatistic": -0.5263251175818624,
+            "positivePct": 50.0,
+            "observations": 64
+          },
+          "quality": {
+            "meanIc": 0.032779848699670724,
+            "tStatistic": 1.1507657625513503,
+            "positivePct": 53.125,
+            "observations": 64
+          },
+          "value": {
+            "meanIc": 0.020354202883667575,
+            "tStatistic": 0.6941401096307431,
+            "positivePct": 59.375,
+            "observations": 64
+          },
+          "low_residual_volatility": {
+            "meanIc": 0.04385545602579761,
+            "tStatistic": 1.180528039907696,
+            "positivePct": 57.8125,
+            "observations": 64
+          },
+          "composite": {
+            "meanIc": 0.03949252910624543,
+            "tStatistic": 1.469963154462197,
+            "positivePct": 53.125,
+            "observations": 64
+          },
+          "neutralized_composite": {
+            "meanIc": 0.03698564553394503,
+            "tStatistic": 1.4054523918358404,
+            "positivePct": 56.25,
+            "observations": 64
+          }
+        },
+        "validation": {
+          "periods": 21,
+          "momentum": {
+            "meanIc": -0.014260082693639922,
+            "tStatistic": -0.23490894565470846,
+            "positivePct": 52.38095238095239,
+            "observations": 21
+          },
+          "quality": {
+            "meanIc": 0.041467403640085075,
+            "tStatistic": 0.9846278887632581,
+            "positivePct": 52.38095238095239,
+            "observations": 21
+          },
+          "value": {
+            "meanIc": -0.010711356603016161,
+            "tStatistic": -0.20798784349056143,
+            "positivePct": 42.857142857142854,
+            "observations": 21
+          },
+          "low_residual_volatility": {
+            "meanIc": -0.11768709799377332,
+            "tStatistic": -2.078578658817215,
+            "positivePct": 42.857142857142854,
+            "observations": 21
+          },
+          "composite": {
+            "meanIc": -0.02217278457545421,
+            "tStatistic": -0.48165911605343453,
+            "positivePct": 47.61904761904761,
+            "observations": 21
+          },
+          "neutralized_composite": {
+            "meanIc": 0.054935377933153236,
+            "tStatistic": 1.2981697125300409,
+            "positivePct": 66.66666666666666,
+            "observations": 21
+          }
+        },
+        "test": {
+          "periods": 22,
+          "momentum": {
+            "meanIc": 0.07335381311639973,
+            "tStatistic": 1.017842062352489,
+            "positivePct": 50.0,
+            "observations": 22
+          },
+          "quality": {
+            "meanIc": -0.0674578534914744,
+            "tStatistic": -1.4448475831357348,
+            "positivePct": 45.45454545454545,
+            "observations": 22
+          },
+          "value": {
+            "meanIc": 0.019726905566879314,
+            "tStatistic": 0.3437201305120852,
+            "positivePct": 54.54545454545454,
+            "observations": 22
+          },
+          "low_residual_volatility": {
+            "meanIc": -0.11692259017054213,
+            "tStatistic": -1.7932662681859384,
+            "positivePct": 31.818181818181817,
+            "observations": 22
+          },
+          "composite": {
+            "meanIc": -0.023493735003998928,
+            "tStatistic": -0.48606098907686984,
+            "positivePct": 45.45454545454545,
+            "observations": 22
+          },
+          "neutralized_composite": {
+            "meanIc": 0.05986838053029449,
+            "tStatistic": 1.2814972871716581,
+            "positivePct": 63.63636363636363,
+            "observations": 22
+          }
+        },
+        "full": {
+          "periods": 107,
+          "momentum": {
+            "meanIc": 0.0012955651203769133,
+            "tStatistic": 0.045984006859102415,
+            "positivePct": 50.467289719626166,
+            "observations": 107
+          },
+          "quality": {
+            "meanIc": 0.013875261835591363,
+            "tStatistic": 0.647515536346658,
+            "positivePct": 51.4018691588785,
+            "observations": 107
+          },
+          "value": {
+            "meanIc": 0.014128246900586264,
+            "tStatistic": 0.6082805993353574,
+            "positivePct": 55.140186915887845,
+            "observations": 107
+          },
+          "low_residual_volatility": {
+            "meanIc": -0.020906325756730088,
+            "tStatistic": -0.720752456537268,
+            "positivePct": 49.532710280373834,
+            "observations": 107
+          },
+          "composite": {
+            "meanIc": 0.014439544080627968,
+            "tStatistic": 0.6891249260445856,
+            "positivePct": 50.467289719626166,
+            "observations": 107
+          },
+          "neutralized_composite": {
+            "meanIc": 0.04521335161154373,
+            "tStatistic": 2.253983301051022,
+            "positivePct": 59.813084112149525,
+            "observations": 107
+          }
+        }
+      }
+    },
+    "biweekly": {
+      "base": {
+        "segments": {
+          "train": {
+            "days": 1354,
+            "start": "2017-08-14",
+            "end": "2022-12-28",
+            "benchmarkTotalReturnPct": 90.26692712041,
+            "portfolioTotalReturnPct": 93.38619726059225,
+            "benchmarkAnnualReturnPct": 12.718126368453596,
+            "portfolioAnnualReturnPct": 13.05978060152897,
+            "annualizedActiveReturnPct": 0.29707725905985316,
+            "realizedTrackingErrorPct": 1.1851038275618997,
+            "informationRatio": 0.2506761451197291,
+            "benchmarkVolatilityPct": 25.38438944141721,
+            "portfolioVolatilityPct": 25.362217018760948,
+            "benchmarkMaxDrawdownPct": 35.11872731588584,
+            "portfolioMaxDrawdownPct": 34.38723274358564,
+            "portfolioBetaToQQQ": 0.9980371082034587,
+            "averageGrossPct": 10.832372085473544,
+            "transactionCostPct": 0.14594084644363597,
+            "shortBorrowCostPct": 0.29101253578831704,
+            "positiveActiveDayPct": 51.18168389955687
+          },
+          "validation": {
+            "days": 452,
+            "start": "2022-12-29",
+            "end": "2024-10-16",
+            "benchmarkTotalReturnPct": 90.86454134135711,
+            "portfolioTotalReturnPct": 90.61512557458924,
+            "benchmarkAnnualReturnPct": 43.3872512297075,
+            "portfolioAnnualReturnPct": 43.28275589174508,
+            "annualizedActiveReturnPct": -0.03742025201168473,
+            "realizedTrackingErrorPct": 1.3693135780424075,
+            "informationRatio": -0.027327744799829794,
+            "benchmarkVolatilityPct": 18.002029483853903,
+            "portfolioVolatilityPct": 18.20133411090955,
+            "benchmarkMaxDrawdownPct": 13.55774038477744,
+            "portfolioMaxDrawdownPct": 13.713757839777374,
+            "portfolioBetaToQQQ": 1.008239620586093,
+            "averageGrossPct": 14.120229657805341,
+            "transactionCostPct": 0.06417012776324531,
+            "shortBorrowCostPct": 0.1266338056612701,
+            "positiveActiveDayPct": 48.67256637168141
+          },
+          "test": {
+            "days": 452,
+            "start": "2024-10-17",
+            "end": "2026-08-07",
+            "benchmarkTotalReturnPct": 48.619382293827876,
+            "portfolioTotalReturnPct": 55.450934020636566,
+            "benchmarkAnnualReturnPct": 24.719933731249032,
+            "portfolioAnnualReturnPct": 27.88438624563827,
+            "annualizedActiveReturnPct": 2.530056676417222,
+            "realizedTrackingErrorPct": 1.9379754792503805,
+            "informationRatio": 1.3055153192112945,
+            "benchmarkVolatilityPct": 22.418488578080076,
+            "portfolioVolatilityPct": 22.510253634878666,
+            "benchmarkMaxDrawdownPct": 22.76830534342098,
+            "portfolioMaxDrawdownPct": 22.86872155228894,
+            "portfolioBetaToQQQ": 1.000365248635643,
+            "averageGrossPct": 13.413852501391519,
+            "transactionCostPct": 0.06232151313223077,
+            "shortBorrowCostPct": 0.12029883592517789,
+            "positiveActiveDayPct": 55.088495575221245
+          },
+          "full": {
+            "days": 2258,
+            "start": "2017-08-14",
+            "end": "2026-08-07",
+            "benchmarkTotalReturnPct": 439.7144044968139,
+            "portfolioTotalReturnPct": 473.02842932638765,
+            "benchmarkAnnualReturnPct": 20.701269540030133,
+            "portfolioAnnualReturnPct": 21.510799396974246,
+            "annualizedActiveReturnPct": 0.6771099524350505,
+            "realizedTrackingErrorPct": 1.4037698658660287,
+            "informationRatio": 0.48235110960821237,
+            "benchmarkVolatilityPct": 23.489857322017425,
+            "portfolioVolatilityPct": 23.52382082030787,
+            "benchmarkMaxDrawdownPct": 35.11872731588584,
+            "portfolioMaxDrawdownPct": 34.38723274358564,
+            "portfolioBetaToQQQ": 0.9996612550902907,
+            "averageGrossPct": 12.007279424131157,
+            "transactionCostPct": 0.2724324873391121,
+            "shortBorrowCostPct": 0.5379451773747651,
+            "positiveActiveDayPct": 51.461470327723646
+          }
+        },
+        "testActiveBootstrap": {
+          "lower95Pct": 0.4753757887515908,
+          "medianPct": 3.161273323808622,
+          "upper95Pct": 6.196573399647991,
+          "months": 23
+        },
+        "rebalances": 235
+      },
+      "stress": {
+        "segments": {
+          "train": {
+            "days": 1354,
+            "start": "2017-08-14",
+            "end": "2022-12-28",
+            "benchmarkTotalReturnPct": 90.26692712041,
+            "portfolioTotalReturnPct": 91.98351974313697,
+            "benchmarkAnnualReturnPct": 12.718126368453596,
+            "portfolioAnnualReturnPct": 12.90670428273808,
+            "annualizedActiveReturnPct": 0.1615917263116197,
+            "realizedTrackingErrorPct": 1.1850589479493459,
+            "informationRatio": 0.13635754288108778,
+            "benchmarkVolatilityPct": 25.38438944141721,
+            "portfolioVolatilityPct": 25.362410311495804,
+            "benchmarkMaxDrawdownPct": 35.11872731588584,
+            "portfolioMaxDrawdownPct": 34.48267640100893,
+            "portfolioBetaToQQQ": 0.9980447987512613,
+            "averageGrossPct": 10.832372085473544,
+            "transactionCostPct": 0.29188169288727195,
+            "shortBorrowCostPct": 0.8730376073649512,
+            "positiveActiveDayPct": 51.10782865583457
+          },
+          "validation": {
+            "days": 452,
+            "start": "2022-12-29",
+            "end": "2024-10-16",
+            "benchmarkTotalReturnPct": 90.86454134135711,
+            "portfolioTotalReturnPct": 90.01163867786126,
+            "benchmarkAnnualReturnPct": 43.3872512297075,
+            "portfolioAnnualReturnPct": 43.02966817221079,
+            "annualizedActiveReturnPct": -0.21439881451083964,
+            "realizedTrackingErrorPct": 1.3688905910911158,
+            "informationRatio": -0.15662231584187203,
+            "benchmarkVolatilityPct": 18.002029483853903,
+            "portfolioVolatilityPct": 18.20162624601377,
+            "benchmarkMaxDrawdownPct": 13.55774038477744,
+            "portfolioMaxDrawdownPct": 13.729369860866447,
+            "portfolioBetaToQQQ": 1.0082578152596176,
+            "averageGrossPct": 14.120229657805341,
+            "transactionCostPct": 0.12834025552649062,
+            "shortBorrowCostPct": 0.37990141698381036,
+            "positiveActiveDayPct": 48.008849557522126
+          },
+          "test": {
+            "days": 452,
+            "start": "2024-10-17",
+            "end": "2026-08-07",
+            "benchmarkTotalReturnPct": 48.619382293827876,
+            "portfolioTotalReturnPct": 54.98161026561068,
+            "benchmarkAnnualReturnPct": 24.719933731249032,
+            "portfolioAnnualReturnPct": 27.668984489326,
+            "annualizedActiveReturnPct": 2.3611725290375496,
+            "realizedTrackingErrorPct": 1.9383761387082286,
+            "informationRatio": 1.2181188582991331,
+            "benchmarkVolatilityPct": 22.418488578080076,
+            "portfolioVolatilityPct": 22.509547356085626,
+            "benchmarkMaxDrawdownPct": 22.76830534342098,
+            "portfolioMaxDrawdownPct": 22.88640710992931,
+            "portfolioBetaToQQQ": 1.0003320707783996,
+            "averageGrossPct": 13.413852501391519,
+            "transactionCostPct": 0.12464302626446154,
+            "shortBorrowCostPct": 0.36089650777553367,
+            "positiveActiveDayPct": 54.86725663716814
+          },
+          "full": {
+            "days": 2258,
+            "start": "2017-08-14",
+            "end": "2026-08-07",
+            "benchmarkTotalReturnPct": 439.7144044968139,
+            "portfolioTotalReturnPct": 465.35901527398755,
+            "benchmarkAnnualReturnPct": 20.701269540030133,
+            "portfolioAnnualReturnPct": 21.328210807427862,
+            "annualizedActiveReturnPct": 0.5266328239114287,
+            "realizedTrackingErrorPct": 1.403757492381928,
+            "informationRatio": 0.3751594037926209,
+            "benchmarkVolatilityPct": 23.489857322017425,
+            "portfolioVolatilityPct": 23.523828856998744,
+            "benchmarkMaxDrawdownPct": 35.11872731588584,
+            "portfolioMaxDrawdownPct": 34.48267640100893,
+            "portfolioBetaToQQQ": 0.9996616291988597,
+            "averageGrossPct": 12.007279424131157,
+            "transactionCostPct": 0.5448649746782241,
+            "shortBorrowCostPct": 1.6138355321242952,
+            "positiveActiveDayPct": 51.240035429583706
+          }
+        },
+        "rebalances": 235
+      },
+      "ic": {
+        "train": {
+          "periods": 140,
+          "momentum": {
+            "meanIc": -0.010866919982586933,
+            "tStatistic": -0.46623423966383387,
+            "positivePct": 47.85714285714286,
+            "observations": 140
+          },
+          "quality": {
+            "meanIc": 0.024711996168708124,
+            "tStatistic": 1.364219869260795,
+            "positivePct": 52.85714285714286,
+            "observations": 140
+          },
+          "value": {
+            "meanIc": 0.031529962617011166,
+            "tStatistic": 1.6812798645326357,
+            "positivePct": 56.42857142857143,
+            "observations": 140
+          },
+          "low_residual_volatility": {
+            "meanIc": 0.024586677305757622,
+            "tStatistic": 0.9732830540416032,
+            "positivePct": 53.57142857142857,
+            "observations": 140
+          },
+          "composite": {
+            "meanIc": 0.02969651034743719,
+            "tStatistic": 1.4895298299561037,
+            "positivePct": 54.285714285714285,
+            "observations": 140
+          },
+          "neutralized_composite": {
+            "meanIc": 0.027139934383875238,
+            "tStatistic": 1.3197661521764856,
+            "positivePct": 52.85714285714286,
+            "observations": 140
+          }
+        },
+        "validation": {
+          "periods": 47,
+          "momentum": {
+            "meanIc": -0.017348361683399174,
+            "tStatistic": -0.40487362578416836,
+            "positivePct": 46.808510638297875,
+            "observations": 47
+          },
+          "quality": {
+            "meanIc": 0.020494808585414262,
+            "tStatistic": 0.6106943211726275,
+            "positivePct": 48.93617021276596,
+            "observations": 47
+          },
+          "value": {
+            "meanIc": -0.017204632580435884,
+            "tStatistic": -0.5466476864337874,
+            "positivePct": 40.42553191489361,
+            "observations": 47
+          },
+          "low_residual_volatility": {
+            "meanIc": -0.08245561406994423,
+            "tStatistic": -2.1125969785177703,
+            "positivePct": 36.17021276595745,
+            "observations": 47
+          },
+          "composite": {
+            "meanIc": -0.029424242065652147,
+            "tStatistic": -0.8060845625843138,
+            "positivePct": 46.808510638297875,
+            "observations": 47
+          },
+          "neutralized_composite": {
+            "meanIc": 0.031828095767298954,
+            "tStatistic": 1.0210459662213915,
+            "positivePct": 53.191489361702125,
+            "observations": 47
+          }
+        },
+        "test": {
+          "periods": 46,
+          "momentum": {
+            "meanIc": 0.06361010508475347,
+            "tStatistic": 1.3736803260241948,
+            "positivePct": 58.69565217391305,
+            "observations": 46
+          },
+          "quality": {
+            "meanIc": -0.029009078084503814,
+            "tStatistic": -0.9306660169290505,
+            "positivePct": 47.82608695652174,
+            "observations": 46
+          },
+          "value": {
+            "meanIc": 0.0025248901469466455,
+            "tStatistic": 0.0705648679893217,
+            "positivePct": 50.0,
+            "observations": 46
+          },
+          "low_residual_volatility": {
+            "meanIc": -0.09075839482377117,
+            "tStatistic": -1.911856296456659,
+            "positivePct": 36.95652173913043,
+            "observations": 46
+          },
+          "composite": {
+            "meanIc": -0.009922861150070126,
+            "tStatistic": -0.2848389548586093,
+            "positivePct": 47.82608695652174,
+            "observations": 46
+          },
+          "neutralized_composite": {
+            "meanIc": 0.06296857069998724,
+            "tStatistic": 2.192053731700843,
+            "positivePct": 63.04347826086957,
+            "observations": 46
+          }
+        },
+        "full": {
+          "periods": 233,
+          "momentum": {
+            "meanIc": 0.0025292834215310195,
+            "tStatistic": 0.1342217803941415,
+            "positivePct": 49.78540772532189,
+            "observations": 233
+          },
+          "quality": {
+            "meanIc": 0.013255441524662799,
+            "tStatistic": 0.9319977663211063,
+            "positivePct": 51.072961373390555,
+            "observations": 233
+          },
+          "value": {
+            "meanIc": 0.015973055716140012,
+            "tStatistic": 1.0843427259567358,
+            "positivePct": 51.931330472103,
+            "observations": 233
+          },
+          "low_residual_volatility": {
+            "meanIc": -0.01977753304881882,
+            "tStatistic": -1.001787737585614,
+            "positivePct": 46.78111587982833,
+            "observations": 233
+          },
+          "composite": {
+            "meanIc": 0.009949014844001413,
+            "tStatistic": 0.6349075514227955,
+            "positivePct": 51.50214592274678,
+            "observations": 233
+          },
+          "neutralized_composite": {
+            "meanIc": 0.03515907968671673,
+            "tStatistic": 2.3516092526099643,
+            "positivePct": 54.93562231759657,
+            "observations": 233
+          }
+        }
+      }
+    }
+  },
+  "decision": {
+    "status": "research_only",
+    "eligibleForLockedForwardObservation": true,
+    "eligibleForPaperOrLive": false,
+    "checks": {
+      "positiveBaseTestActiveReturn": true,
+      "positiveStressTestActiveReturn": true,
+      "positiveTestInformationRatio": true,
+      "positiveTestNeutralizedCompositeIc": true,
+      "trackingErrorWithinFourPct": true,
+      "sufficientCurrentLiquidContracts": true,
+      "qqqCoreContractCurrentlyEligible": true
+    },
+    "reason": "现货代理的主版本通过预注册方向门槛，且当前合约覆盖达到最低数量；可锁定模型开始全新的公共盘口/资金费/基差前瞻观察，但仍不能仿真或实盘。"
+  },
+  "limitations": [
+    "current_constituent_and_current_contract_selection_bias",
+    "no_complete_historical_delisting_or_industry_master",
+    "sec_filed_date_has_no_uniform_tradeable_timestamp",
+    "yahoo_adjusted_daily_data_is_not_institutional_point_in_time_security_master",
+    "contract_execution_funding_basis_spread_depth_and_queue_require_new_forward_sample"
+  ]
+}

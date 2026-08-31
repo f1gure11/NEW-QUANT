@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "registryId": "qqq-stock-microstructure-registry-07f60c0cfdedd9c0",
+  "frozenAt": "2026-08-12T02:53:48Z",
+  "protocol": {
+    "classification": "new_forward_observation_only",
+    "historyReusePolicy": "only_snapshots_captured_strictly_after_the_forward_boundary_with_this_model_id_are_eligible; older_microstructure_candles_funding_and_the_inspected_monte_carlo_window_are_prohibited",
+    "scope": "freeze_the_29_contract_data_observation_layer_now; no_microstructure_reduction_signal_or_threshold_is_authorized_by_this_registry",
+    "candidateRuleDeadline": "a_deterministic_reduction_mapping_must_be_preregistered_with_its_own_content_hash_before_the_end_of_the_first_complete_eligible_calendar_month; otherwise_the_dataset_remains_descriptive_only",
+    "evaluation": "after_all_maturity_gates_pass_run_one_chronological_50_25_25_comparison_against_the_unchanged_source_strategy; select_only_on_train_report_validation_and_test_once",
+    "multipleComparisonPolicy": "one_frozen_candidate_mapping_only; no_threshold_sweep_no_test_only_winner_substitution_and_no_post_result_parameter_change",
+    "promotion": "forward_research_only; evaluation_cannot_authorize_paper_or_live_trading_and_live_requires_a_new_explicit_user_approval"
+  },
+  "study": {
+    "strategyKey": "qqq_pure_stock_microstructure_reduction_forward_v1",
+    "modelId": "qqq-stock-microstructure-ee829cd47ba482d5",
+    "status": "preregistered_collecting",
+    "paperOrLiveAuthorized": false,
+    "forwardBoundary": "2026-08-12T02:53:48Z",
+    "source": {
+      "strategy": "unchanged_qqq_pure_stock_locked_monthly_factor_book",
+      "monteCarloRegistryPath": "config/qqq_pure_stock_monte_carlo_preregistration.json",
+      "monteCarloRegistrySha256": "2ff517acbc92e35a1e31d95d44f3568ac92266f60823ace79a7486f8f94003ce",
+      "weightsPath": "reports/qqq_active_enhancement/qqq-pit-20260808-v5/monthly_weights.csv",
+      "weightsSha256": "a92d07f484cbb68bab790e31d4fca0089e7f26c6fce30f3d45a12ef4017df8a0",
+      "baselineRule": "the_source_monthly_weights_exit_variants_leverage_costs_and_no_reentry_rules_remain_unchanged; this_registry_must_not_modify_or_append_to_the_2026_08_11_monte_carlo_results"
+    },
+    "universe": {
+      "rule": "exact_29_equity_contract_universe_from_the_frozen_pure_stock_monte_carlo_registry",
+      "symbols": [
+        "AAPL",
+        "ADBE",
+        "ALAB",
+        "AMAT",
+        "AMD",
+        "AMZN",
+        "APP",
+        "AVGO",
+        "COST",
+        "CRWD",
+        "CSCO",
+        "GOOGL",
+        "INTC",
+        "KLAC",
+        "LITE",
+        "LRCX",
+        "META",
+        "MRVL",
+        "MSFT",
+        "MSTR",
+        "MU",
+        "NVDA",
+        "PLTR",
+        "QCOM",
+        "RKLB",
+        "TER",
+        "TSLA",
+        "TTWO",
+        "WDC"
+      ],
+      "instruments": [
+        "AAPL-USDT-SWAP",
+        "ADBE-USDT-SWAP",
+        "ALAB-USDT-SWAP",
+        "AMAT-USDT-SWAP",
+        "AMD-USDT-SWAP",
+        "AMZN-USDT-SWAP",
+        "APP-USDT-SWAP",
+        "AVGO-USDT-SWAP",
+        "COST-USDT-SWAP",
+        "CRWD-USDT-SWAP",
+        "CSCO-USDT-SWAP",
+        "GOOGL-USDT-SWAP",
+        "INTC-USDT-SWAP",
+        "KLAC-USDT-SWAP",
+        "LITE-USDT-SWAP",
+        "LRCX-USDT-SWAP",
+        "META-USDT-SWAP",
+        "MRVL-USDT-SWAP",
+        "MSFT-USDT-SWAP",
+        "MSTR-USDT-SWAP",
+        "MU-USDT-SWAP",
+        "NVDA-USDT-SWAP",
+        "PLTR-USDT-SWAP",
+        "QCOM-USDT-SWAP",
+        "RKLB-USDT-SWAP",
+        "TER-USDT-SWAP",
+        "TSLA-USDT-SWAP",
+        "TTWO-USDT-SWAP",
+        "WDC-USDT-SWAP"
+      ]
+    },
+    "basis": {
+      "cadence": "UTC_minute_00_and_30",
+      "source": "OKX_public_REST_only",
+      "storage": "append_only_JSONL_in_data_microstructure_and_data_lake_snapshots",
+      "snapshotSchemaVersion": 2,
+      "books": {
+        "endpoint": "/api/v5/market/books",
+        "requestedLevels": 50,
+        "rawRows": "price_and_contract_size_for_each_returned_bid_and_ask_level",
+        "derivedLevels": [5, 10, 25, 50],
+        "derived": "bid_and_ask_contracts_USDT_notional_and_notional_imbalance_at_each_frozen_level"
+      },
+      "orderFlow": {
+        "endpoint": "/api/v5/market/trades",
+        "requestedLatestTrades": 100,
+        "definition": "buyer_and_seller_initiated_count_and_price_times_size_times_contract_value_notional_from_the_latest_public_trades_returned_at_capture",
+        "limitation": "this_is_a_latest_trade_sample_not_complete_30_minute_flow_and_must_never_be_relabelled_as_interval_complete"
+      },
+      "openInterest": {
+        "endpoint": "/api/v5/public/open-interest",
+        "fields": ["oi_contracts", "oi_underlying_units", "oi_usd"],
+        "definition": "point_in_time_OKX_values_with_exchange_timestamp"
+      },
+      "premium": {
+        "endpoint": "/api/v5/public/funding-rate",
+        "field": "premium",
+        "definition": "point_in_time_OKX_funding_premium_rate_with_exchange_timestamp; do_not_substitute_a_post_hoc_mark_index_basis"
+      },
+      "instrumentMetadata": {
+        "endpoint": "/api/v5/public/instruments",
+        "fields": ["instCategory", "state", "ctType", "ctVal", "ctValCcy", "settleCcy", "lotSz", "minSz", "tickSz"]
+      },
+      "completeness": "a_snapshot_is_complete_only_when_ticker_bid_ask_book_trades_OI_and_premium_are_all_present",
+      "noBackfill": true,
+      "ordersOrAccountAccess": false
+    },
+    "candidateReductionMapping": {
+      "status": "not_yet_preregistered",
+      "authorized": false,
+      "reason": "no_uninspected_deterministic_four_field_reduction_formula_exists_in_the_repository_and_existing_short_window_factor_rules_are_research_only",
+      "eventCountingRule": "when_a_future_mapping_is_frozen_count_at_most_one_independent_reduction_event_per_instrument_per_monthly_cohort; repeated_30_minute_alerts_do_not_increase_the_event_count",
+      "eligibleLegRule": "only_nonzero_legs_generated_by_a_separately_frozen_29_symbol_monthly_target_rule_can_create_reduction_events"
+    },
+    "costs": {
+      "comparisonProfiles": [
+        {
+          "key": "base",
+          "perSideBps": 10.0
+        },
+        {
+          "key": "stress",
+          "perSideBps": 20.0
+        }
+      ],
+      "funding": "realized_point_in_time_from_data_pipeline_load_funding",
+      "reductionTurnover": "charge_the_actual_absolute_weight_reduction_and_any_later_monthly_reentry_or_rebalance_separately"
+    },
+    "maturity": {
+      "minimumCompleteCalendarMonths": 12,
+      "completeMonthRule": "calendar_month_strictly_after_the_forward_boundary_with_at_least_90_percent_complete_scheduled_snapshots_for_every_one_of_the_29_instruments",
+      "minimumCompleteSnapshotRatioPerInstrumentPerMonth": 0.9,
+      "minimumIndependentReductionEvents": 100,
+      "minimumIndependentReductionEventsValidation": 25,
+      "minimumIndependentReductionEventsTest": 25,
+      "minimumContractsWithReductionEvents": 12,
+      "minimumMonthlyCohorts": 12,
+      "split": {
+        "train": 0.5,
+        "validation": 0.25,
+        "test": 0.25,
+        "method": "chronological_complete_months"
+      },
+      "earlyEvaluationAuthorized": false,
+      "ifNotMature": "continue_collecting_without_evaluation_or_rule_changes"
+    },
+    "requiredComparisonOutputs": [
+      "unchanged_baseline_and_frozen_candidate_side_by_side",
+      "gross_return",
+      "net_return_after_base_cost",
+      "net_return_after_stress_cost",
+      "realized_funding",
+      "turnover",
+      "trade_and_reduction_event_counts",
+      "profit_factor",
+      "maximum_drawdown",
+      "worst_month",
+      "coverage_and_missingness_by_contract_and_month"
+    ],
+    "artifacts": [
+      {
+        "path": "config/qqq_pure_stock_monte_carlo_preregistration.json",
+        "sha256": "2ff517acbc92e35a1e31d95d44f3568ac92266f60823ace79a7486f8f94003ce"
+      },
+      {
+        "path": "reports/qqq_active_enhancement/qqq-pit-20260808-v5/monthly_weights.csv",
+        "sha256": "a92d07f484cbb68bab790e31d4fca0089e7f26c6fce30f3d45a12ef4017df8a0"
+      }
+    ]
+  }
+}

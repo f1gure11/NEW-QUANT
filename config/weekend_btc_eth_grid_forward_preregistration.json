@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "modelId": "weekend-btc-eth-grid-v1-20260818",
+  "strategyKey": "weekend_btc_eth_static_grid",
+  "status": "preregistered_collecting",
+  "paperOrLiveAuthorized": false,
+  "forwardBoundary": "2026-08-18T07:48:08Z",
+  "hypothesis": "UTC Saturday-Sunday range reversion in BTC and ETH perpetuals can cover execution and funding costs when inventory is statically bounded and the weekend is force-closed.",
+  "nullHypothesis": "Net return after base cost, or after the stress cost schedule, is not positive.",
+  "data": {
+    "source": "data_pipeline.load_candles and data_pipeline.load_funding",
+    "instruments": ["BTC-USDT-SWAP", "ETH-USDT-SWAP"],
+    "bar": "5m",
+    "timezone": "UTC",
+    "session": "Saturday 00:00:00 through Monday 00:00:00",
+    "historicalReusePolicy": "2026-06-18_and_later_is_development_only; only post-boundary complete weekends count as evidence"
+  },
+  "rule": {
+    "anchor": "first complete 5m close at Saturday 00:00 UTC",
+    "bandBps": 800,
+    "levelsEachSide": 8,
+    "spacingBps": 100,
+    "recenter": false,
+    "oneWayInventory": true,
+    "orderNotional": "leverage_multiple_times_starting_equity_divided_by_levels_each_side",
+    "maxGrossNotional": "leverage_multiple_times_starting_equity",
+    "fillPath": "conservative_adverse_first_when_both_ohlc_sides_touch_in_one_bar",
+    "outsideBand": "cancel_all_orders_and_flatten at next 5m open",
+    "equityStopPct": 12,
+    "sessionExit": "flatten at the first bar at or after Monday 00:00 UTC",
+    "reentryAfterStop": false
+  },
+  "leverageScenarios": {
+    "base": 3,
+    "costStress": 5,
+    "tenX": "not_evaluated; rejected as a design candidate because the observed weekend tail is too large"
+  },
+  "costs": {
+    "base": {
+      "makerFeeBpsPerSide": 2,
+      "takerFeeBpsPerSide": 5,
+      "slippageBpsPerSide": 2
+    },
+    "stress": {
+      "makerFeeBpsPerSide": 4,
+      "takerFeeBpsPerSide": 10,
+      "slippageBpsPerSide": 5
+    },
+    "funding": "realized point-in-time funding rows charged on signed notional at each funding timestamp"
+  },
+  "evaluation": {
+    "minimumCompleteWeekends": 12,
+    "split": {
+      "train": 0.5,
+      "validation": 0.25,
+      "test": 0.25
+    },
+    "selection": "none; the rule is frozen and no parameter may be changed after the boundary",
+    "requiredMetrics": [
+      "gross_return",
+      "net_return",
+      "stress_net_return",
+      "funding",
+      "fills",
+      "stop_rate",
+      "max_drawdown",
+      "worst_weekend",
+      "liquidation_or_gap_events"
+    ],
+    "passGate": "test net_return > 0, test stress_net_return > 0, base max_drawdown < 20%, and no unmodeled liquidation",
+    "failureAction": "research_only; do not tune, paper trade, or promote",
+    "promotion": "research_only_to_forward_observation_to_paper_review_to_explicit_live_approval"
+  }
+}

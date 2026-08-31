@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-07-02T15:33:34Z",
+  "mode": "read_only_microstructure_research",
+  "summary": {
+    "instrumentCount": 3,
+    "totalSnapshots": 3,
+    "minSamples": 200,
+    "testedCandidates": 0,
+    "passedCandidates": 0,
+    "status": "insufficient_data"
+  },
+  "config": {
+    "threshold": 0.2,
+    "feeBps": 5.0,
+    "slippageBps": 2.0,
+    "costStressMultiplier": 1.5
+  },
+  "aggregates": []
+}

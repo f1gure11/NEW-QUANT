@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-08-12T18:07:23Z",
+  "classification": "development_feasibility_inspected_window",
+  "paperOrLiveAuthorized": false,
+  "newValidation": false,
+  "methodViableForForwardFreeze": true,
+  "registryPath": "/opt/okx-quant/config/vwap_book_feasibility_preregistration.json",
+  "registrySha256": "282809f3eece4b0377174788e3b79dbc0bceb84c46a13b86c514046c6ccacfa2",
+  "inheritedParameters": {
+    "source": "reports/vwap_market_maker/btc-eth-20260807/report.md",
+    "vwapWindow5m": 288,
+    "anchorWeight": 0.5,
+    "minHalfSpreadBps": 10.0,
+    "volatilityMultiplier": 1.0,
+    "inventorySkewBps": 10.0,
+    "trendLookback": 12,
+    "maxVwapSlopeBps": 50.0,
+    "volatilityWindow": 24,
+    "quoteNotionalPct": 2.0,
+    "maxInventoryPct": 10.0,
+    "maxInventoryBars": 72,
+    "inventoryStopBps": 150.0,
+    "penetrationBps": 0.5,
+    "makerFeeBps": 2.0,
+    "takerFeeBps": 5.0,
+    "takerSlippageBps": 1.0,
+    "startingEquity": 100000.0
+  },
+  "coverage": [
+    {
+      "instId": "BTC-USDT-SWAP",
+      "snapshots": 48690,
+      "first": "2026-07-02T15:28:41.825870+00:00",
+      "last": "2026-08-12T18:04:04.999647+00:00",
+      "medianGapSeconds": 64.998474,
+      "completeBookRatio": 1.0,
+      "medianSpreadBps": 0.01561521609128036
+    },
+    {
+      "instId": "ETH-USDT-SWAP",
+      "snapshots": 48701,
+      "first": "2026-07-02T15:28:41.825870+00:00",
+      "last": "2026-08-12T18:06:05.008967+00:00",
+      "medianGapSeconds": 64.9984685,
+      "completeBookRatio": 1.0,
+      "medianSpreadBps": 0.053564732980238006
+    }
+  ],
+  "diagnosticResults": [
+    {
+      "instId": "BTC-USDT-SWAP",
+      "snapshotsJoined": 48690,
+      "quoteIntervals": 48689,
+      "makerFills": 19850,
+      "takerExits": 9652,
+      "bothSidesTouched": 9,
+      "quotesInsideBookSpread": 1010,
+      "quotesWiderThanBook": 48689,
+      "terminalEquity": 75950.12440565042,
+      "returnPct": -24.04987559434958
+    },
+    {
+      "instId": "ETH-USDT-SWAP",
+      "snapshotsJoined": 48701,
+      "quoteIntervals": 48044,
+      "makerFills": 22220,
+      "takerExits": 10761,
+      "bothSidesTouched": 7,
+      "quotesInsideBookSpread": 774,
+      "quotesWiderThanBook": 48044,
+      "terminalEquity": 72609.98553767397,
+      "returnPct": -27.39001446232603
+    }
+  ],
+  "note": "Diagnostic PnL cannot select parameters or authorize paper/live trading."
+}

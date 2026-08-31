@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "registryId": "preregistry-fbe07d3879041eb2",
+  "frozenAt": "2026-08-08T17:44:03Z",
+  "protocol": {
+    "historyReusePolicy": "2026-06-18_and_later_is_development_only_not_new_evidence",
+    "evaluationSplit": {
+      "train": 0.5,
+      "validation": 0.25,
+      "test": 0.25
+    },
+    "selection": "training_only_no_post_validation_or_test_tuning",
+    "requiredMetrics": [
+      "gross_return",
+      "net_return",
+      "double_cost_return",
+      "funding",
+      "latency",
+      "trade_count",
+      "profit_factor",
+      "max_drawdown",
+      "worst_window"
+    ],
+    "reversalMechanicalGate": "gross_loss_N_must_be_less_than_minus_2C_before_mechanical_reversal_is_considered",
+    "promotion": "research_only_to_forward_observation_to_paper_review_to_explicit_live_approval"
+  },
+  "models": [
+    {
+      "strategyKey": "qqq_monthly_active_enhancement",
+      "modelId": "qqq-pit-1fda3d7e14f137bf",
+      "status": "forward_observation_only",
+      "paperOrLiveAuthorized": false,
+      "forwardBoundary": "2026-08-08T04:51:23Z",
+      "basis": {
+        "primaryRebalance": "monthly",
+        "factorWeights": "equal",
+        "factors": [
+          "12-1_momentum",
+          "quality",
+          "value",
+          "low_residual_volatility"
+        ],
+        "secAvailabilityRule": "filed_date_strictly_before_rebalance_date",
+        "grossLimit": 0.2,
+        "singleStockLimit": 0.015,
+        "trackingErrorLimit": 0.03,
+        "symbols": [
+          "AMD",
+          "GOOGL",
+          "INTC",
+          "LITE",
+          "MRVL",
+          "MSTR",
+          "MU",
+          "NVDA",
+          "PLTR",
+          "RKLB",
+          "TSLA",
+          "WDC"
+        ]
+      },
+      "artifacts": [
+        {
+          "path": "reports/qqq_active_enhancement/qqq-pit-20260808-v5/locked_model.json",
+          "sha256": "674d68a3f68d90cc54c03fc1e6efd338ce0ad18df29d155e8abbe97e696fc718"
+        }
+      ],
+      "costs": {
+        "baseTransactionCostPerSideBps": 5.0,
+        "baseShortBorrowAnnualBps": 100.0,
+        "stressTransactionCostPerSideBps": 10.0,
+        "stressShortBorrowAnnualBps": 300.0,
+        "funding": "realized_point_in_time"
+      },
+      "maturity": {
+        "minimumNewSignalDates": 6,
+        "preferredNewSignalDates": 12,
+        "minimumForwardDays": 180,
+        "minimumCompleteMarketObservationRatio": 0.9
+      }
+    },
+    {
+      "strategyKey": "qqq_event_breakout_reversal_gate",
+      "modelId": "event-gate-ac84915dc46654fd",
+      "status": "preregistered_collecting",
+      "paperOrLiveAuthorized": false,
+      "forwardBoundary": "2026-08-08T17:44:03Z",
+      "basis": {
+        "instrument": "QQQ-USDT-SWAP",
+        "bar": "5m",
+        "eventFamilies": {
+          "cpi": {
+            "ticker": "ECONOMICS:USIRYY",
+            "scale": 0.1,
+            "unit": "percentage_points"
+          },
+          "nfp": {
+            "ticker": "ECONOMICS:USNFP",
+            "scale": 50000.0,
+            "unit": "persons"
+          },
+          "pce": {
+            "ticker": "ECONOMICS:USCPCEPIAC",
+            "scale": 0.1,
+            "unit": "percentage_points"
+          },
+          "gdp-advance": {
+            "ticker": "ECONOMICS:USGDPQQ",
+            "scale": 0.3,
+            "unit": "percentage_points"
+          },
+          "fomc": {
+            "ticker": "ECONOMICS:USINTR",
+            "scale": 0.25,
+            "unit": "percentage_points"
+          }
+        },
+        "preEventRangeBars": 12,
+        "breakoutConfirmationBars": 3,
+        "reversalBreachBars": 3,
+        "reversalInsideBars": 3,
+        "significantSurpriseScore": 1.0,
+        "decisionRule": {
+          "breakout": "first_three_post_event_closes_all_outside_same_pre_event_boundary",
+          "reversal": "boundary_breach_in_first_three_bars_then_next_three_closes_inside_range",
+          "nonSignificant": "no_trade",
+          "otherwise": "no_trade"
+        }
+      },
+      "artifacts": [
+        {
+          "path": "macro_calendar.py",
+          "sha256": "59819cee6cfd90e5486ed18cfc0b5f0a280a4366a19d302696573d006f6caa93"
+        }
+      ],
+      "costs": {
+        "feePerSideBps": 5.0,
+        "slippagePerSideBps": 3.0,
+        "spread": "observed_point_in_time",
+        "costStressMultiplier": 2.0,
+        "funding": "realized_point_in_time"
+      },
+      "maturity": {
+        "minimumCompleteEvents": 30,
+        "minimumEventsPerFamily": 3,
+        "minimumDirectionalDecisions": 10
+      }
+    },
+    {
+      "strategyKey": "spcx_1h_multi_horizon_momentum",
+      "modelId": "spcx-mhm-7be4e11ac843fb74",
+      "status": "preregistered_collecting",
+      "paperOrLiveAuthorized": false,
+      "forwardBoundary": "2026-08-08T17:44:03Z",
+      "basis": {
+        "instrument": "SPCX-USDT-SWAP",
+        "strategy": "multi_horizon_momentum",
+        "bar": "1H",
+        "params": {
+          "lookbacks": [
+            6,
+            12,
+            24,
+            48
+          ],
+          "min_votes": 2,
+          "target_daily_vol_bps": 300,
+          "threshold_sigma": 0.1,
+          "vol_window": 48,
+          "vol_window_bars": 48
+        },
+        "allowedRegimes": [
+          "all"
+        ],
+        "fundingRule": "observe_only_no_new_veto_threshold",
+        "executionRule": "observe_public_post_only_and_taker_cost_inputs_without_orders"
+      },
+      "artifacts": [
+        {
+          "path": "reports/strategy_candidates/gate-20260710-evidence-live/approved_candidates.json",
+          "sha256": "afa9c2b90c93592a1f9fbd9aae4ffd00e63acdb9f4383ba2bed185468bf1aa57"
+        }
+      ],
+      "costs": {
+        "feePerSideBps": 5.0,
+        "slippagePerSideBps": 2.0,
+        "spread": "observed_point_in_time",
+        "costStressMultiplier": 2.0,
+        "funding": "realized_point_in_time"
+      },
+      "maturity": {
+        "minimumForwardDays": 56,
+        "minimumSignalTransitions": 30,
+        "minimumCompleteMarketObservations": 56,
+        "minimumFundingObservations": 20
+      }
+    }
+  ]
+}

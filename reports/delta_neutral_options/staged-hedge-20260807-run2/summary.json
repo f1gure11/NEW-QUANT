@@ -1,0 +1,389 @@
+{
+  "generatedAt": "2026-08-07T10:07:24Z",
+  "mode": "read_only_okx_public_websocket_staged_option_fill_perp_hedge_research",
+  "execution": "no account reads and no orders",
+  "config": {
+    "bases": [
+      "BTC",
+      "ETH"
+    ],
+    "duration_seconds": 180.0,
+    "cohort_interval_seconds": 10.0,
+    "order_ttl_seconds": 60.0,
+    "min_hours_to_expiry": 20.0,
+    "max_hours_to_expiry": 240.0,
+    "otm_target_pct": 1.5,
+    "max_quote_age_seconds": 10.0,
+    "hedge_quote_age_seconds": 3.0,
+    "option_fee_bps": 3.0,
+    "hedge_fee_bps": 5.0,
+    "edge_report": "/opt/okx-quant/reports/option_strangle_backtest/spread-calibrated-20260807/summary.json",
+    "output_dir": "staged-hedge-20260807-run2"
+  },
+  "collectorStats": {
+    "connected_at": "2026-08-07T09:58:40.354728Z",
+    "disconnected_at": "2026-08-07T10:01:40.159058Z",
+    "events_written": 13860,
+    "reconnects": 0,
+    "channel_events": {
+      "bbo-tbt": 7939,
+      "trades": 5921
+    },
+    "errors": []
+  },
+  "structures": [
+    {
+      "name": "BTC_atm",
+      "base": "BTC",
+      "kind": "atm",
+      "spot": 64781.7,
+      "expiryMs": 1786176000000,
+      "hoursToExpiry": 22.022749444444443,
+      "targetOtmPct": 0.0,
+      "actualCallOtmPct": 0.02824871838806864,
+      "actualPutOtmPct": -0.02824871838806864,
+      "call": {
+        "instId": "BTC-USD_UM-260808-64800-C",
+        "optionType": "C",
+        "strike": 64800.0,
+        "expiryMs": 1786176000000,
+        "tickSize": 5.0,
+        "initialBid": 310.0,
+        "initialAsk": 335.0,
+        "initialBidSize": 1048.0,
+        "initialAskSize": 1048.0
+      },
+      "put": {
+        "instId": "BTC-USD_UM-260808-64800-P",
+        "optionType": "P",
+        "strike": 64800.0,
+        "expiryMs": 1786176000000,
+        "tickSize": 5.0,
+        "initialBid": 325.0,
+        "initialAsk": 350.0,
+        "initialBidSize": 1048.0,
+        "initialAskSize": 1048.0
+      }
+    },
+    {
+      "name": "BTC_otm",
+      "base": "BTC",
+      "kind": "light_otm",
+      "spot": 64781.7,
+      "expiryMs": 1786176000000,
+      "hoursToExpiry": 22.022749444444443,
+      "targetOtmPct": 1.5,
+      "actualCallOtmPct": 1.8806236946545152,
+      "actualPutOtmPct": 1.5153970951673035,
+      "call": {
+        "instId": "BTC-USD_UM-260808-66000-C",
+        "optionType": "C",
+        "strike": 66000.0,
+        "expiryMs": 1786176000000,
+        "tickSize": 5.0,
+        "initialBid": 25.0,
+        "initialAsk": 40.0,
+        "initialBidSize": 160.0,
+        "initialAskSize": 1049.0
+      },
+      "put": {
+        "instId": "BTC-USD_UM-260808-63800-P",
+        "optionType": "P",
+        "strike": 63800.0,
+        "expiryMs": 1786176000000,
+        "tickSize": 5.0,
+        "initialBid": 55.0,
+        "initialAsk": 70.0,
+        "initialBidSize": 1048.0,
+        "initialAskSize": 1048.0
+      }
+    },
+    {
+      "name": "ETH_atm",
+      "base": "ETH",
+      "kind": "atm",
+      "spot": 1911.88,
+      "expiryMs": 1786176000000,
+      "hoursToExpiry": 22.022749444444443,
+      "targetOtmPct": 0.0,
+      "actualCallOtmPct": -0.09833253133042508,
+      "actualPutOtmPct": 0.09833253133042508,
+      "call": {
+        "instId": "ETH-USD_UM-260808-1910-C",
+        "optionType": "C",
+        "strike": 1910.0,
+        "expiryMs": 1786176000000,
+        "tickSize": 0.2,
+        "initialBid": 13.4,
+        "initialAsk": 16.0,
+        "initialBidSize": 14499.0,
+        "initialAskSize": 14499.0
+      },
+      "put": {
+        "instId": "ETH-USD_UM-260808-1910-P",
+        "optionType": "P",
+        "strike": 1910.0,
+        "expiryMs": 1786176000000,
+        "tickSize": 0.2,
+        "initialBid": 11.6,
+        "initialAsk": 13.4,
+        "initialBidSize": 4000.0,
+        "initialAskSize": 10498.0
+      }
+    },
+    {
+      "name": "ETH_otm",
+      "base": "ETH",
+      "kind": "light_otm",
+      "spot": 1911.88,
+      "expiryMs": 1786176000000,
+      "hoursToExpiry": 22.022749444444443,
+      "targetOtmPct": 1.5,
+      "actualCallOtmPct": 1.470803606920934,
+      "actualPutOtmPct": 1.667468669581773,
+      "call": {
+        "instId": "ETH-USD_UM-260808-1940-C",
+        "optionType": "C",
+        "strike": 1940.0,
+        "expiryMs": 1786176000000,
+        "tickSize": 0.2,
+        "initialBid": 4.2,
+        "initialAsk": 5.0,
+        "initialBidSize": 4000.0,
+        "initialAskSize": 14500.0
+      },
+      "put": {
+        "instId": "ETH-USD_UM-260808-1880-P",
+        "optionType": "P",
+        "strike": 1880.0,
+        "expiryMs": 1786176000000,
+        "tickSize": 0.2,
+        "initialBid": 3.4,
+        "initialAsk": 4.0,
+        "initialBidSize": 4000.0,
+        "initialAskSize": 10498.0
+      }
+    }
+  ],
+  "deltaByInstId": {
+    "BTC-USD_UM-260808-64800-C": {
+      "delta": 0.48721301652922655
+    },
+    "BTC-USD_UM-260808-64800-P": {
+      "delta": -0.5127618423611443
+    },
+    "BTC-USD_UM-260808-66000-C": {
+      "delta": 0.06570615867417154
+    },
+    "BTC-USD_UM-260808-63800-P": {
+      "delta": -0.15110650287140248
+    },
+    "ETH-USD_UM-260808-1910-P": {
+      "delta": -0.464815321897193
+    },
+    "ETH-USD_UM-260808-1910-C": {
+      "delta": 0.535184678102807
+    },
+    "ETH-USD_UM-260808-1940-C": {
+      "delta": 0.20890542959704184
+    },
+    "ETH-USD_UM-260808-1880-P": {
+      "delta": -0.19345169388166106
+    }
+  },
+  "eventCount": 13860,
+  "cohortCount": 54,
+  "summary": [
+    {
+      "structure": "BTC_atm",
+      "policy": "improve25",
+      "cohorts": 5,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    },
+    {
+      "structure": "BTC_atm",
+      "policy": "join_bid",
+      "cohorts": 5,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    },
+    {
+      "structure": "BTC_atm",
+      "policy": "midpoint",
+      "cohorts": 5,
+      "firstLegCohorts": 2,
+      "bothFilled": 0,
+      "partialFilled": 2,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": 13.6545,
+      "medianTotalPnlUsd": -0.571920912622611,
+      "medianReturnOnEntryPremiumPct": -17.200863279421885,
+      "medianOptionFeesUsd": 0.00195,
+      "medianHedgeFeesUsd": 0.3239985978621377
+    },
+    {
+      "structure": "BTC_otm",
+      "policy": "improve25",
+      "cohorts": 2,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    },
+    {
+      "structure": "BTC_otm",
+      "policy": "join_bid",
+      "cohorts": 2,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    },
+    {
+      "structure": "BTC_otm",
+      "policy": "midpoint",
+      "cohorts": 2,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    },
+    {
+      "structure": "ETH_atm",
+      "policy": "improve25",
+      "cohorts": 7,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    },
+    {
+      "structure": "ETH_atm",
+      "policy": "join_bid",
+      "cohorts": 7,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    },
+    {
+      "structure": "ETH_atm",
+      "policy": "midpoint",
+      "cohorts": 7,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    },
+    {
+      "structure": "ETH_otm",
+      "policy": "improve25",
+      "cohorts": 4,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    },
+    {
+      "structure": "ETH_otm",
+      "policy": "join_bid",
+      "cohorts": 4,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    },
+    {
+      "structure": "ETH_otm",
+      "policy": "midpoint",
+      "cohorts": 4,
+      "firstLegCohorts": 0,
+      "bothFilled": 0,
+      "partialFilled": 0,
+      "hedgeMissing": 0,
+      "medianFirstLegWaitSeconds": null,
+      "medianTotalPnlUsd": null,
+      "medianReturnOnEntryPremiumPct": null,
+      "medianOptionFeesUsd": null,
+      "medianHedgeFeesUsd": null
+    }
+  ],
+  "feeSensitivity": [
+    {
+      "hedgeFeeBps": 0.0,
+      "filledSamples": 2,
+      "medianTotalPnlUsd": -0.24792231476047333,
+      "medianReturnOnEntryPremiumPct": -7.454106221244115,
+      "positiveSamples": 0
+    },
+    {
+      "hedgeFeeBps": 2.0,
+      "filledSamples": 2,
+      "medianTotalPnlUsd": -0.3775217539053284,
+      "medianReturnOnEntryPremiumPct": -11.352809044515222,
+      "positiveSamples": 0
+    },
+    {
+      "hedgeFeeBps": 5.0,
+      "filledSamples": 2,
+      "medianTotalPnlUsd": -0.571920912622611,
+      "medianReturnOnEntryPremiumPct": -17.200863279421885,
+      "positiveSamples": 0
+    }
+  ]
+}

@@ -1,0 +1,284 @@
+{
+  "generatedAt": "2026-08-07T07:23:32Z",
+  "mode": "read_only_public_quote_paper_plan",
+  "execution": "no account reads, no order placement",
+  "assumptions": {
+    "optionQuoteToUsdt": "USD option quote treated as 1:1 USDT",
+    "greeks": "OKX public Black-Scholes Greeks; theta interpreted per day per underlying unit",
+    "hedge": "linear USDT swap, rounded to public lot size, hedge margin estimated at configured leverage",
+    "pnl": "one-day theta plus second-order gamma approximation; no historical option repricing"
+  },
+  "config": {
+    "equity": 10000.0,
+    "min_hours_to_expiry": 20.0,
+    "premium_budget_pct": 5.0,
+    "max_theta_day_pct": 0.5,
+    "max_hedge_margin_pct": 10.0,
+    "max_jump_loss_pct": 0.5,
+    "jump_shock_pct": 1.0,
+    "delta_threshold_pct": 5.0,
+    "hedge_interval_hours": 6.0,
+    "max_hedges_per_day": 4,
+    "hedge_leverage": 1.0
+  },
+  "plans": [
+    {
+      "pair": {
+        "underlying": "BTC",
+        "option_family": "BTC-USD",
+        "spot_px": 64319.7,
+        "call": {
+          "inst_id": "BTC-USD_UM-260808-64400-C",
+          "option_type": "C",
+          "expiry_ms": 1786176000000,
+          "strike": 64400.0,
+          "ct_val": 1.0,
+          "ct_mult": 0.01,
+          "tick_size": 5.0,
+          "ask_px": 350.0,
+          "ask_sz": 1049.0,
+          "bid_px": 325.0,
+          "bid_sz": 1049.0,
+          "delta": 0.4619070909589754,
+          "gamma": 0.00043946605608980463,
+          "theta_day": -174.95643822471038,
+          "vega": 13.535881174949392,
+          "bid_vol": 0.2710055517578125,
+          "ask_vol": 0.2905367626953125,
+          "quote_ts": 1786087409113,
+          "greek_ts": 1786087400451
+        },
+        "put": {
+          "inst_id": "BTC-USD_UM-260808-64400-P",
+          "option_type": "P",
+          "expiry_ms": 1786176000000,
+          "strike": 64400.0,
+          "ct_val": 1.0,
+          "ct_mult": 0.01,
+          "tick_size": 5.0,
+          "ask_px": 425.0,
+          "ask_sz": 1049.0,
+          "bid_px": 400.0,
+          "bid_sz": 1049.0,
+          "delta": -0.5380648145599842,
+          "gamma": 0.00043946605608980463,
+          "theta_day": -174.95389583041162,
+          "vega": 13.535881174949392,
+          "bid_vol": 0.25879854492187504,
+          "ask_vol": 0.27710905517578127,
+          "quote_ts": 1786087409090,
+          "greek_ts": 1786087400451
+        },
+        "swap": {
+          "inst_id": "BTC-USDT-SWAP",
+          "ct_val": 0.01,
+          "ct_mult": 1.0,
+          "lot_size": 0.01,
+          "min_size": 0.01,
+          "last_px": 64344.0,
+          "bid_px": 64343.9,
+          "ask_px": 64344.0
+        },
+        "retrieved_at": "2026-08-07T07:23:29+00:00"
+      },
+      "metrics": {
+        "contracts": 14,
+        "option_units": 0.14,
+        "option_notional_usd": 9004.758,
+        "premium_usdt": 108.5,
+        "premium_pct_equity": 1.085,
+        "theta_per_day_usdt": -48.98744676771708,
+        "theta_pct_equity": 0.4898744676771708,
+        "net_option_delta_units": -0.010662081304141226,
+        "delta_threshold_units": 0.007000000000000001,
+        "initial_hedge_triggered": true,
+        "hedge_contracts": 1.07,
+        "hedge_side": "buy",
+        "hedge_units": 0.010700000000000001,
+        "residual_delta_units": 3.791869585877475e-05,
+        "hedge_notional_usd": 688.2207900000001,
+        "hedge_margin_usdt": 688.2207900000001,
+        "gamma_pnl_at_jump_usdt": 25.45314151647312,
+        "estimated_max_jump_loss_usdt": 48.98744676771708,
+        "estimated_max_jump_loss_pct": 0.4898744676771708,
+        "estimated_no_move_day_pnl_usdt": -48.98744676771708
+      },
+      "shockScenarios": [
+        {
+          "shock_pct": -1.0,
+          "option_delta_units": -0.08980779099020357,
+          "net_delta_before_rehedge_units": -0.07910779099020357,
+          "threshold_units": 0.007000000000000001,
+          "trigger": true,
+          "target_hedge_contracts": 8.98,
+          "additional_hedge_contracts": 7.91
+        },
+        {
+          "shock_pct": -0.5,
+          "option_delta_units": -0.05023493614717239,
+          "net_delta_before_rehedge_units": -0.03953493614717239,
+          "threshold_units": 0.007000000000000001,
+          "trigger": true,
+          "target_hedge_contracts": 5.0200000000000005,
+          "additional_hedge_contracts": 3.95
+        },
+        {
+          "shock_pct": 0.0,
+          "option_delta_units": -0.010662081304141226,
+          "net_delta_before_rehedge_units": 3.791869585877475e-05,
+          "threshold_units": 0.007000000000000001,
+          "trigger": false,
+          "target_hedge_contracts": 1.07,
+          "additional_hedge_contracts": 0.0
+        },
+        {
+          "shock_pct": 0.5,
+          "option_delta_units": 0.028910773538889944,
+          "net_delta_before_rehedge_units": 0.03961077353888995,
+          "threshold_units": 0.007000000000000001,
+          "trigger": true,
+          "target_hedge_contracts": -2.89,
+          "additional_hedge_contracts": -3.96
+        },
+        {
+          "shock_pct": 1.0,
+          "option_delta_units": 0.06848362838192111,
+          "net_delta_before_rehedge_units": 0.07918362838192111,
+          "threshold_units": 0.007000000000000001,
+          "trigger": true,
+          "target_hedge_contracts": -6.8500000000000005,
+          "additional_hedge_contracts": -7.920000000000001
+        }
+      ]
+    },
+    {
+      "pair": {
+        "underlying": "ETH",
+        "option_family": "ETH-USD",
+        "spot_px": 1904.01,
+        "call": {
+          "inst_id": "ETH-USD_UM-260808-1900-C",
+          "option_type": "C",
+          "expiry_ms": 1786176000000,
+          "strike": 1900.0,
+          "ct_val": 1.0,
+          "ct_mult": 0.01,
+          "tick_size": 0.2,
+          "ask_px": 18.2,
+          "ask_sz": 10498.0,
+          "bid_px": 17.2,
+          "bid_sz": 4000.0,
+          "delta": 0.5514358230341414,
+          "gamma": 0.010066491763208335,
+          "theta_day": -7.581531056811774,
+          "vega": 0.39939379152059384,
+          "bid_vol": 0.3662202050781249,
+          "ask_vol": 0.39185491943359374,
+          "quote_ts": 1786087410101,
+          "greek_ts": 1786087405856
+        },
+        "put": {
+          "inst_id": "ETH-USD_UM-260808-1900-P",
+          "option_type": "P",
+          "expiry_ms": 1786176000000,
+          "strike": 1900.0,
+          "ct_val": 1.0,
+          "ct_mult": 0.01,
+          "tick_size": 0.2,
+          "ask_px": 13.8,
+          "ask_sz": 10499.0,
+          "bid_px": 12.8,
+          "bid_sz": 10499.0,
+          "delta": -0.4485641769658586,
+          "gamma": 0.010066491763208335,
+          "theta_day": -7.581531056811774,
+          "vega": 0.39939379152059384,
+          "bid_vol": 0.37354440917968745,
+          "ask_vol": 0.39795842285156247,
+          "quote_ts": 1786087410112,
+          "greek_ts": 1786087405856
+        },
+        "swap": {
+          "inst_id": "ETH-USDT-SWAP",
+          "ct_val": 0.1,
+          "ct_mult": 1.0,
+          "lot_size": 0.01,
+          "min_size": 0.01,
+          "last_px": 1904.67,
+          "bid_px": 1904.66,
+          "ask_px": 1904.67
+        },
+        "retrieved_at": "2026-08-07T07:23:29+00:00"
+      },
+      "metrics": {
+        "contracts": 329,
+        "option_units": 3.29,
+        "option_notional_usd": 6264.1929,
+        "premium_usdt": 105.28,
+        "premium_pct_equity": 1.0528000000000002,
+        "theta_per_day_usdt": -49.88647435382148,
+        "theta_pct_equity": 0.49886474353821475,
+        "net_option_delta_units": 0.3384477155646503,
+        "delta_threshold_units": 0.16449999999999998,
+        "initial_hedge_triggered": true,
+        "hedge_contracts": 3.38,
+        "hedge_side": "sell",
+        "hedge_units": -0.338,
+        "residual_delta_units": 0.00044771556465028617,
+        "hedge_notional_usd": 643.55538,
+        "hedge_margin_usdt": 643.55538,
+        "gamma_pnl_at_jump_usdt": 12.006391220828272,
+        "estimated_max_jump_loss_usdt": 49.88647435382148,
+        "estimated_max_jump_loss_pct": 0.49886474353821475,
+        "estimated_no_move_day_pnl_usdt": -49.88647435382148
+      },
+      "shockScenarios": [
+        {
+          "shock_pct": -1.0,
+          "option_delta_units": -0.9227212090553121,
+          "net_delta_before_rehedge_units": -1.2607212090553122,
+          "threshold_units": 0.16449999999999998,
+          "trigger": true,
+          "target_hedge_contracts": 9.23,
+          "additional_hedge_contracts": 12.61
+        },
+        {
+          "shock_pct": -0.5,
+          "option_delta_units": -0.2921367467453309,
+          "net_delta_before_rehedge_units": -0.6301367467453309,
+          "threshold_units": 0.16449999999999998,
+          "trigger": true,
+          "target_hedge_contracts": 2.92,
+          "additional_hedge_contracts": 6.3
+        },
+        {
+          "shock_pct": 0.0,
+          "option_delta_units": 0.3384477155646503,
+          "net_delta_before_rehedge_units": 0.00044771556465028617,
+          "threshold_units": 0.16449999999999998,
+          "trigger": false,
+          "target_hedge_contracts": -3.38,
+          "additional_hedge_contracts": 0.0
+        },
+        {
+          "shock_pct": 0.5,
+          "option_delta_units": 0.9690321778746316,
+          "net_delta_before_rehedge_units": 0.6310321778746315,
+          "threshold_units": 0.16449999999999998,
+          "trigger": true,
+          "target_hedge_contracts": -9.69,
+          "additional_hedge_contracts": -6.31
+        },
+        {
+          "shock_pct": 1.0,
+          "option_delta_units": 1.5996166401846128,
+          "net_delta_before_rehedge_units": 1.2616166401846127,
+          "threshold_units": 0.16449999999999998,
+          "trigger": true,
+          "target_hedge_contracts": -16.0,
+          "additional_hedge_contracts": -12.620000000000001
+        }
+      ]
+    }
+  ]
+}

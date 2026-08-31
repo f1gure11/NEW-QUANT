@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "mode": "manual_subjective_sector_plan",
+  "status": "research_only",
+  "purpose": "Fixed high-beta baskets for a manually declared US equity sector view. This file does not authorize paper or live trading.",
+  "data": {
+    "timeframe": "5m",
+    "sessionTimezone": "America/New_York",
+    "sessionOpen": "09:30",
+    "sessionClose": "16:00",
+    "minSessionBars": 60,
+    "atrWindow": 14
+  },
+  "risk": {
+    "defaultRiskPct": 2.0,
+    "costBufferPct": 0.5,
+    "defaultLeverage": 3,
+    "minLeverage": 2,
+    "maxLeverage": 5,
+    "maxMarginPct": 50.0,
+    "maxLegs": 2,
+    "takeProfit1R": 1.0,
+    "takeProfit2R": 1.5,
+    "takeProfit1ClosePct": 50.0
+  },
+  "execution": {
+    "minMinutesAfterOpen": 15,
+    "minMinutesBeforeClose": 60,
+    "openingRangeMinutes": 15,
+    "maxEntryDeviationBps": 100,
+    "requireVwapConfirmation": true,
+    "requireOpeningRangeConfirmation": true,
+    "flatBeforeUsClose": true,
+    "allowAveragingDown": false,
+    "allowStopReentry": false,
+    "allowOvernight": false
+  },
+  "sectors": {
+    "semiconductor": {
+      "label": "半导体",
+      "thesis": "高 Beta 半导体进攻篮子；SNDK 是主风险腿，SOXL 是杠杆 ETF 风险腿。",
+      "atrMultiplier": 0.5,
+      "stopFloorPct": 4.5,
+      "stopCapPct": 6.5,
+      "legs": [
+        {"instId": "SNDK-USDT-SWAP", "riskWeight": 0.6},
+        {"instId": "SOXL-USDT-SWAP", "riskWeight": 0.4}
+      ]
+    },
+    "sk_hynix": {
+      "label": "海力士半导体",
+      "thesis": "SKHY-USDT-SWAP 海力士单腿主动多头；以量化门控、仓位上限和保护单约束主观方向。",
+      "atrMultiplier": 0.5,
+      "stopFloorPct": 4.5,
+      "stopCapPct": 6.5,
+      "legs": [
+        {"instId": "SKHY-USDT-SWAP", "riskWeight": 1.0}
+      ]
+    },
+    "cloud_ai": {
+      "label": "云计算与 AI 软件",
+      "thesis": "软件成长与 AI 资本开支敏感度篮子；PLTR 主腿，CRWD 稳定波动腿。",
+      "atrMultiplier": 0.55,
+      "stopFloorPct": 3.0,
+      "stopCapPct": 5.0,
+      "legs": [
+        {"instId": "PLTR-USDT-SWAP", "riskWeight": 0.6},
+        {"instId": "CRWD-USDT-SWAP", "riskWeight": 0.4}
+      ]
+    },
+    "crypto_fintech": {
+      "label": "加密金融科技",
+      "thesis": "加密市场 beta 的股票代理；COIN 主腿，HOOD 为更高弹性卫星腿。",
+      "atrMultiplier": 0.55,
+      "stopFloorPct": 3.5,
+      "stopCapPct": 6.0,
+      "legs": [
+        {"instId": "COIN-USDT-SWAP", "riskWeight": 0.6},
+        {"instId": "HOOD-USDT-SWAP", "riskWeight": 0.4}
+      ]
+    },
+    "data_center_power": {
+      "label": "数据中心与电力",
+      "thesis": "AI 数据中心建设与电力设备 beta；VRT 主腿，GEV 提供电力设备暴露。",
+      "atrMultiplier": 0.55,
+      "stopFloorPct": 4.0,
+      "stopCapPct": 6.0,
+      "legs": [
+        {"instId": "VRT-USDT-SWAP", "riskWeight": 0.6},
+        {"instId": "GEV-USDT-SWAP", "riskWeight": 0.4}
+      ]
+    },
+    "mega_cap_platform": {
+      "label": "大型科技平台",
+      "thesis": "大型平台 beta；META 主腿，AMZN 提供云与消费平台暴露。",
+      "atrMultiplier": 0.55,
+      "stopFloorPct": 2.5,
+      "stopCapPct": 4.5,
+      "legs": [
+        {"instId": "META-USDT-SWAP", "riskWeight": 0.6},
+        {"instId": "AMZN-USDT-SWAP", "riskWeight": 0.4}
+      ]
+    },
+    "ev_growth": {
+      "label": "电动车成长",
+      "thesis": "单一高 Beta 成长腿；TSLA，单腿避免在相关性极高时重复叠加风险。",
+      "atrMultiplier": 0.55,
+      "stopFloorPct": 3.5,
+      "stopCapPct": 5.5,
+      "legs": [
+        {"instId": "TSLA-USDT-SWAP", "riskWeight": 1.0}
+      ]
+    },
+    "precious_metals": {
+      "label": "贵金属",
+      "thesis": "COMEX 时段黄金主观腿；XAU 单腿，用人给方向、量化管仓位和出场。不叠 XAG，避免同一宏观因子重复暴露。",
+      "session": {
+        "timezone": "America/New_York",
+        "open": "18:00",
+        "close": "17:00",
+        "minSessionBars": 200
+      },
+      "atrMultiplier": 0.5,
+      "stopFloorPct": 0.8,
+      "stopCapPct": 2.0,
+      "legs": [
+        {"instId": "XAU-USDT-SWAP", "riskWeight": 1.0}
+      ]
+    }
+  }
+}

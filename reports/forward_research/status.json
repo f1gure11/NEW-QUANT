@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "registryId": "preregistry-fbe07d3879041eb2",
+  "generatedAt": "2026-08-31T11:07:21Z",
+  "evaluationAuthorized": false,
+  "paperOrLiveAuthorized": false,
+  "models": [
+    {
+      "strategyKey": "qqq_monthly_active_enhancement",
+      "modelId": "qqq-pit-1fda3d7e14f137bf",
+      "forwardBoundary": "2026-08-08T04:51:23Z",
+      "paperOrLiveAuthorized": false,
+      "maturity": {
+        "status": "collecting",
+        "checks": {
+          "newSignalDates": false,
+          "forwardDays": false,
+          "marketCoverage": true
+        },
+        "observations": 24,
+        "signalDecisionObservations": 0,
+        "newSignalDates": [],
+        "forwardDays": 23,
+        "completeMarketObservationRatio": 1.0
+      }
+    },
+    {
+      "strategyKey": "qqq_event_breakout_reversal_gate",
+      "modelId": "event-gate-ac84915dc46654fd",
+      "forwardBoundary": "2026-08-08T17:44:03Z",
+      "paperOrLiveAuthorized": false,
+      "maturity": {
+        "status": "collecting",
+        "checks": {
+          "completeEvents": false,
+          "eventsPerFamily": false,
+          "directionalDecisions": false
+        },
+        "observations": 120,
+        "uniqueEvents": 2,
+        "completeEvents": 2,
+        "eventsPerFamily": {
+          "cpi": 1,
+          "pce": 1
+        },
+        "directionalDecisions": 0
+      }
+    },
+    {
+      "strategyKey": "spcx_1h_multi_horizon_momentum",
+      "modelId": "spcx-mhm-7be4e11ac843fb74",
+      "forwardBoundary": "2026-08-08T17:44:03Z",
+      "paperOrLiveAuthorized": false,
+      "maturity": {
+        "status": "collecting",
+        "checks": {
+          "forwardDays": false,
+          "signalTransitions": false,
+          "completeMarketObservations": false,
+          "fundingObservations": true
+        },
+        "observations": 24,
+        "forwardDays": 23,
+        "signalTransitions": 11,
+        "completeMarketObservations": 24,
+        "fundingObservations": 24
+      }
+    }
+  ]
+}

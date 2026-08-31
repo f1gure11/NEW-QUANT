@@ -1,4 +1,6 @@
 .env
+CODEX_MEMORY.md
+CODEX_MEMORY_ARCHIVE.md
 .venv/
 __pycache__/
 *.py[cod]
@@ -8,10 +10,37 @@ data/okx/*
 !data/okx/.gitkeep
 data/backtest/*
 !data/backtest/.gitkeep
+data/tradfi_intraday/*
+!data/tradfi_intraday/.gitkeep
+data/english-learning/*
+!data/english-learning/.gitkeep
 reports/backtests/*
 !reports/backtests/.gitkeep
 reports/portfolio/*
 !reports/portfolio/.gitkeep
+
+# Local data-lake and collector output; research code loads these at runtime.
+data/data_lake/
+data/microstructure/
+data/microstructure_ws/
+data/options/
+data/combined_overlay/
+data/qqq_active_enhancement/
+data/qqq_active_enhancement_increment/
+data/qqq_intraday_flat/
+data/vwap_market_maker/
+data_lake
+
+# Generated report payloads; keep lightweight narrative and summary artifacts.
+reports/**/raw/
+reports/**/trades.csv
+reports/**/equity_curve.csv
+reports/**/rows.csv
+reports/**/scores.csv
+reports/**/repriced_trades.csv
+reports/**/regime_*.joblib
+reports/qqq_live_daily/
+reports/strategy_live/
 
 *.log
 *.pid

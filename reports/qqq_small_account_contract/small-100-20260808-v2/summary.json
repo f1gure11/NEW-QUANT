@@ -1,0 +1,1314 @@
+{
+  "generatedAt": "2026-08-08T06:27:01Z",
+  "mode": "read_only_100_usdt_discrete_qqq_contract_research",
+  "modelId": "qqq-pit-1fda3d7e14f137bf",
+  "config": {
+    "initialEquityUsdt": 100.0,
+    "grossCaps": [
+      1.2,
+      1.5
+    ],
+    "activeGrossLimitPct": 20.0,
+    "singleStockLimitPct": 1.5,
+    "dollarResidualLimitPct": 2.0,
+    "betaResidualLimitPct": 1.0,
+    "industryResidualLimitPct": 2.0,
+    "trackingErrorLimitPct": 3.0,
+    "baseCostBpsPerSide": 10.0,
+    "stressCostBpsPerSide": 20.0
+  },
+  "period": {
+    "sessions": 43,
+    "start": "2026-06-08",
+    "end": "2026-08-07",
+    "splits": {
+      "train": [
+        "2026-06-08",
+        "2026-06-09",
+        "2026-06-10",
+        "2026-06-11",
+        "2026-06-12",
+        "2026-06-15",
+        "2026-06-16",
+        "2026-06-17",
+        "2026-06-18",
+        "2026-06-22",
+        "2026-06-23",
+        "2026-06-24",
+        "2026-06-25",
+        "2026-06-26",
+        "2026-06-29",
+        "2026-06-30",
+        "2026-07-01",
+        "2026-07-02",
+        "2026-07-06",
+        "2026-07-07",
+        "2026-07-08"
+      ],
+      "validation": [
+        "2026-07-09",
+        "2026-07-10",
+        "2026-07-13",
+        "2026-07-14",
+        "2026-07-15",
+        "2026-07-16",
+        "2026-07-17",
+        "2026-07-20",
+        "2026-07-21",
+        "2026-07-22",
+        "2026-07-23"
+      ],
+      "test": [
+        "2026-07-24",
+        "2026-07-27",
+        "2026-07-28",
+        "2026-07-29",
+        "2026-07-30",
+        "2026-07-31",
+        "2026-08-03",
+        "2026-08-04",
+        "2026-08-05",
+        "2026-08-06",
+        "2026-08-07"
+      ],
+      "full": [
+        "2026-06-08",
+        "2026-06-09",
+        "2026-06-10",
+        "2026-06-11",
+        "2026-06-12",
+        "2026-06-15",
+        "2026-06-16",
+        "2026-06-17",
+        "2026-06-18",
+        "2026-06-22",
+        "2026-06-23",
+        "2026-06-24",
+        "2026-06-25",
+        "2026-06-26",
+        "2026-06-29",
+        "2026-06-30",
+        "2026-07-01",
+        "2026-07-02",
+        "2026-07-06",
+        "2026-07-07",
+        "2026-07-08",
+        "2026-07-09",
+        "2026-07-10",
+        "2026-07-13",
+        "2026-07-14",
+        "2026-07-15",
+        "2026-07-16",
+        "2026-07-17",
+        "2026-07-20",
+        "2026-07-21",
+        "2026-07-22",
+        "2026-07-23",
+        "2026-07-24",
+        "2026-07-27",
+        "2026-07-28",
+        "2026-07-29",
+        "2026-07-30",
+        "2026-07-31",
+        "2026-08-03",
+        "2026-08-04",
+        "2026-08-05",
+        "2026-08-06",
+        "2026-08-07"
+      ]
+    }
+  },
+  "contractRules": [
+    {
+      "symbol": "QQQ",
+      "contract": "QQQ-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 721.47,
+      "max_leverage": 20.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "AMD",
+      "contract": "AMD-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 479.88,
+      "max_leverage": 20.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "GOOGL",
+      "contract": "GOOGL-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 355.38,
+      "max_leverage": 20.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "INTC",
+      "contract": "INTC-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.1,
+      "min_sz": 0.1,
+      "last": 101.0,
+      "max_leverage": 25.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "LITE",
+      "contract": "LITE-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 891.32,
+      "max_leverage": 20.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "MRVL",
+      "contract": "MRVL-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 216.89,
+      "max_leverage": 50.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "MSTR",
+      "contract": "MSTR-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 100.64,
+      "max_leverage": 20.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "MU",
+      "contract": "MU-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 876.77,
+      "max_leverage": 50.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "NVDA",
+      "contract": "NVDA-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 223.39,
+      "max_leverage": 25.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "PLTR",
+      "contract": "PLTR-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 171.0,
+      "max_leverage": 20.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "RKLB",
+      "contract": "RKLB-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 83.01,
+      "max_leverage": 20.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "TSLA",
+      "contract": "TSLA-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 328.85,
+      "max_leverage": 20.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    },
+    {
+      "symbol": "WDC",
+      "contract": "WDC-USDT-SWAP",
+      "ct_val": 1.0,
+      "lot_sz": 0.01,
+      "min_sz": 0.01,
+      "last": 433.68,
+      "max_leverage": 20.0,
+      "captured_at": "2026-08-08T06:26:52Z"
+    }
+  ],
+  "current": {
+    "capturedAt": "2026-08-08T06:26:52Z",
+    "signalDate": "2026-07-31",
+    "activeGrossPct": 5.787699999999999,
+    "activeNetPct": 1.3199,
+    "betaResidualPct": 0.018253455257948747,
+    "trackingErrorPct": 1.2568109708246795,
+    "targetDeviationTrackingErrorPct": 1.652507058896039,
+    "activePositions": [
+      {
+        "symbol": "GOOGL",
+        "side": "long",
+        "contracts": 0.01,
+        "price": 355.38,
+        "notional": 3.5538,
+        "weightPct": 3.5538
+      },
+      {
+        "symbol": "NVDA",
+        "side": "short",
+        "contracts": -0.01,
+        "price": 223.39,
+        "notional": -2.2338999999999998,
+        "weightPct": -2.2338999999999998
+      }
+    ],
+    "leverageVariants": [
+      {
+        "grossCap": 1.2,
+        "qqqContracts": 0.15,
+        "qqqNotional": 108.2205,
+        "actualGrossPct": 114.0082
+      },
+      {
+        "grossCap": 1.5,
+        "qqqContracts": 0.19,
+        "qqqNotional": 137.07930000000002,
+        "actualGrossPct": 142.86700000000002
+      }
+    ]
+  },
+  "currentAllMin": {
+    "capturedAt": "2026-08-08T06:26:52Z",
+    "signalDate": "2026-07-31",
+    "activeGrossPct": 50.7017,
+    "activeNetPct": 9.3919,
+    "betaResidualPct": 23.320473829306223,
+    "trackingErrorPct": 12.261613341392037,
+    "targetDeviationTrackingErrorPct": 11.45649277965662,
+    "activePositions": [
+      {
+        "symbol": "AMD",
+        "side": "short",
+        "contracts": -0.01,
+        "price": 479.88,
+        "notional": -4.7988,
+        "weightPct": -4.7988
+      },
+      {
+        "symbol": "GOOGL",
+        "side": "long",
+        "contracts": 0.01,
+        "price": 355.38,
+        "notional": 3.5538,
+        "weightPct": 3.5538
+      },
+      {
+        "symbol": "INTC",
+        "side": "long",
+        "contracts": 0.1,
+        "price": 101.0,
+        "notional": 10.100000000000001,
+        "weightPct": 10.100000000000001
+      },
+      {
+        "symbol": "LITE",
+        "side": "short",
+        "contracts": -0.01,
+        "price": 891.32,
+        "notional": -8.913200000000002,
+        "weightPct": -8.913200000000002
+      },
+      {
+        "symbol": "MRVL",
+        "side": "short",
+        "contracts": -0.01,
+        "price": 216.89,
+        "notional": -2.1689,
+        "weightPct": -2.1689
+      },
+      {
+        "symbol": "MU",
+        "side": "long",
+        "contracts": 0.01,
+        "price": 876.77,
+        "notional": 8.7677,
+        "weightPct": 8.7677
+      },
+      {
+        "symbol": "NVDA",
+        "side": "short",
+        "contracts": -0.01,
+        "price": 223.39,
+        "notional": -2.2338999999999998,
+        "weightPct": -2.2338999999999998
+      },
+      {
+        "symbol": "PLTR",
+        "side": "short",
+        "contracts": -0.01,
+        "price": 171.0,
+        "notional": -1.71,
+        "weightPct": -1.71
+      },
+      {
+        "symbol": "RKLB",
+        "side": "short",
+        "contracts": -0.01,
+        "price": 83.01,
+        "notional": -0.8301000000000001,
+        "weightPct": -0.8301000000000001
+      },
+      {
+        "symbol": "TSLA",
+        "side": "long",
+        "contracts": 0.01,
+        "price": 328.85,
+        "notional": 3.2885000000000004,
+        "weightPct": 3.2885000000000004
+      },
+      {
+        "symbol": "WDC",
+        "side": "long",
+        "contracts": 0.01,
+        "price": 433.68,
+        "notional": 4.3368,
+        "weightPct": 4.3368
+      }
+    ],
+    "leverageVariants": [
+      {
+        "grossCap": 1.2,
+        "qqqContracts": 0.09,
+        "qqqNotional": 64.9323,
+        "actualGrossPct": 115.63399999999999
+      },
+      {
+        "grossCap": 1.5,
+        "qqqContracts": 0.13,
+        "qqqNotional": 93.7911,
+        "actualGrossPct": 144.4928
+      }
+    ]
+  },
+  "results": {
+    "base": {
+      "1.2": {
+        "enhanced": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": -1.7593186644578318,
+            "activeCumulativePct": 0.012389181257477233,
+            "annualizedPct": -19.18417893222879,
+            "volatilityPct": 31.709668101311244,
+            "maxDrawdownPct": 5.745422942797629,
+            "fundingPct": -0.662710710741716,
+            "tradingCostPct": 0.11354820000000002,
+            "averageGrossPct": 114.01707577590213,
+            "maximumGrossPct": 114.48332653135832,
+            "averageNetPct": 109.96238898904218
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -3.683878685936237,
+            "activeCumulativePct": -0.5086135840380868,
+            "annualizedPct": -57.67874216199722,
+            "volatilityPct": 23.85359534252032,
+            "maxDrawdownPct": 5.596760926881417,
+            "fundingPct": -0.2918921676969699,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 114.81427147346794,
+            "maximumGrossPct": 115.42975816672948,
+            "averageNetPct": 110.55829767821336
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 4.24666810695471,
+            "activeCumulativePct": -0.24804645950786686,
+            "annualizedPct": 159.2914491072603,
+            "volatilityPct": 29.162779380141036,
+            "maxDrawdownPct": 3.354562818649365,
+            "fundingPct": -0.20216561816207382,
+            "tradingCostPct": 0.11990733378987606,
+            "averageGrossPct": 116.28183584350748,
+            "maximumGrossPct": 117.49230971039626,
+            "averageNetPct": 110.51646215629111
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": -1.360120288933031,
+            "activeCumulativePct": -0.7431028519833349,
+            "annualizedPct": -7.712032199967989,
+            "volatilityPct": 28.8912541831567,
+            "maxDrawdownPct": 12.583979293932956,
+            "fundingPct": -1.1567684966007596,
+            "tradingCostPct": 0.23345553378987605,
+            "averageGrossPct": 114.80036678559706,
+            "maximumGrossPct": 117.49230971039626,
+            "averageNetPct": 110.25657039417291
+          }
+        },
+        "allMin": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": 3.707111736156943,
+            "activeCumulativePct": 4.696684659924211,
+            "annualizedPct": 54.775590962185916,
+            "volatilityPct": 31.37525140133149,
+            "maxDrawdownPct": 4.964132343511308,
+            "fundingPct": -0.5561796436431945,
+            "tradingCostPct": 0.17390835845190541,
+            "averageGrossPct": 113.89072802330188,
+            "maximumGrossPct": 119.77815250263555,
+            "averageNetPct": 72.1290590424854
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -0.13055668117999408,
+            "activeCumulativePct": 1.7009180924067335,
+            "annualizedPct": -2.9485455728704646,
+            "volatilityPct": 19.667023297631168,
+            "maxDrawdownPct": 3.2622191110663,
+            "fundingPct": -0.16611502390760943,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 110.62805486157865,
+            "maximumGrossPct": 113.17298218452001,
+            "averageNetPct": 68.80308607705238
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 0.08287371251129994,
+            "activeCumulativePct": -2.8369875670615885,
+            "annualizedPct": 1.9158973546699043,
+            "volatilityPct": 25.0458524524766,
+            "maxDrawdownPct": 3.484601244809593,
+            "fundingPct": -0.12388494714856467,
+            "tradingCostPct": 0.16962973221950334,
+            "averageGrossPct": 111.72990941412108,
+            "maximumGrossPct": 121.69190054920564,
+            "averageNetPct": 73.51777118107434
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": 3.657548898402041,
+            "activeCumulativePct": 3.4567363722956435,
+            "annualizedPct": 23.432275881900154,
+            "volatilityPct": 26.691608698673168,
+            "maxDrawdownPct": 8.980285793299492,
+            "fundingPct": -0.8461796146993685,
+            "tradingCostPct": 0.3435380906714087,
+            "averageGrossPct": 112.50332315167529,
+            "maximumGrossPct": 121.69190054920564,
+            "averageNetPct": 71.63348069143225
+          }
+        },
+        "qqqOnly": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": -1.8886368648141194,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -20.451550918557825,
+            "volatilityPct": 33.75140505891589,
+            "maxDrawdownPct": 5.98055717994267,
+            "fundingPct": -0.7041609375743776,
+            "tradingCostPct": 0.114992,
+            "averageGrossPct": 115.6369687118228,
+            "maximumGrossPct": 116.14340437515797,
+            "averageNetPct": 115.6369687118228
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -3.3957088358566145,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -54.68086824550657,
+            "volatilityPct": 25.148953839908188,
+            "maxDrawdownPct": 5.56096313390495,
+            "fundingPct": -0.2987739848408129,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 116.37643641290975,
+            "maximumGrossPct": 116.98865719899358,
+            "averageNetPct": 116.37643641290975
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 4.8160657335379,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": 193.7538549751833,
+            "volatilityPct": 32.67342479730322,
+            "maxDrawdownPct": 3.955044123540552,
+            "fundingPct": -0.21045024802390372,
+            "tradingCostPct": 0.11783539556826383,
+            "averageGrossPct": 117.07626064093833,
+            "maximumGrossPct": 118.06966627417674,
+            "averageNetPct": 117.07626064093833
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": -0.6555562521677216,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -3.7811716395291906,
+            "volatilityPct": 31.097780962055342,
+            "maxDrawdownPct": 13.271011667849375,
+            "fundingPct": -1.2133851704390939,
+            "tradingCostPct": 0.23282739556826385,
+            "averageGrossPct": 116.19432582652576,
+            "maximumGrossPct": 118.06966627417674,
+            "averageNetPct": 116.19432582652576
+          }
+        }
+      },
+      "1.5": {
+        "enhanced": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": -2.362610279421362,
+            "activeCumulativePct": 0.01270454173345481,
+            "annualizedPct": -24.94252963580985,
+            "volatilityPct": 40.28619079994405,
+            "maxDrawdownPct": 7.188628569167288,
+            "fundingPct": -0.8435883860279098,
+            "tradingCostPct": 0.1710826237334744,
+            "averageGrossPct": 144.23028118224056,
+            "maximumGrossPct": 150.7569160159047,
+            "averageNetPct": 140.16775279287896
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -4.55968926465522,
+            "activeCumulativePct": -0.5128942187171304,
+            "annualizedPct": -65.66990648901955,
+            "volatilityPct": 30.348785143998185,
+            "maxDrawdownPct": 6.991652816109683,
+            "fundingPct": -0.3693672936444237,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 145.00263879289247,
+            "maximumGrossPct": 146.95634578140132,
+            "averageNetPct": 140.71398690288413
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 5.536734883201411,
+            "activeCumulativePct": -0.24405986014200964,
+            "annualizedPct": 243.68171872530317,
+            "volatilityPct": 38.02697627943073,
+            "maxDrawdownPct": 4.426037059361354,
+            "fundingPct": -0.25975066127859897,
+            "tradingCostPct": 0.15037519782915512,
+            "averageGrossPct": 147.64135314591397,
+            "maximumGrossPct": 149.64985314197003,
+            "averageNetPct": 141.80648011838636
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": -1.655141750735023,
+            "activeCumulativePct": -0.7430937767282209,
+            "annualizedPct": -9.317945995851119,
+            "volatilityPct": 36.95706818370649,
+            "maxDrawdownPct": 15.8050723710201,
+            "fundingPct": -1.4727063409509324,
+            "tradingCostPct": 0.32145782156262953,
+            "averageGrossPct": 145.3004608407889,
+            "maximumGrossPct": 150.7569160159047,
+            "averageNetPct": 140.72669641591705
+          }
+        },
+        "allMin": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": 3.101747906410801,
+            "activeCumulativePct": 4.73338217256718,
+            "annualizedPct": 44.275416399848844,
+            "volatilityPct": 40.250896605908146,
+            "maxDrawdownPct": 5.969668672724637,
+            "fundingPct": -0.7455411769328848,
+            "tradingCostPct": 0.18840337938032728,
+            "averageGrossPct": 145.53662252604576,
+            "maximumGrossPct": 148.73332953914615,
+            "averageNetPct": 103.70046156685298
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -0.9391602369821395,
+            "activeCumulativePct": 1.7222015843178395,
+            "annualizedPct": -19.440146739773134,
+            "volatilityPct": 25.44888714836751,
+            "maxDrawdownPct": 4.431711169189201,
+            "fundingPct": -0.23788960284812058,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 138.75945301388623,
+            "maximumGrossPct": 140.73769037335265,
+            "averageNetPct": 96.64284286471957
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 1.2013672776551854,
+            "activeCumulativePct": -2.8537311399208787,
+            "annualizedPct": 31.466545833839497,
+            "volatilityPct": 32.87643528359123,
+            "maxDrawdownPct": 4.465311989878673,
+            "fundingPct": -0.1753207413498432,
+            "tradingCostPct": 0.1991170108617247,
+            "averageGrossPct": 140.6921201932399,
+            "maximumGrossPct": 150.6163723109216,
+            "averageNetPct": 101.97486150562247
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": 3.3604552218174266,
+            "activeCumulativePct": 3.4968196803242257,
+            "annualizedPct": 21.373405870728845,
+            "volatilityPct": 34.43577899679833,
+            "maxDrawdownPct": 11.927368829822193,
+            "fundingPct": -1.1587515211308488,
+            "tradingCostPct": 0.387520390242052,
+            "averageGrossPct": 142.56363670524067,
+            "maximumGrossPct": 150.6163723109216,
+            "averageNetPct": 101.45359165064363
+          }
+        },
+        "qqqOnly": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": -2.3607960810176687,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -24.925792228958176,
+            "volatilityPct": 42.23254701295777,
+            "maxDrawdownPct": 7.410868885823851,
+            "fundingPct": -0.8806238039503644,
+            "tradingCostPct": 0.14374,
+            "averageGrossPct": 144.6616275008214,
+            "maximumGrossPct": 146.37240536314,
+            "averageNetPct": 144.6616275008214
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -4.265162062522165,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -63.159029985000444,
+            "volatilityPct": 31.6224611478746,
+            "maxDrawdownPct": 6.944961826867246,
+            "fundingPct": -0.37582672832866043,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 146.38303801548417,
+            "maximumGrossPct": 148.2775019619696,
+            "averageNetPct": 146.38303801548417
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 5.897966612432959,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": 271.66594982428404,
+            "volatilityPct": 40.70491056182164,
+            "maxDrawdownPct": 4.9317439307515425,
+            "fundingPct": -0.26199260104640776,
+            "tradingCostPct": 0.16309581792572977,
+            "averageGrossPct": 145.69612652522295,
+            "maximumGrossPct": 149.4611851934423,
+            "averageNetPct": 145.69612652522295
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": -1.0121577838492546,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -5.787694994359405,
+            "volatilityPct": 38.88719964979448,
+            "maxDrawdownPct": 16.35832790135735,
+            "fundingPct": -1.518443133325433,
+            "tradingCostPct": 0.3068358179257298,
+            "averageGrossPct": 145.36662761546577,
+            "maximumGrossPct": 149.4611851934423,
+            "averageNetPct": 145.36662761546577
+          }
+        }
+      }
+    },
+    "stress": {
+      "1.2": {
+        "enhanced": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": -1.872866864457834,
+            "activeCumulativePct": 0.006675272120926223,
+            "annualizedPct": -20.29797987735621,
+            "volatilityPct": 31.767228137213333,
+            "maxDrawdownPct": 5.751739005733503,
+            "fundingPct": -0.6634222158322138,
+            "tradingCostPct": 0.22709640000000003,
+            "averageGrossPct": 114.14706368147773,
+            "maximumGrossPct": 114.61580136520159,
+            "averageNetPct": 110.08775415597718
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -3.6881415007198437,
+            "activeCumulativePct": -0.5092068849851028,
+            "annualizedPct": -57.72163189617305,
+            "volatilityPct": 23.881339477201628,
+            "maxDrawdownPct": 5.6031084724748155,
+            "fundingPct": -0.29223215497978394,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 114.94801562077946,
+            "maximumGrossPct": 115.56844306289142,
+            "averageNetPct": 110.68708321579868
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 4.127664735049041,
+            "activeCumulativePct": -0.2573362516608779,
+            "annualizedPct": 152.594585569413,
+            "volatilityPct": 29.16032777397493,
+            "maxDrawdownPct": 3.3586403856478153,
+            "fundingPct": -0.2024119900492945,
+            "tradingCostPct": 0.2400964361740701,
+            "averageGrossPct": 116.42142565910787,
+            "maximumGrossPct": 117.62905784276462,
+            "averageNetPct": 110.64917434743988
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": -1.5909582889330531,
+            "activeCumulativePct": -0.7586085719832991,
+            "annualizedPct": -8.970558836444553,
+            "volatilityPct": 28.917970136823858,
+            "maxDrawdownPct": 12.597813124095724,
+            "fundingPct": -1.1580663608612922,
+            "tradingCostPct": 0.46719283617407015,
+            "averageGrossPct": 114.93377189278588,
+            "maximumGrossPct": 117.62905784276462,
+            "averageNetPct": 110.38469001095686
+          }
+        },
+        "allMin": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": 3.529780236156954,
+            "activeCumulativePct": 4.602445273548339,
+            "annualizedPct": 51.62943110726936,
+            "volatilityPct": 31.468994760043845,
+            "maxDrawdownPct": 5.016780138093835,
+            "fundingPct": -0.5568481946327472,
+            "tradingCostPct": 0.3479462428757363,
+            "averageGrossPct": 114.04117716006238,
+            "maximumGrossPct": 119.9216095562355,
+            "averageNetPct": 72.22387138691903
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -0.13078030584197098,
+            "activeCumulativePct": 1.7038737719764496,
+            "annualizedPct": -2.9535239331051844,
+            "volatilityPct": 19.700550570262667,
+            "maxDrawdownPct": 3.267673839293328,
+            "fundingPct": -0.166398893404176,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 110.81600342140081,
+            "maximumGrossPct": 113.36308896567657,
+            "averageNetPct": 68.91998971733719
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": -0.08664413998341614,
+            "activeCumulativePct": -2.920521114516661,
+            "annualizedPct": -1.9662117747365815,
+            "volatilityPct": 25.077555390637496,
+            "maxDrawdownPct": 3.490654285198269,
+            "fundingPct": -0.12411076821687872,
+            "tradingCostPct": 0.33996813630320005,
+            "averageGrossPct": 111.94955885251238,
+            "maximumGrossPct": 121.95518613392169,
+            "averageNetPct": 73.66276039195296
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": 3.304798498401995,
+            "activeCumulativePct": 3.2777501411128007,
+            "annualizedPct": 20.990889043589522,
+            "volatilityPct": 26.756589269200955,
+            "maxDrawdownPct": 9.037627604172648,
+            "fundingPct": -0.8473578562538019,
+            "tradingCostPct": 0.6879143791789364,
+            "averageGrossPct": 112.68106756684546,
+            "maximumGrossPct": 121.95518613392169,
+            "averageNetPct": 71.74678024017422
+          }
+        },
+        "qqqOnly": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": -2.003628864814122,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -21.56318947585052,
+            "volatilityPct": 33.81137403692044,
+            "maxDrawdownPct": 5.987201079210092,
+            "fundingPct": -0.7049265775409987,
+            "tradingCostPct": 0.229984,
+            "averageGrossPct": 115.77050841266305,
+            "maximumGrossPct": 116.28064698289921,
+            "averageNetPct": 115.77050841266305
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -3.3996934665723177,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -54.72367229687036,
+            "volatilityPct": 25.17858628364725,
+            "maxDrawdownPct": 5.56734211563904,
+            "fundingPct": -0.2991265638922292,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 116.5137462344771,
+            "maximumGrossPct": 117.13076662501271,
+            "averageNetPct": 116.5137462344771
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 4.699633526825253,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": 186.36868096877186,
+            "volatilityPct": 32.65677904064733,
+            "maxDrawdownPct": 3.9599103782040013,
+            "fundingPct": -0.21071007133139588,
+            "tradingCostPct": 0.23594697945005547,
+            "averageGrossPct": 117.21798175765674,
+            "maximumGrossPct": 118.2209280793483,
+            "averageNetPct": 117.21798175765674
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": -0.8863066521677232,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -5.083558319882608,
+            "volatilityPct": 31.122647892219646,
+            "maxDrawdownPct": 13.285754652833115,
+            "fundingPct": -1.214763212764624,
+            "tradingCostPct": 0.4659309794500554,
+            "averageGrossPct": 116.33092289719526,
+            "maximumGrossPct": 118.2209280793483,
+            "averageNetPct": 116.33092289719526
+          }
+        }
+      },
+      "1.5": {
+        "enhanced": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": -2.5011343794214214,
+            "activeCumulativePct": 0.007012933627947859,
+            "annualizedPct": -26.210468390474308,
+            "volatilityPct": 40.37514665629017,
+            "maxDrawdownPct": 7.199447118048285,
+            "fundingPct": -0.8448128393938458,
+            "tradingCostPct": 0.31348430305775893,
+            "averageGrossPct": 144.10505064231188,
+            "maximumGrossPct": 150.98758385547063,
+            "averageNetPct": 140.03633672409063
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -4.566167564147683,
+            "activeCumulativePct": -0.5136304974508232,
+            "annualizedPct": -65.72325092432287,
+            "volatilityPct": 30.39218187048564,
+            "maxDrawdownPct": 7.001332919329295,
+            "fundingPct": -0.3698964151195105,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 145.21037218158463,
+            "maximumGrossPct": 147.1751278649965,
+            "averageNetPct": 140.91557484496755
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 5.387821075419841,
+            "activeCumulativePct": -0.25346754064043964,
+            "annualizedPct": 232.7422340692996,
+            "volatilityPct": 38.03293981033417,
+            "maxDrawdownPct": 4.43272661694164,
+            "fundingPct": -0.2601446489303052,
+            "tradingCostPct": 0.3011833078099652,
+            "averageGrossPct": 147.8606793368532,
+            "maximumGrossPct": 149.88652654202127,
+            "averageNetPct": 142.01721549899148
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": -1.9398952507350131,
+            "activeCumulativePct": -0.7588369226492753,
+            "annualizedPct": -10.845918408693212,
+            "volatilityPct": 37.003092716057964,
+            "maxDrawdownPct": 15.811508266628804,
+            "fundingPct": -1.4748539034436612,
+            "tradingCostPct": 0.6146676108677241,
+            "averageGrossPct": 145.34854953933407,
+            "maximumGrossPct": 150.98758385547063,
+            "averageNetPct": 140.76799453463843
+          }
+        },
+        "allMin": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": 2.9103531064107235,
+            "activeCumulativePct": 4.640693472215318,
+            "annualizedPct": 41.09408915786079,
+            "volatilityPct": 40.37235257897879,
+            "maxDrawdownPct": 6.0176912881166,
+            "fundingPct": -0.7465961429301522,
+            "tradingCostPct": 0.37691840967035706,
+            "averageGrossPct": 145.75916122990176,
+            "maximumGrossPct": 148.9547786866128,
+            "averageNetPct": 103.85851557847572
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -0.940906906586314,
+            "activeCumulativePct": 1.7254722255807708,
+            "annualizedPct": -19.47268178359859,
+            "volatilityPct": 25.496044146783177,
+            "maxDrawdownPct": 4.43971336967196,
+            "fundingPct": -0.23833156361487493,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 139.01575389385096,
+            "maximumGrossPct": 140.99323263476566,
+            "averageNetPct": 96.82137145205988
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 1.003157490082418,
+            "activeCumulativePct": -2.938467484809615,
+            "annualizedPct": 25.69261957245599,
+            "volatilityPct": 32.903673485998254,
+            "maxDrawdownPct": 4.473830067175221,
+            "fundingPct": -0.17567009892071989,
+            "tradingCostPct": 0.39913400322527104,
+            "averageGrossPct": 140.9912391714757,
+            "maximumGrossPct": 150.96689636199,
+            "averageNetPct": 102.19204455910243
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": 2.964701921817414,
+            "activeCumulativePct": 3.3183514360274113,
+            "annualizedPct": 18.675133699082757,
+            "volatilityPct": 34.51469795239734,
+            "maxDrawdownPct": 11.983485097760127,
+            "fundingPct": -1.1605978054657469,
+            "tradingCostPct": 0.7760524128956281,
+            "averageGrossPct": 142.81440254759372,
+            "maximumGrossPct": 150.96689636199,
+            "averageNetPct": 101.63200937839012
+          }
+        },
+        "qqqOnly": {
+          "train": {
+            "sessions": 21,
+            "cumulativePct": -2.504536081017683,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -26.241356356735924,
+            "volatilityPct": 42.32007796414427,
+            "maxDrawdownPct": 7.421073425213553,
+            "fundingPct": -0.8818220354134836,
+            "tradingCostPct": 0.28748,
+            "averageGrossPct": 144.87071974324067,
+            "maximumGrossPct": 146.59426410395366,
+            "averageNetPct": 144.87071974324067
+          },
+          "validation": {
+            "sessions": 11,
+            "cumulativePct": -4.271450297586899,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -63.21442685324572,
+            "volatilityPct": 31.669337536061242,
+            "maxDrawdownPct": 6.954913934308083,
+            "fundingPct": -0.376384892072426,
+            "tradingCostPct": 0.0,
+            "averageGrossPct": 146.60039545452724,
+            "maximumGrossPct": 148.5058656309058,
+            "averageNetPct": 146.60039545452724
+          },
+          "test": {
+            "sessions": 11,
+            "cumulativePct": 5.7374016629405,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": 258.96820260339234,
+            "volatilityPct": 40.6994259831467,
+            "maxDrawdownPct": 4.946788913564237,
+            "fundingPct": -0.2624159261178849,
+            "tradingCostPct": 0.3267181160677555,
+            "averageGrossPct": 145.93297695035398,
+            "maximumGrossPct": 149.69658023084062,
+            "averageNetPct": 145.93297695035398
+          },
+          "full": {
+            "sessions": 43,
+            "cumulativePct": -1.314232383849212,
+            "activeCumulativePct": 0.0,
+            "annualizedPct": -7.460140488255029,
+            "volatilityPct": 38.92967134867823,
+            "maxDrawdownPct": 16.38729614145421,
+            "fundingPct": -1.5206228536037945,
+            "tradingCostPct": 0.6141981160677555,
+            "averageGrossPct": 145.58493514097088,
+            "maximumGrossPct": 149.69658023084062,
+            "averageNetPct": 145.58493514097088
+          }
+        }
+      }
+    }
+  },
+  "allMinAttributionBase1p2": [
+    {
+      "symbol": "INTC",
+      "pricePnl": 8.635,
+      "fundingPnl": -0.12698541444500694,
+      "tradingCost": 0.065405,
+      "netPnl": 8.442609585554992,
+      "netPnlPctInitial": 8.442609585554992
+    },
+    {
+      "symbol": "MRVL",
+      "pricePnl": 0.7173,
+      "fundingPnl": 0.040733286257798304,
+      "tradingCost": 0.005096700000000001,
+      "netPnl": 0.7529365862577984,
+      "netPnlPctInitial": 0.7529365862577984
+    },
+    {
+      "symbol": "RKLB",
+      "pricePnl": 0.30990000000000006,
+      "fundingPnl": 0.0151512101072598,
+      "tradingCost": 0.0019701000000000002,
+      "netPnl": 0.3230811101072599,
+      "netPnlPctInitial": 0.3230811101072599
+    },
+    {
+      "symbol": "AMD",
+      "pricePnl": 0.03999999999999954,
+      "fundingPnl": 0.08321180282705787,
+      "tradingCost": 0.0097162,
+      "netPnl": 0.11349560282705741,
+      "netPnlPctInitial": 0.11349560282705741
+    },
+    {
+      "symbol": "MSTR",
+      "pricePnl": 0.0,
+      "fundingPnl": 0.0,
+      "tradingCost": 0.0,
+      "netPnl": 0.0,
+      "netPnlPctInitial": 0.0
+    },
+    {
+      "symbol": "NVDA",
+      "pricePnl": -0.1472999999999999,
+      "fundingPnl": 0.019257568038411794,
+      "tradingCost": 0.0043309,
+      "netPnl": -0.1323733319615881,
+      "netPnlPctInitial": -0.1323733319615881
+    },
+    {
+      "symbol": "GOOGL",
+      "pricePnl": -0.10349999999999947,
+      "fundingPnl": -0.03858437056418,
+      "tradingCost": 0.0071993000000000005,
+      "netPnl": -0.14928367056417946,
+      "netPnlPctInitial": -0.14928367056417946
+    },
+    {
+      "symbol": "PLTR",
+      "pricePnl": -0.35369999999999996,
+      "fundingPnl": 0.0009128379454970999,
+      "tradingCost": 0.0030865,
+      "netPnl": -0.3558736620545028,
+      "netPnlPctInitial": -0.3558736620545028
+    },
+    {
+      "symbol": "TSLA",
+      "pricePnl": -0.7075000000000001,
+      "fundingPnl": -0.0175162438674522,
+      "tradingCost": 0.007285700000000001,
+      "netPnl": -0.7323019438674523,
+      "netPnlPctInitial": -0.7323019438674523
+    },
+    {
+      "symbol": "MU",
+      "pricePnl": -0.6509999999999996,
+      "fundingPnl": -0.23911367778376158,
+      "tradingCost": 0.018222000000000002,
+      "netPnl": -0.9083356777837611,
+      "netPnlPctInitial": -0.9083356777837611
+    },
+    {
+      "symbol": "WDC",
+      "pricePnl": -0.9829000000000004,
+      "fundingPnl": -0.025072588467465295,
+      "tradingCost": 0.009681100000000002,
+      "netPnl": -1.0176536884674658,
+      "netPnlPctInitial": -1.0176536884674658
+    },
+    {
+      "symbol": "LITE",
+      "pricePnl": -2.976399999999998,
+      "fundingPnl": 0.06672249110285772,
+      "tradingCost": 0.0480888,
+      "netPnl": -2.95776630889714,
+      "netPnlPctInitial": -2.95776630889714
+    }
+  ],
+  "allMinAttributionSummary": {
+    "activeNetPnlUsdt": 3.378534601151019,
+    "largestContributor": "INTC",
+    "largestContributorNetPnlUsdt": 8.442609585554992,
+    "activeNetPnlWithoutLargestUsdt": -5.064074984403973
+  },
+  "rebalanceSummary": [
+    {
+      "strategy": "enhanced",
+      "grossCap": 1.2,
+      "signalDate": "2026-05-29",
+      "session": "2026-06-08",
+      "positions": "GOOGL +0.01, NVDA -0.01",
+      "activeGrossPct": 5.7432,
+      "activeNetPct": 1.5595999999999997,
+      "betaResidualPct": 0.6756316943758489,
+      "trackingErrorPct": 1.1512791238708913
+    },
+    {
+      "strategy": "enhanced",
+      "grossCap": 1.2,
+      "signalDate": "2026-06-30",
+      "session": "2026-07-01",
+      "positions": "GOOGL +0.01, NVDA -0.01",
+      "activeGrossPct": 5.506209101390636,
+      "activeNetPct": 1.6374586533873932,
+      "betaResidualPct": 0.47826041758480975,
+      "trackingErrorPct": 1.140527829343008
+    },
+    {
+      "strategy": "enhanced",
+      "grossCap": 1.2,
+      "signalDate": "2026-07-31",
+      "session": "2026-08-03",
+      "positions": "GOOGL +0.01, NVDA -0.01, PLTR -0.01",
+      "activeGrossPct": 7.361050659585181,
+      "activeNetPct": 0.5060801436448918,
+      "betaResidualPct": -0.9214914980101824,
+      "trackingErrorPct": 1.480962482962091
+    },
+    {
+      "strategy": "allMin",
+      "grossCap": 1.2,
+      "signalDate": "2026-05-29",
+      "session": "2026-06-08",
+      "positions": "AMD -0.01, GOOGL +0.01, INTC +0.10, LITE -0.01, MRVL -0.01, MU +0.01, NVDA -0.01, PLTR -0.01, RKLB -0.01, TSLA +0.01, WDC +0.01",
+      "activeGrossPct": 54.5018,
+      "activeNetPct": 12.217200000000002,
+      "betaResidualPct": 23.26233918257906,
+      "trackingErrorPct": 11.900418728215842
+    },
+    {
+      "strategy": "allMin",
+      "grossCap": 1.2,
+      "signalDate": "2026-06-30",
+      "session": "2026-07-01",
+      "positions": "AMD -0.01, GOOGL +0.01, INTC -0.10, LITE +0.01, MRVL -0.01, MU +0.01, NVDA -0.01, PLTR -0.01, RKLB -0.01, TSLA +0.01, WDC +0.01",
+      "activeGrossPct": 56.05764964817694,
+      "activeNetPct": 6.659017624094996,
+      "betaResidualPct": 13.820336324510743,
+      "trackingErrorPct": 13.954298798091946
+    },
+    {
+      "strategy": "allMin",
+      "grossCap": 1.2,
+      "signalDate": "2026-07-31",
+      "session": "2026-08-03",
+      "positions": "AMD -0.01, GOOGL +0.01, INTC +0.10, LITE -0.01, MRVL -0.01, MU +0.01, NVDA -0.01, PLTR -0.01, RKLB -0.01, TSLA +0.01, WDC +0.01",
+      "activeGrossPct": 44.80118427305153,
+      "activeNetPct": 11.150903714558282,
+      "betaResidualPct": 25.992870393045166,
+      "trackingErrorPct": 10.859179716285656
+    },
+    {
+      "strategy": "enhanced",
+      "grossCap": 1.5,
+      "signalDate": "2026-05-29",
+      "session": "2026-06-08",
+      "positions": "GOOGL +0.01, NVDA -0.01",
+      "activeGrossPct": 5.743200000000001,
+      "activeNetPct": 1.5595999999999999,
+      "betaResidualPct": 0.675631694375849,
+      "trackingErrorPct": 1.1512791238708913
+    },
+    {
+      "strategy": "enhanced",
+      "grossCap": 1.5,
+      "signalDate": "2026-06-30",
+      "session": "2026-07-01",
+      "positions": "GOOGL +0.01, NVDA -0.01",
+      "activeGrossPct": 5.502831279971265,
+      "activeNetPct": 1.6364541432405937,
+      "betaResidualPct": 0.4779670254791328,
+      "trackingErrorPct": 1.1398281647897004
+    },
+    {
+      "strategy": "enhanced",
+      "grossCap": 1.5,
+      "signalDate": "2026-07-31",
+      "session": "2026-08-03",
+      "positions": "GOOGL +0.01, NVDA -0.01, PLTR -0.01",
+      "activeGrossPct": 7.4839958509472195,
+      "activeNetPct": 0.5145327576781792,
+      "betaResidualPct": -0.9368823645862504,
+      "trackingErrorPct": 1.5056977040994006
+    },
+    {
+      "strategy": "allMin",
+      "grossCap": 1.5,
+      "signalDate": "2026-05-29",
+      "session": "2026-06-08",
+      "positions": "AMD -0.01, GOOGL +0.01, INTC +0.10, LITE -0.01, MRVL -0.01, MU +0.01, NVDA -0.01, PLTR -0.01, RKLB -0.01, TSLA +0.01, WDC +0.01",
+      "activeGrossPct": 54.50180000000001,
+      "activeNetPct": 12.217200000000004,
+      "betaResidualPct": 23.262339182579062,
+      "trackingErrorPct": 11.900418728215842
+    },
+    {
+      "strategy": "allMin",
+      "grossCap": 1.5,
+      "signalDate": "2026-06-30",
+      "session": "2026-07-01",
+      "positions": "AMD -0.01, GOOGL +0.01, INTC -0.10, LITE +0.01, MRVL -0.01, MU +0.01, NVDA -0.01, PLTR -0.01, RKLB -0.01, TSLA +0.01, WDC +0.01",
+      "activeGrossPct": 56.03932945543654,
+      "activeNetPct": 6.6568413914648215,
+      "betaResidualPct": 13.815819702305006,
+      "trackingErrorPct": 13.949738395628719
+    },
+    {
+      "strategy": "allMin",
+      "grossCap": 1.5,
+      "signalDate": "2026-07-31",
+      "session": "2026-08-03",
+      "positions": "AMD -0.01, GOOGL +0.01, INTC +0.10, LITE -0.01, MRVL -0.01, MU +0.01, NVDA -0.01, PLTR -0.01, RKLB -0.01, TSLA +0.01, WDC +0.01",
+      "activeGrossPct": 45.494091722730765,
+      "activeNetPct": 11.323366661238042,
+      "betaResidualPct": 26.39488328235,
+      "trackingErrorPct": 11.027130779296863
+    }
+  ],
+  "decision": {
+    "status": "research_only",
+    "enhancedBeatsSameGrossQqqAtBothCaps": false,
+    "allMinBeatsSameGrossQqqAtBothCaps": true,
+    "eligibleForPaperOrLive": false,
+    "reason": "全11腿最小合约在43天基础成本下优于同gross的QQQ合约对照，但权重、beta和行业暴露已严重偏离原模型，只能进入全新的只读前瞻观察。"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "registryId": "qqq-exit-registry-9861e5e29aa7e1eb",
+  "frozenAt": "2026-08-10T17:05:00Z",
+  "protocol": {
+    "historyReusePolicy": "all_data_before_2026-08-10T17:05:00Z_is_development_only_and_must_not_be_replayed_for_this_study",
+    "evaluationSplit": {
+      "train": 0.5,
+      "validation": 0.25,
+      "test": 0.25
+    },
+    "selection": "all_variants_are_frozen_now_report_all_results_and_make_no_parameter_change_after_forward_observation",
+    "requiredMetrics": [
+      "gross_return",
+      "net_return",
+      "double_cost_return",
+      "realized_funding",
+      "one_extra_5m_exit_latency",
+      "trade_count",
+      "profit_factor",
+      "max_drawdown",
+      "worst_daily_return"
+    ],
+    "multipleComparisonPolicy": "control_and_three_named_candidates_are_one_frozen_family_no_test_only_winner_substitution",
+    "promotion": "research_only_to_forward_observation_to_paper_review_to_explicit_live_approval"
+  },
+  "study": {
+    "strategyKey": "qqq_active_exit_overlays_forward",
+    "modelId": "qqq-exit-496ffb3159b6f4d6",
+    "status": "preregistered_collecting",
+    "paperOrLiveAuthorized": false,
+    "forwardBoundary": "2026-08-10T17:05:00Z",
+    "basis": {
+      "sourceModelId": "qqq-pit-1fda3d7e14f137bf",
+      "sourceSignalCadence": "completed_month_only",
+      "sourceSignalRule": "use_the_locked_monthly_active_weights_and_future_append_only_decisions_without_refitting",
+      "bar": "5m",
+      "decisionExecution": "evaluate_completed_close_then_execute_at_the_next_available_5m_open",
+      "cohortEntry": "first_09_35_America_New_York_weekday_bar_strictly_after_signal_availability",
+      "postExitReentry": "none_until_the_next_monthly_signal_cohort",
+      "symbols": [
+        "AMD",
+        "GOOGL",
+        "INTC",
+        "LITE",
+        "MRVL",
+        "MSTR",
+        "MU",
+        "NVDA",
+        "PLTR",
+        "RKLB",
+        "TSLA",
+        "WDC"
+      ],
+      "variants": [
+        {
+          "key": "monthly_control",
+          "type": "monthly_hold",
+          "stopLossBps": 1500,
+          "description": "Current monthly hold behavior with only the existing fixed active-leg stop"
+        },
+        {
+          "key": "fixed_take_profit_10pct",
+          "type": "fixed_take_profit",
+          "stopLossBps": 1500,
+          "takeProfitBps": 1000,
+          "description": "Exit a leg after a completed close reaches a 10 percent favorable return"
+        },
+        {
+          "key": "trailing_profit_6pct_4pct",
+          "type": "trailing_take_profit",
+          "stopLossBps": 1500,
+          "activationBps": 600,
+          "givebackBps": 400,
+          "description": "After peak favorable return reaches 6 percent exit on a 4 percentage point giveback"
+        },
+        {
+          "key": "biweekly_20session_trend_review",
+          "type": "biweekly_trend_review",
+          "stopLossBps": 1500,
+          "lookbackSessions": 20,
+          "reviewEverySessions": 10,
+          "description": "Every 10 completed US sessions after a full 20-session forward lookback exit a leg whose 20-session return opposes its side"
+        }
+      ]
+    },
+    "artifacts": [
+      {
+        "path": "reports/qqq_active_enhancement/qqq-pit-20260808-v5/locked_model.json",
+        "sha256": "674d68a3f68d90cc54c03fc1e6efd338ce0ad18df29d155e8abbe97e696fc718"
+      }
+    ],
+    "costs": {
+      "feePerSideBps": 5.0,
+      "slippagePerSideBps": 5.0,
+      "basePerSideBps": 10.0,
+      "stressPerSideBps": 20.0,
+      "funding": "realized_point_in_time_from_data_lake",
+      "latencyStress": "one_additional_5m_bar_for_exit_decisions"
+    },
+    "maturity": {
+      "minimumForwardDays": 365,
+      "minimumMonthlyCohorts": 12,
+      "minimumClosedCandidateLegs": 80,
+      "minimumCandidateExitEvents": 20,
+      "minimumCompleteMarketObservationRatio": 0.9
+    }
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "registryId": "qqq-pure-stock-mc-registry-6c8f1e715a78797a",
+  "frozenAt": "2026-08-11T16:38:56Z",
+  "protocol": {
+    "classification": "development_only_risk_stress_on_inspected_history",
+    "historyReusePolicy": "the_2024_08_01_through_2026_07_31_underlying_history_and_all_2026_06_18_plus_okx_data_are_already_inspected_and_cannot_count_as_new_validation",
+    "selection": "all_frozen_exit_leverage_and_cost_combinations_must_be_reported_with_no_winner_selection_or_post_result_parameter_change",
+    "chronologicalSourceSplit": {
+      "trainSignalDates": ["2024-07-31", "2025-06-30"],
+      "validationSignalDates": ["2025-07-31", "2025-12-31"],
+      "testSignalDates": ["2026-01-30", "2026-06-30"],
+      "use": "descriptive_stability_only_no_parameter_selection"
+    },
+    "promotion": "historical_or_bootstrap_results_cannot_authorize_paper_or_live_trading_new_forward_data_and_explicit_user_approval_are_required"
+  },
+  "study": {
+    "strategyKey": "qqq_pure_stock_factor_monte_carlo",
+    "modelId": "qqq-pure-stock-mc-development-v1",
+    "status": "preregistered_development_only",
+    "paperOrLiveAuthorized": false,
+    "hypothesis": "A pure long_short stock book using the locked point_in_time monthly factor weights at 100 percent factor gross may offer a useful return distribution at 2x while higher leverage exposes liquidation and ruin risk; fixed and trailing profit exits are evaluated as a frozen family.",
+    "source": {
+      "sourceModelId": "qqq-pit-1fda3d7e14f137bf",
+      "weightsPath": "reports/qqq_active_enhancement/qqq-pit-20260808-v5/monthly_weights.csv",
+      "weightsSha256": "a92d07f484cbb68bab790e31d4fca0089e7f26c6fce30f3d45a12ef4017df8a0",
+      "lockedModelPath": "reports/qqq_active_enhancement/qqq-pit-20260808-v5/locked_model.json",
+      "lockedModelSha256": "674d68a3f68d90cc54c03fc1e6efd338ce0ad18df29d155e8abbe97e696fc718",
+      "trackingPath": "config/tradfi_index_tracking.json",
+      "trackingSha256": "f48594719eaa988ee971cc4de6ef77da114704553f4de2bf17cbdccbfbd3f3fc",
+      "priceRoot": "data/qqq_active_enhancement/prices",
+      "priceField": "adj_close",
+      "priceObservation": "completed_underlying_daily_close",
+      "signalStart": "2024-07-31",
+      "signalEnd": "2026-06-30",
+      "returnStart": "2024-08-01",
+      "returnEnd": "2026-07-31",
+      "initialPriceDate": "2026-07-31",
+      "sourceEpisodes": 24,
+      "limitations": [
+        "underlying_adjusted_closes_are_not_historical_okx_contract_candles",
+        "daily_closes_cannot_observe_intraday_stop_or_profit_touch_order",
+        "today_constituent_and_current_contract_survivorship_bias_remains",
+        "the_factor_model_and_source_window_were_already_inspected"
+      ]
+    },
+    "universe": {
+      "rule": "symbols_in_the_frozen_weight_file_during_the_source_window_that_are_validated_current_category_3_okx_equity_contracts",
+      "excludedMappings": {
+        "DASH": "DASH_USDT_SWAP_is_category_1_Dash_crypto_not_DoorDash_equity"
+      },
+      "symbols": [
+        "AAPL", "ADBE", "ALAB", "AMAT", "AMD", "AMZN", "APP", "AVGO",
+        "COST", "CRWD", "CSCO", "GOOGL", "INTC", "KLAC", "LITE", "LRCX",
+        "META", "MRVL", "MSFT", "MSTR", "MU", "NVDA", "PLTR", "QCOM",
+        "RKLB", "TER", "TSLA", "TTWO", "WDC"
+      ]
+    },
+    "portfolio": {
+      "initialEquityUsdt": 100.0,
+      "qqqOrSpyCoreWeight": 0.0,
+      "factorGrossTarget": 1.0,
+      "leverageScenarios": [2.0, 3.0, 5.0, 10.0],
+      "weightRule": "drop_excluded_symbols_then_divide_each_locked_signed_active_weight_by_the_sum_of_absolute_remaining_weights_for_that_signal_date",
+      "rebalance": "monthly_before_the_first_return_of_each_sampled_source_episode",
+      "postExitReentry": "none_until_the_next_monthly_factor_rebalance",
+      "syntheticContractValueUnderlyingShares": 1.0,
+      "syntheticQuantityIncrement": 0.01,
+      "quantityRounding": "absolute_quantity_floor_to_increment",
+      "executability": "synthetic_only_the_forced_0_01_increment_overrides_real_okx_ctVal_lotSz_and_minSz"
+    },
+    "exits": {
+      "decisionPrice": "completed_daily_close",
+      "executionPrice": "next_completed_daily_close",
+      "monthlyRebalancePrecedence": "a_new_monthly_factor_target_supersedes_a_pending_prior_cohort_exit",
+      "hardStopLossPct": 15.0,
+      "adversePrecedence": "hard_stop_is_evaluated_before_the_profit_rule_on_each_completed_close",
+      "variants": [
+        {
+          "key": "fixed_take_profit_10pct",
+          "type": "fixed_take_profit",
+          "takeProfitPct": 10.0
+        },
+        {
+          "key": "trailing_profit_6pct_4pct",
+          "type": "trailing_take_profit",
+          "activationPct": 6.0,
+          "givebackPercentagePoints": 4.0
+        }
+      ]
+    },
+    "monteCarlo": {
+      "method": "synchronized_monthly_episode_bootstrap_with_replacement",
+      "paths": 4000,
+      "horizonMonths": 24,
+      "seed": 20260811,
+      "sameRandomDrawsAcrossScenarios": true,
+      "episodePairing": "each_sampled_block_keeps_one_locked_factor_target_with_its_actual_following_month_cross_sectional_return_path",
+      "fundingSampling": "independent_synchronized_daily_vectors_bootstrapped_from_data_pipeline_load_funding",
+      "fundingMinimumSymbolCoverageRatio": 0.8,
+      "missingFundingFill": 0.0,
+      "tradingDayToCalendarFundingMultiplier": 1.4
+    },
+    "costs": {
+      "profiles": [
+        {"key": "base", "perSideBps": 10.0},
+        {"key": "stress", "perSideBps": 20.0}
+      ],
+      "funding": "signed_realized_rate_vectors_from_the_okx_data_lake",
+      "shortBorrow": "not_added_separately_because_the_contract_funding_proxy_is_used"
+    },
+    "margin": {
+      "mode": "synthetic_cross_margin_proxy",
+      "maintenanceMarginPctOfGross": 5.0,
+      "liquidationPenaltyBpsOfGross": 50.0,
+      "check": "completed_daily_close_after_pnl_and_funding_before_pending_exit_execution",
+      "ruinDefinition": "equity_less_than_or_equal_to_zero_before_or_after_modeled_liquidation",
+      "drawdownRiskThresholdsPct": [50.0, 90.0],
+      "limitation": "actual_okx_instrument_tiers_mark_prices_intraday_liquidation_and_insurance_fund_behavior_are_not_recreated"
+    },
+    "requiredOutputs": [
+      "all_exit_leverage_cost_combinations",
+      "gross_and_net_of_cost_results",
+      "terminal_equity_and_return_percentiles_1_5_50_95_99",
+      "ruin_probability",
+      "liquidation_proxy_probability",
+      "drawdown_50_and_90_probability",
+      "maximum_drawdown_percentiles",
+      "stop_and_profit_exit_counts",
+      "turnover_cost_and_funding",
+      "realized_gross_and_position_count",
+      "chronological_source_split_diagnostics"
+    ]
+  }
+}

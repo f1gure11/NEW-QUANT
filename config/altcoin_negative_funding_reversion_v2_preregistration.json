@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "modelId": "alt-negfund-reversion-short-v2-microalts",
+  "strategyKey": "altcoin_negative_funding_reversion_short",
+  "frozenAt": "2026-08-09T16:50:01Z",
+  "status": "preregistered_collecting",
+  "paperOrLiveAuthorized": false,
+  "hypothesis": "Among liquid micro-altcoin perpetuals with a large prior price rise, a still-negative realized funding rate that becomes materially less negative marks weakening squeeze demand; a small isolated-margin short entered only after the funding observation may capture the subsequent liquidation candle.",
+  "evidencePolicy": {
+    "developmentReplayAllowed": false,
+    "developmentReplayEnd": "2026-08-09T16:50:01Z",
+    "developmentReplayIsNewEvidence": false,
+    "forwardEvaluationStart": "2026-08-09T16:50:01Z",
+    "split": {
+      "train": 0.5,
+      "validation": 0.25,
+      "test": 0.25
+    },
+    "selection": "none; one frozen specification only",
+    "minimumForwardDays": 90,
+    "minimumClosedTrades": 30,
+    "minimumTradedInstruments": 4,
+    "minimumBigBearishCandleExits": 10
+  },
+  "universe": {
+    "selectionAsOf": "2026-08-09T16:47:52Z",
+    "selectionRule": "Live OKX USDT crypto swaps excluding frozen major-crypto and tokenized-TradFi lists; fixed names passing 72h return >=20% and completed 24h quote turnover >=10M USDT at the discovery snapshot.",
+    "instruments": [
+      "BEAT-USDT-SWAP",
+      "BOME-USDT-SWAP",
+      "CAP-USDT-SWAP",
+      "ESP-USDT-SWAP",
+      "MMT-USDT-SWAP",
+      "MUBARAK-USDT-SWAP",
+      "PEOPLE-USDT-SWAP"
+    ],
+    "contractValue": {
+      "BEAT-USDT-SWAP": 10.0,
+      "BOME-USDT-SWAP": 1000.0,
+      "CAP-USDT-SWAP": 100.0,
+      "ESP-USDT-SWAP": 100.0,
+      "MMT-USDT-SWAP": 10.0,
+      "MUBARAK-USDT-SWAP": 100.0,
+      "PEOPLE-USDT-SWAP": 100.0
+    },
+    "discoverySnapshot": {
+      "BEAT-USDT-SWAP": {"return72h": 0.6342, "turnover24hUsdt": 334080000.0},
+      "BOME-USDT-SWAP": {"return72h": 0.2895, "turnover24hUsdt": 11110000.0},
+      "CAP-USDT-SWAP": {"return72h": 0.2349, "turnover24hUsdt": 16850000.0},
+      "ESP-USDT-SWAP": {"return72h": 0.2026, "turnover24hUsdt": 12380000.0},
+      "MMT-USDT-SWAP": {"return72h": 0.2436, "turnover24hUsdt": 97340000.0},
+      "MUBARAK-USDT-SWAP": {"return72h": 0.7220, "turnover24hUsdt": 53520000.0},
+      "PEOPLE-USDT-SWAP": {"return72h": 0.2383, "turnover24hUsdt": 15240000.0}
+    },
+    "excludedMajorCrypto": [
+      "BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "ADA", "TRX", "LINK",
+      "AVAX", "SUI", "LTC", "BCH", "DOT", "OKB"
+    ],
+    "excludedTokenizedTradFi": [
+      "QQQ", "AMD", "NVDA", "MU", "SOXL", "SNDK", "TSLA", "GOOGL", "INTC",
+      "PLTR", "MSTR", "RKLB", "LITE", "MRVL", "WDC", "SKHYNIX", "XAU", "CL", "SPCX"
+    ],
+    "survivorshipWarning": "Fixed discovery-time contract universe; the forward study does not represent delisted or future contracts."
+  },
+  "signal": {
+    "decisionTimes": "realized funding timestamps only",
+    "priceLookbackHours": 72,
+    "minimumPriceReturn": 0.2,
+    "crossSectionTopN": 2,
+    "liquidityLookbackHours": 24,
+    "minimumApproxQuoteTurnoverUsdt": 10000000.0,
+    "minimumLiquidityBarCoverage": 0.95,
+    "fundingObservations": 2,
+    "earlierFundingMaximum": -0.0005,
+    "latestFundingMaximum": 0.0,
+    "minimumFundingImprovement": 0.0002,
+    "fundingRule": "earlier <= -5 bps, latest remains below zero, latest-earlier >= 2 bps",
+    "allInputsMustPrecedeEntry": true
+  },
+  "execution": {
+    "bar": "5m",
+    "side": "short_only",
+    "entry": "first 5m open strictly after the realized funding timestamp",
+    "marginMode": "isolated",
+    "allowedMarginFractionRange": [0.05, 0.1],
+    "marginFractionPerPosition": 0.05,
+    "notionalFractionPerPosition": 0.1,
+    "leverage": 2.0,
+    "maximumConcurrentPositions": 2,
+    "reentryCooldownHours": 24,
+    "sameInstrumentStacking": false,
+    "hardStopFraction": null,
+    "modeledLiquidationAdverseMoveFraction": 0.45,
+    "modeledLiquidationPenaltyBps": 50.0,
+    "maximumHoldingHours": 24,
+    "bigBearishCandle": {
+      "timeframe": "1h",
+      "maximumOpenToCloseReturn": -0.04,
+      "maximumCloseLocationInRange": 0.25,
+      "positionMustBeProfitable": true,
+      "exit": "next 5m open after the completed UTC-clock hour"
+    },
+    "exitPriority": [
+      "modeled_liquidation",
+      "big_bearish_candle_take_profit",
+      "time_exit"
+    ]
+  },
+  "costs": {
+    "takerFeePerSideBps": 5.0,
+    "adverseSlippagePerSideBps": 5.0,
+    "stressMultiplier": 2.0,
+    "funding": "realized point-in-time funding paid or received while the short is open"
+  },
+  "requiredReporting": [
+    "gross_price_return",
+    "net_return",
+    "double_cost_return",
+    "funding_pnl",
+    "latency",
+    "trade_count",
+    "profit_factor",
+    "max_drawdown",
+    "worst_window",
+    "exit_reason_counts",
+    "modeled_liquidation_count",
+    "instrument_concentration"
+  ],
+  "promotion": "new forward observation -> one frozen evaluation -> paper review -> explicit live approval"
+}

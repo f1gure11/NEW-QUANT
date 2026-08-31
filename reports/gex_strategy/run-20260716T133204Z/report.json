@@ -1,0 +1,39 @@
+{
+  "generatedAt": "2026-07-16T13:32:04+00:00",
+  "mode": "read_only_gex_wall_backtest",
+  "config": {
+    "entry_band_bps": 35.0,
+    "breakout_buffer_bps": 8.0,
+    "min_volume_ratio": 1.1,
+    "fast_ema": 12,
+    "slow_ema": 36,
+    "atr_window": 14,
+    "stop_atr_mult": 1.5,
+    "take_profit_r": 1.5,
+    "min_hold_bars": 6,
+    "max_hold_bars": 72,
+    "fee_bps_per_side": 5.0,
+    "slippage_bps_per_side": 2.0
+  },
+  "snapshotFile": "/opt/okx-quant/data/okx/gex_snapshots.jsonl",
+  "results": [
+    {
+      "status": "insufficient_history",
+      "reason": "only_2_gex_snapshots_need_12",
+      "trades": [],
+      "instId": "BTC-USDT-SWAP"
+    },
+    {
+      "status": "insufficient_history",
+      "reason": "only_2_gex_snapshots_need_12",
+      "trades": [],
+      "instId": "ETH-USDT-SWAP"
+    },
+    {
+      "status": "insufficient_history",
+      "reason": "only_2_gex_snapshots_need_12",
+      "trades": [],
+      "instId": "SOL-USDT-SWAP"
+    }
+  ]
+}

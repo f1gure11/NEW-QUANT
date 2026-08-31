@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "registryId": "vwap-book-forward-registry-20260812",
+  "frozenAt": "2026-08-12T18:10:00Z",
+  "protocol": {
+    "classification": "new_forward_observation_only",
+    "historyReusePolicy": "only_BTC_and_ETH_snapshots_captured_strictly_after_the_forward_boundary_are_eligible; the_2026-07-02_to_boundary_feasibility_window_is_inspected_and_cannot_select_or_change_parameters",
+    "parameterPolicy": "inherit_the_published_vwap_market_maker_selected_parameters_with_no_new_grid_search",
+    "evaluation": "one_chronological_review_after_maturity; do_not_tune_on_the_forward_sample",
+    "promotion": "forward_research_only; cannot_authorize_paper_or_live_trading"
+  },
+  "study": {
+    "strategyKey": "btc_eth_vwap_book_forward_v1",
+    "modelId": "vwap-book-forward-20260812",
+    "status": "preregistered_collecting",
+    "paperOrLiveAuthorized": false,
+    "forwardBoundary": "2026-08-12T18:10:00Z",
+    "universe": ["BTC-USDT-SWAP", "ETH-USDT-SWAP"],
+    "inheritedParameters": {
+      "source": "reports/vwap_market_maker/btc-eth-20260807/report.md",
+      "vwapWindow5m": 288,
+      "anchorWeight": 0.5,
+      "minHalfSpreadBps": 10.0,
+      "volatilityMultiplier": 1.0,
+      "inventorySkewBps": 10.0,
+      "maxVwapSlopeBps": 50.0,
+      "quoteNotionalPct": 2.0,
+      "maxInventoryPct": 10.0,
+      "maxInventoryBars": 72,
+      "inventoryStopBps": 150.0,
+      "penetrationBps": 0.5
+    },
+    "collection": {
+      "btcEthXauMinuteSnapshots": "okx-microstructure-core.timer",
+      "broadThirtyMinuteSnapshots": "okx-microstructure-collector.timer"
+    },
+    "maturity": {
+      "minimumCalendarDays": 90,
+      "minimumCompleteSnapshotRatio": 0.8
+    }
+  }
+}

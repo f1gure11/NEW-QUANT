@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "registryId": "vwap-book-feasibility-registry-pending",
+  "frozenAt": "2026-08-12T18:00:00Z",
+  "protocol": {
+    "classification": "development_feasibility_on_inspected_snapshot_history_plus_new_forward_if_method_works",
+    "historyReusePolicy": "the_2026-07-02_through_2026-08-12_BTC_ETH_snapshots_and_overlapping_5m_candles_are_inspected; they_may_only_answer_whether_a_book_join_and_fill_definition_is_possible; they_cannot_select_parameters_or_authorize_paper_or_live",
+    "parameterPolicy": "inherit_the_already_published_vwap_market_maker_selected_parameters_without_a_new_grid_search",
+    "evaluation": "report_coverage_join_rate_and_diagnostic_pnl_once; if_join_and_fill_definitions_work_freeze_a_forward_only_copy_that_uses_only_post_boundary_snapshots",
+    "promotion": "this_file_cannot_authorize_paper_or_live_trading"
+  },
+  "study": {
+    "strategyKey": "btc_eth_vwap_book_feasibility_v1",
+    "modelId": "vwap-book-feasibility-pending",
+    "status": "preregistered_development_only",
+    "paperOrLiveAuthorized": false,
+    "forwardBoundary": "2026-08-12T18:00:00Z",
+    "universe": ["BTC-USDT-SWAP", "ETH-USDT-SWAP"],
+    "inheritedParameters": {
+      "source": "reports/vwap_market_maker/btc-eth-20260807/report.md",
+      "vwapWindow5m": 288,
+      "anchorWeight": 0.5,
+      "minHalfSpreadBps": 10.0,
+      "volatilityMultiplier": 1.0,
+      "inventorySkewBps": 10.0,
+      "trendLookback": 12,
+      "maxVwapSlopeBps": 50.0,
+      "volatilityWindow": 24,
+      "quoteNotionalPct": 2.0,
+      "maxInventoryPct": 10.0,
+      "maxInventoryBars": 72,
+      "inventoryStopBps": 150.0,
+      "penetrationBps": 0.5,
+      "makerFeeBps": 2.0,
+      "takerFeeBps": 5.0,
+      "takerSlippageBps": 1.0,
+      "startingEquity": 100000.0
+    },
+    "fillRule": "quotes_are_posted_after_snapshot_i_using_only_completed_5m_bars_strictly_before_that_snapshot; a_5m_bar_may_fill_only_if_its_entire_open-to-close_interval_sits_inside_(snapshot_i, snapshot_i+1]; otherwise_use_snapshot_i+1_last_price; both_sides_in_one_interval_keep_the_worse_mark-to-market_side_only",
+    "maturityIfForwardFrozen": {
+      "minimumCalendarDays": 90,
+      "minimumCompleteSnapshotRatio": 0.8,
+      "instruments": ["BTC-USDT-SWAP", "ETH-USDT-SWAP"]
+    }
+  }
+}

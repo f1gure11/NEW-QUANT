@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "registryId": "us-equity-mr-registry-9a7b89fd71f4adeb",
+  "frozenAt": "2026-08-12T07:10:44Z",
+  "protocol": {
+    "classification": "development_only_historical_test_on_inspected_and_survivorship_biased_data",
+    "historyReusePolicy": "the_cached_2016_08_08_through_2026_08_07_underlying_history_and_all_2026_06_18_plus_OKX_data_are_already_inspected_and_cannot_count_as_new_forward_validation",
+    "splitPolicy": "chronological_50_25_25_after_a_252_session_warmup; candidates_are_designated_from_training_2x_base_cost_only; validation_and_test_are_never_used_to_change_rules",
+    "multipleComparisonPolicy": "all_three_frozen_portfolios_and_every_2x_through_10x_leverage_result_must_be_reported; no_test_only_winner_substitution_symbol_removal_or_parameter_sweep",
+    "promotion": "results_are_research_only_and_cannot_authorize_paper_or_live_trading; genuine_promotion_requires_a_separately_frozen_rule_new_forward_data_and_explicit_user_approval"
+  },
+  "study": {
+    "strategyKey": "us_equity_mean_reversion_portfolios",
+    "modelId": "us-equity-mr-4567b2fa37926c56",
+    "status": "preregistered_development_only",
+    "paperOrLiveAuthorized": false,
+    "hypothesis": "Fixed literature-inspired short-horizon reversal, residual reversal, and distance-pairs portfolios may exhibit out-of-sample mean reversion after realistic fractional-share sizing, turnover, financing, borrow, and leverage stress.",
+    "data": {
+      "priceRoot": "data/qqq_active_enhancement/prices",
+      "priceField": "adj_close",
+      "observation": "completed_underlying_daily_close",
+      "commonStart": "2016-08-08",
+      "commonEnd": "2026-08-07",
+      "commonRows": 2514,
+      "warmupSessions": 252,
+      "bundleSha256": "19fb59960b395efb2acd6347bc84437c01bcc7206d77590ceba57e9b133719f9",
+      "bundleRule": "sha256_over_sorted_symbol_NUL_file_sha256_newline_for_the_26_equities_plus_QQQ",
+      "limitations": [
+        "current_contract_and_current_survivor_universe_bias",
+        "underlying_adjusted_closes_are_not_historical_OKX_contract_prices",
+        "daily_closes_cannot_observe_intraday_liquidation_or_signal_path",
+        "historical_bid_ask_depth_funding_and_real_margin_tiers_are_unavailable",
+        "the_source_history_has_already_been_inspected"
+      ]
+    },
+    "universe": {
+      "rule": "all_currently_tracked_OKX_equity_mappings_with_exactly_2514_complete_cached_daily_rows_from_2016_08_08_through_2026_08_07_excluding_index_proxies_and_non_equity_mappings; no_performance_based_deletion",
+      "symbols": [
+        "AAPL",
+        "ADBE",
+        "AMAT",
+        "AMD",
+        "AMZN",
+        "AVGO",
+        "COST",
+        "CSCO",
+        "GOOGL",
+        "INTC",
+        "ISRG",
+        "KLAC",
+        "LITE",
+        "LRCX",
+        "META",
+        "MRVL",
+        "MSFT",
+        "MSTR",
+        "MU",
+        "NFLX",
+        "NVDA",
+        "QCOM",
+        "TER",
+        "TSLA",
+        "TTWO",
+        "WDC"
+      ],
+      "marketProxy": "QQQ"
+    },
+    "split": {
+      "eligibleRows": 2262,
+      "train": {
+        "start": "2017-08-08",
+        "end": "2022-02-02",
+        "rows": 1131
+      },
+      "validation": {
+        "start": "2022-02-03",
+        "end": "2024-05-03",
+        "rows": 565
+      },
+      "test": {
+        "start": "2024-05-06",
+        "end": "2026-08-07",
+        "rows": 566
+      },
+      "boundaryAccounting": "each_split_starts_flat_with_1000_USD_and_pays_first_entry_and_final_liquidation_costs; indicators_may_use_only_prior_completed_closes_across_the_boundary"
+    },
+    "portfolios": [
+      {
+        "key": "cross_sectional_5d_reversal",
+        "family": "short_horizon_cross_sectional_reversal",
+        "formationSessions": 5,
+        "rebalanceEverySessions": 5,
+        "tailNamesPerSide": 5,
+        "weighting": "equal_notional_with_50_percent_of_gross_long_and_50_percent_short",
+        "signal": "long_the_five_lowest_and_short_the_five_highest_split_adjusted_close_returns_over_the_last_five_completed_sessions",
+        "execution": "execute_at_the_next_completed_close_and_hold_until_the_next_scheduled_execution"
+      },
+      {
+        "key": "market_residual_5d_reversal",
+        "family": "short_horizon_residual_reversal",
+        "betaLookbackSessions": 252,
+        "residualFormationSessions": 5,
+        "rebalanceEverySessions": 5,
+        "tailNamesPerSide": 5,
+        "regression": "per_stock_rolling_OLS_with_intercept_against_QQQ_daily_return_using_only_the_latest_252_completed_sessions",
+        "weighting": "equal_notional_with_50_percent_of_gross_long_and_50_percent_short",
+        "signal": "long_the_five_lowest_and_short_the_five_highest_sums_of_the_latest_five_OLS_residuals",
+        "execution": "execute_at_the_next_completed_close_and_hold_until_the_next_scheduled_execution"
+      },
+      {
+        "key": "distance_pairs_252_126",
+        "family": "distance_pairs_trading",
+        "formationSessions": 252,
+        "tradingSessions": 126,
+        "pairCount": 5,
+        "pairSelection": "greedily_select_five_disjoint_pairs_with_the_lowest_sum_of_squared_differences_between_formation_price_paths_normalized_to_one_at_the_first_formation_close",
+        "spreadCalibration": "formation_normalized_price_difference_mean_and_population_standard_deviation",
+        "entryZ": 2.0,
+        "exitZ": 0.0,
+        "stop": "none",
+        "weighting": "five_equal_gross_sleeves;_each_active_pair_is_half_long_and_half_short;flat_sleeves_remain_cash",
+        "signal": "when_absolute_spread_z_reaches_two_short_the_high_normalized_path_and_long_the_low_path;exit_on_the_first_completed_close_at_or_through_the_formation_mean_or_at_the_end_of_the_126_session_block",
+        "execution": "all_signal_changes_execute_at_the_next_completed_close"
+      }
+    ],
+    "selection": {
+      "input": "training_split_2x_base_cost_only",
+      "eligibility": {
+        "minimumCompletedSessions": 504,
+        "minimumTradeOrders": 50,
+        "minimumNetTotalReturnPct": 0.0,
+        "minimumProfitFactor": 1.0,
+        "maximumDrawdownPct": 35.0,
+        "liquidationAllowed": false
+      },
+      "ranking": "highest_annualized_Sharpe_then_highest_annualized_return_then_lowest_maximum_drawdown",
+      "validationPass": "selected_portfolio_at_2x_base_cost_must_have_positive_total_return_profit_factor_at_least_one_maximum_drawdown_at_most_35_percent_and_no_liquidation",
+      "testUse": "report_all_frozen_results_but_only_the_training_selected_portfolio_is_the_primary_test_hypothesis"
+    },
+    "portfolio": {
+      "initialEquityUsd": 1000.0,
+      "fractionalShareIncrement": 0.01,
+      "quantityRounding": "absolute_target_quantity_floor_to_increment",
+      "grossLeverageScenarios": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "netTarget": 0.0,
+      "reinvestment": "target_notional_is_recomputed_from_current_equity_at_each_execution",
+      "shortSaleProceeds": "held_as_collateral_and_not_counted_as_extra_equity",
+      "ruinDefinition": "equity_less_than_or_equal_to_zero",
+      "marginProxy": {
+        "mode": "daily_close_cross_margin_proxy",
+        "maintenanceMarginPctOfGross": 5.0,
+        "liquidationPenaltyBpsOfGross": 50.0,
+        "check": "after_daily_price_PnL_and_carry_and_again_after_rebalancing_costs",
+        "limitation": "not_actual_broker_or_OKX_tiering_and_intraday_liquidation_can_be_materially_worse"
+      }
+    },
+    "costProfiles": [
+      {
+        "key": "gross",
+        "transactionPerSideBps": 0.0,
+        "annualLongFinancingPct": 0.0,
+        "annualShortBorrowPct": 0.0
+      },
+      {
+        "key": "base",
+        "transactionPerSideBps": 10.0,
+        "annualLongFinancingPct": 5.0,
+        "annualShortBorrowPct": 1.0
+      },
+      {
+        "key": "stress",
+        "transactionPerSideBps": 20.0,
+        "annualLongFinancingPct": 8.0,
+        "annualShortBorrowPct": 3.0
+      }
+    ],
+    "carry": {
+      "longFinancingBase": "max(long_notional_minus_equity,zero)",
+      "shortBorrowBase": "short_notional",
+      "dayCount": 252,
+      "OKXFunding": "not_included_because_point_in_time_data_lake_funding_begins_only_in_2026_and_cannot_be_backfilled_across_the_underlying_2016_2026_history_without_temporal_bias"
+    },
+    "requiredOutputs": [
+      "all_portfolio_split_leverage_and_cost_profile_rows",
+      "training_selected_portfolio_and_validation_status",
+      "terminal_equity_total_and_annualized_return",
+      "annualized_volatility_and_Sharpe",
+      "profit_factor_and_maximum_drawdown",
+      "turnover_trade_orders_and_average_realized_gross",
+      "transaction_financing_borrow_and_liquidation_costs",
+      "liquidation_and_ruin_flags",
+      "coverage_data_fingerprint_and_bias_limitations"
+    ],
+    "references": [
+      {
+        "citation": "Jegadeesh, N. (1990), Evidence of Predictable Behavior of Security Returns, Journal of Finance 45(3)",
+        "doi": "10.1111/j.1540-6261.1990.tb05110.x",
+        "use": "short_horizon_cross_sectional_reversal"
+      },
+      {
+        "citation": "Da, Z., Liu, Q., and Schaumburg, E. (2014), A Closer Look at the Short-Term Return Reversal, Management Science 60(3)",
+        "doi": "10.1287/mnsc.2013.1755",
+        "use": "residual_reversal"
+      },
+      {
+        "citation": "Gatev, E., Goetzmann, W., and Rouwenhorst, K. (2006), Pairs Trading: Performance of a Relative-Value Arbitrage Rule, Review of Financial Studies 19(3)",
+        "doi": "10.1093/rfs/hhj020",
+        "workingPaper": "NBER w7032",
+        "use": "distance_pairs_trading"
+      }
+    ]
+  }
+}

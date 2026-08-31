@@ -1,0 +1,3570 @@
+{
+  "generatedAt": "2026-08-07T18:03:31Z",
+  "mode": "read_only_point_in_time_positive_gex_passive_pin_catcher",
+  "gexFile": "/opt/okx-quant/data/okx/gex_snapshots.jsonl",
+  "candleRoot": "/opt/okx-quant/data/vwap_market_maker",
+  "period": {
+    "start": "2026-07-24T04:18:39+00:00",
+    "trainEnd": "2026-07-31T07:39:19+00:00",
+    "validationEnd": "2026-08-03T21:19:39+00:00",
+    "end": "2026-08-07T11:00:00+00:00"
+  },
+  "eventCounts": {
+    "BTC": 141,
+    "ETH": 141
+  },
+  "candidateCount": 36,
+  "execution": {
+    "starting_equity": 100000.0,
+    "allocation_pct": 20.0,
+    "maker_fee_bps": 2.0,
+    "taker_fee_bps": 5.0,
+    "exit_slippage_bps": 1.0,
+    "penetration_bps": 0.5,
+    "max_wall_distance_bps": 200.0,
+    "wall_move_exit_bps": 50.0,
+    "event_latency_bars": 0
+  },
+  "costStress": {
+    "starting_equity": 100000.0,
+    "allocation_pct": 20.0,
+    "maker_fee_bps": 5.0,
+    "taker_fee_bps": 8.0,
+    "exit_slippage_bps": 2.0,
+    "penetration_bps": 2.0,
+    "max_wall_distance_bps": 200.0,
+    "wall_move_exit_bps": 50.0,
+    "event_latency_bars": 0
+  },
+  "selectedParameters": {
+    "wall_offset_bps": 0.0,
+    "take_profit_bps": 25.0,
+    "stop_loss_bps": 50.0,
+    "max_hold_bars": 12,
+    "max_gex_age_hours": 6.0
+  },
+  "selectedTrainingScore": {
+    "params": {
+      "wall_offset_bps": 0.0,
+      "take_profit_bps": 25.0,
+      "stop_loss_bps": 50.0,
+      "max_hold_bars": 12,
+      "max_gex_age_hours": 6.0
+    },
+    "score": -0.60422385,
+    "eligible": true,
+    "minimumInstrumentTrades": 5,
+    "primaryMedianReturnPct": -0.18298739,
+    "stressedMedianReturnPct": -0.29978076,
+    "worstDrawdownPct": 0.48582281,
+    "instrumentResults": {
+      "BTC": {
+        "primaryReturnPct": -0.17937965,
+        "primaryTrades": 5,
+        "stressedReturnPct": -0.24726965,
+        "stressedTrades": 5
+      },
+      "ETH": {
+        "primaryReturnPct": -0.18659513,
+        "primaryTrades": 13,
+        "stressedReturnPct": -0.35229186,
+        "stressedTrades": 13
+      }
+    }
+  },
+  "candidateScores": [
+    {
+      "params": {
+        "wall_offset_bps": 0.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -0.60422385,
+      "eligible": true,
+      "minimumInstrumentTrades": 5,
+      "primaryMedianReturnPct": -0.18298739,
+      "stressedMedianReturnPct": -0.29978076,
+      "worstDrawdownPct": 0.48582281,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.17937965,
+          "primaryTrades": 5,
+          "stressedReturnPct": -0.24726965,
+          "stressedTrades": 5
+        },
+        "ETH": {
+          "primaryReturnPct": -0.18659513,
+          "primaryTrades": 13,
+          "stressedReturnPct": -0.35229186,
+          "stressedTrades": 13
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 10.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -0.77260677,
+      "eligible": true,
+      "minimumInstrumentTrades": 6,
+      "primaryMedianReturnPct": -0.25952972,
+      "stressedMedianReturnPct": -0.37701296,
+      "worstDrawdownPct": 0.54425636,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.15445828,
+          "primaryTrades": 6,
+          "stressedReturnPct": -0.23433725,
+          "stressedTrades": 6
+        },
+        "ETH": {
+          "primaryReturnPct": -0.36460117,
+          "primaryTrades": 12,
+          "stressedReturnPct": -0.51968867,
+          "stressedTrades": 12
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 10.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -0.79622928,
+      "eligible": true,
+      "minimumInstrumentTrades": 5,
+      "primaryMedianReturnPct": -0.26087275,
+      "stressedMedianReturnPct": -0.38827358,
+      "worstDrawdownPct": 0.58833181,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.14688503,
+          "primaryTrades": 5,
+          "stressedReturnPct": -0.21277215,
+          "stressedTrades": 5
+        },
+        "ETH": {
+          "primaryReturnPct": -0.37486047,
+          "primaryTrades": 10,
+          "stressedReturnPct": -0.563775,
+          "stressedTrades": 10
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 0.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -0.86198397,
+      "eligible": true,
+      "minimumInstrumentTrades": 5,
+      "primaryMedianReturnPct": -0.30244468,
+      "stressedMedianReturnPct": -0.40015657,
+      "worstDrawdownPct": 0.63753089,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.23025048,
+          "primaryTrades": 5,
+          "stressedReturnPct": -0.29611165,
+          "stressedTrades": 5
+        },
+        "ETH": {
+          "primaryReturnPct": -0.37463888,
+          "primaryTrades": 10,
+          "stressedReturnPct": -0.50420149,
+          "stressedTrades": 10
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 25.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -0.94970385,
+      "eligible": true,
+      "minimumInstrumentTrades": 5,
+      "primaryMedianReturnPct": -0.31426614,
+      "stressedMedianReturnPct": -0.45260143,
+      "worstDrawdownPct": 0.73134513,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.10794978,
+          "primaryTrades": 5,
+          "stressedReturnPct": -0.17385773,
+          "stressedTrades": 5
+        },
+        "ETH": {
+          "primaryReturnPct": -0.5205825,
+          "primaryTrades": 16,
+          "stressedReturnPct": -0.73134513,
+          "stressedTrades": 16
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 25.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -0.96429181,
+      "eligible": true,
+      "minimumInstrumentTrades": 5,
+      "primaryMedianReturnPct": -0.34328352,
+      "stressedMedianReturnPct": -0.44289508,
+      "worstDrawdownPct": 0.71245286,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.10745214,
+          "primaryTrades": 5,
+          "stressedReturnPct": -0.17333731,
+          "stressedTrades": 5
+        },
+        "ETH": {
+          "primaryReturnPct": -0.57911489,
+          "primaryTrades": 10,
+          "stressedReturnPct": -0.71245286,
+          "stressedTrades": 10
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 10.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -1.21999357,
+      "eligible": true,
+      "minimumInstrumentTrades": 5,
+      "primaryMedianReturnPct": -0.41688498,
+      "stressedMedianReturnPct": -0.50987026,
+      "worstDrawdownPct": 1.17295336,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.1948996,
+          "primaryTrades": 5,
+          "stressedReturnPct": 0.12880046,
+          "stressedTrades": 5
+        },
+        "ETH": {
+          "primaryReturnPct": -1.02866956,
+          "primaryTrades": 8,
+          "stressedReturnPct": -1.14854097,
+          "stressedTrades": 8
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 0.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -1.23195451,
+      "eligible": true,
+      "minimumInstrumentTrades": 5,
+      "primaryMedianReturnPct": -0.44638277,
+      "stressedMedianReturnPct": -0.53189443,
+      "worstDrawdownPct": 1.01470923,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.09717964,
+          "primaryTrades": 5,
+          "stressedReturnPct": -0.16302619,
+          "stressedTrades": 5
+        },
+        "ETH": {
+          "primaryReturnPct": -0.79558589,
+          "primaryTrades": 8,
+          "stressedReturnPct": -0.90076268,
+          "stressedTrades": 8
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 50.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -0.03090031,
+      "eligible": false,
+      "minimumInstrumentTrades": 2,
+      "primaryMedianReturnPct": 0.08339394,
+      "stressedMedianReturnPct": -0.0094922,
+      "worstDrawdownPct": 0.41920817,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.16897955,
+          "primaryTrades": 2,
+          "stressedReturnPct": 0.1429497,
+          "stressedTrades": 2
+        },
+        "ETH": {
+          "primaryReturnPct": -0.00219168,
+          "primaryTrades": 12,
+          "stressedReturnPct": -0.1619341,
+          "stressedTrades": 12
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 10.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.09585323,
+      "eligible": false,
+      "minimumInstrumentTrades": 2,
+      "primaryMedianReturnPct": -0.01869462,
+      "stressedMedianReturnPct": -0.0446844,
+      "worstDrawdownPct": 0.12989682,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.03660845,
+          "primaryTrades": 2,
+          "stressedReturnPct": 0.01059195,
+          "stressedTrades": 2
+        },
+        "ETH": {
+          "primaryReturnPct": -0.07399769,
+          "primaryTrades": 2,
+          "stressedReturnPct": -0.09996075,
+          "stressedTrades": 2
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 10.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.11089136,
+      "eligible": false,
+      "minimumInstrumentTrades": 2,
+      "primaryMedianReturnPct": -0.0187224,
+      "stressedMedianReturnPct": -0.04470976,
+      "worstDrawdownPct": 0.18983683,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.06660084,
+          "primaryTrades": 2,
+          "stressedReturnPct": 0.04057114,
+          "stressedTrades": 2
+        },
+        "ETH": {
+          "primaryReturnPct": -0.10404563,
+          "primaryTrades": 2,
+          "stressedReturnPct": -0.12999065,
+          "stressedTrades": 2
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 0.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.11586581,
+      "eligible": false,
+      "minimumInstrumentTrades": 2,
+      "primaryMedianReturnPct": -0.02869951,
+      "stressedMedianReturnPct": -0.05469209,
+      "worstDrawdownPct": 0.12989682,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.01659867,
+          "primaryTrades": 2,
+          "stressedReturnPct": -0.00942343,
+          "stressedTrades": 2
+        },
+        "ETH": {
+          "primaryReturnPct": -0.07399769,
+          "primaryTrades": 2,
+          "stressedReturnPct": -0.09996075,
+          "stressedTrades": 2
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 0.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.13090994,
+      "eligible": false,
+      "minimumInstrumentTrades": 2,
+      "primaryMedianReturnPct": -0.02873029,
+      "stressedMedianReturnPct": -0.05472045,
+      "worstDrawdownPct": 0.18983683,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.04658506,
+          "primaryTrades": 2,
+          "stressedReturnPct": 0.02054976,
+          "stressedTrades": 2
+        },
+        "ETH": {
+          "primaryReturnPct": -0.10404563,
+          "primaryTrades": 2,
+          "stressedReturnPct": -0.12999065,
+          "stressedTrades": 2
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 10.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.13099814,
+      "eligible": false,
+      "minimumInstrumentTrades": 2,
+      "primaryMedianReturnPct": -0.01878741,
+      "stressedMedianReturnPct": -0.04477152,
+      "worstDrawdownPct": 0.26975684,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.10659069,
+          "primaryTrades": 2,
+          "stressedReturnPct": 0.08054339,
+          "stressedTrades": 2
+        },
+        "ETH": {
+          "primaryReturnPct": -0.14416551,
+          "primaryTrades": 2,
+          "stressedReturnPct": -0.17008643,
+          "stressedTrades": 2
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 0.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.15102472,
+      "eligible": false,
+      "minimumInstrumentTrades": 2,
+      "primaryMedianReturnPct": -0.0287993,
+      "stressedMedianReturnPct": -0.05478621,
+      "worstDrawdownPct": 0.26975684,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.08656691,
+          "primaryTrades": 2,
+          "stressedReturnPct": 0.06051402,
+          "stressedTrades": 2
+        },
+        "ETH": {
+          "primaryReturnPct": -0.14416551,
+          "primaryTrades": 2,
+          "stressedReturnPct": -0.17008643,
+          "stressedTrades": 2
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 25.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.22136692,
+      "eligible": false,
+      "minimumInstrumentTrades": 2,
+      "primaryMedianReturnPct": -0.06171227,
+      "stressedMedianReturnPct": -0.09469689,
+      "worstDrawdownPct": 0.25983103,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.06654827,
+          "primaryTrades": 2,
+          "stressedReturnPct": 0.04054014,
+          "stressedTrades": 2
+        },
+        "ETH": {
+          "primaryReturnPct": -0.18997281,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.22993392,
+          "stressedTrades": 3
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 50.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.22429458,
+      "eligible": false,
+      "minimumInstrumentTrades": 0,
+      "primaryMedianReturnPct": -0.05737519,
+      "stressedMedianReturnPct": -0.096305,
+      "worstDrawdownPct": 0.28245756,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.0,
+          "primaryTrades": 0,
+          "stressedReturnPct": 0.0,
+          "stressedTrades": 0
+        },
+        "ETH": {
+          "primaryReturnPct": -0.11475037,
+          "primaryTrades": 6,
+          "stressedReturnPct": -0.19261001,
+          "stressedTrades": 6
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 50.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.28314546,
+      "eligible": false,
+      "minimumInstrumentTrades": 1,
+      "primaryMedianReturnPct": -0.06418005,
+      "stressedMedianReturnPct": -0.12406951,
+      "worstDrawdownPct": 0.37958359,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.1359019,
+          "primaryTrades": 1,
+          "stressedReturnPct": -0.14985172,
+          "stressedTrades": 1
+        },
+        "ETH": {
+          "primaryReturnPct": 0.0075418,
+          "primaryTrades": 8,
+          "stressedReturnPct": -0.0982873,
+          "stressedTrades": 8
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 50.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.31004582,
+      "eligible": false,
+      "minimumInstrumentTrades": 0,
+      "primaryMedianReturnPct": -0.08920454,
+      "stressedMedianReturnPct": -0.13011336,
+      "worstDrawdownPct": 0.3629117,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.0,
+          "primaryTrades": 0,
+          "stressedReturnPct": 0.0,
+          "stressedTrades": 0
+        },
+        "ETH": {
+          "primaryReturnPct": -0.17840909,
+          "primaryTrades": 6,
+          "stressedReturnPct": -0.26022671,
+          "stressedTrades": 6
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 25.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.31130384,
+      "eligible": false,
+      "minimumInstrumentTrades": 2,
+      "primaryMedianReturnPct": -0.0917049,
+      "stressedMedianReturnPct": -0.12468919,
+      "worstDrawdownPct": 0.37963905,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.09654963,
+          "primaryTrades": 2,
+          "stressedReturnPct": 0.07052831,
+          "stressedTrades": 2
+        },
+        "ETH": {
+          "primaryReturnPct": -0.27995942,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.31990668,
+          "stressedTrades": 3
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 10.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.32635265,
+      "eligible": false,
+      "minimumInstrumentTrades": 3,
+      "primaryMedianReturnPct": -0.08223777,
+      "stressedMedianReturnPct": -0.14713635,
+      "worstDrawdownPct": 0.38791416,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.03210456,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.0700287,
+          "stressedTrades": 3
+        },
+        "ETH": {
+          "primaryReturnPct": -0.13237097,
+          "primaryTrades": 7,
+          "stressedReturnPct": -0.22424399,
+          "stressedTrades": 7
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 10.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.34731352,
+      "eligible": false,
+      "minimumInstrumentTrades": 3,
+      "primaryMedianReturnPct": -0.09717304,
+      "stressedMedianReturnPct": -0.17385032,
+      "worstDrawdownPct": 0.30516065,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.03201877,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.06996577,
+          "stressedTrades": 3
+        },
+        "ETH": {
+          "primaryReturnPct": -0.1623273,
+          "primaryTrades": 9,
+          "stressedReturnPct": -0.27773488,
+          "stressedTrades": 9
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 25.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.43119141,
+      "eligible": false,
+      "minimumInstrumentTrades": 2,
+      "primaryMedianReturnPct": -0.1316949,
+      "stressedMedianReturnPct": -0.16467874,
+      "worstDrawdownPct": 0.53927108,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.13655145,
+          "primaryTrades": 2,
+          "stressedReturnPct": 0.11051253,
+          "stressedTrades": 2
+        },
+        "ETH": {
+          "primaryReturnPct": -0.39994125,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.43987002,
+          "stressedTrades": 3
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 0.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.47996436,
+      "eligible": false,
+      "minimumInstrumentTrades": 3,
+      "primaryMedianReturnPct": -0.15762386,
+      "stressedMedianReturnPct": -0.22347281,
+      "worstDrawdownPct": 0.39547077,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.05554893,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.09549123,
+          "stressedTrades": 3
+        },
+        "ETH": {
+          "primaryReturnPct": -0.25969878,
+          "primaryTrades": 7,
+          "stressedReturnPct": -0.3514544,
+          "stressedTrades": 7
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 25.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.51600032,
+      "eligible": false,
+      "minimumInstrumentTrades": 3,
+      "primaryMedianReturnPct": -0.16718076,
+      "stressedMedianReturnPct": -0.22604585,
+      "worstDrawdownPct": 0.49109483,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.03210456,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.0700287,
+          "stressedTrades": 3
+        },
+        "ETH": {
+          "primaryReturnPct": -0.30225695,
+          "primaryTrades": 6,
+          "stressedReturnPct": -0.38206301,
+          "stressedTrades": 6
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 25.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.56587268,
+      "eligible": false,
+      "minimumInstrumentTrades": 3,
+      "primaryMedianReturnPct": -0.17219446,
+      "stressedMedianReturnPct": -0.23104115,
+      "worstDrawdownPct": 0.65054826,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.03801262,
+          "primaryTrades": 3,
+          "stressedReturnPct": 7.402e-05,
+          "stressedTrades": 3
+        },
+        "ETH": {
+          "primaryReturnPct": -0.38240154,
+          "primaryTrades": 6,
+          "stressedReturnPct": -0.46215633,
+          "stressedTrades": 6
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 25.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.57705106,
+      "eligible": false,
+      "minimumInstrumentTrades": 3,
+      "primaryMedianReturnPct": -0.1946724,
+      "stressedMedianReturnPct": -0.26645266,
+      "worstDrawdownPct": 0.46370398,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.03201877,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.06996577,
+          "stressedTrades": 3
+        },
+        "ETH": {
+          "primaryReturnPct": -0.35732604,
+          "primaryTrades": 8,
+          "stressedReturnPct": -0.46293955,
+          "stressedTrades": 8
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 50.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 1.0
+      },
+      "score": -0.60781582,
+      "eligible": false,
+      "minimumInstrumentTrades": 0,
+      "primaryMedianReturnPct": -0.21397279,
+      "stressedMedianReturnPct": -0.25482615,
+      "worstDrawdownPct": 0.55606753,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.0,
+          "primaryTrades": 0,
+          "stressedReturnPct": 0.0,
+          "stressedTrades": 0
+        },
+        "ETH": {
+          "primaryReturnPct": -0.42794558,
+          "primaryTrades": 6,
+          "stressedReturnPct": -0.50965229,
+          "stressedTrades": 6
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 50.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.65500207,
+      "eligible": false,
+      "minimumInstrumentTrades": 1,
+      "primaryMedianReturnPct": -0.2296814,
+      "stressedMedianReturnPct": -0.2953881,
+      "worstDrawdownPct": 0.5197303,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.115939,
+          "primaryTrades": 1,
+          "stressedReturnPct": -0.12989682,
+          "stressedTrades": 1
+        },
+        "ETH": {
+          "primaryReturnPct": -0.3434238,
+          "primaryTrades": 9,
+          "stressedReturnPct": -0.46087938,
+          "stressedTrades": 9
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 0.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.6560077,
+      "eligible": false,
+      "minimumInstrumentTrades": 3,
+      "primaryMedianReturnPct": -0.2267526,
+      "stressedMedianReturnPct": -0.28554919,
+      "worstDrawdownPct": 0.57482366,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.03210456,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.0700287,
+          "stressedTrades": 3
+        },
+        "ETH": {
+          "primaryReturnPct": -0.42140064,
+          "primaryTrades": 6,
+          "stressedReturnPct": -0.50106967,
+          "stressedTrades": 6
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 25.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -0.70963521,
+      "eligible": false,
+      "minimumInstrumentTrades": 4,
+      "primaryMedianReturnPct": -0.21111868,
+      "stressedMedianReturnPct": -0.2967914,
+      "worstDrawdownPct": 0.80690051,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.24839864,
+          "primaryTrades": 4,
+          "stressedReturnPct": 0.19630599,
+          "stressedTrades": 4
+        },
+        "ETH": {
+          "primaryReturnPct": -0.670636,
+          "primaryTrades": 9,
+          "stressedReturnPct": -0.7898888,
+          "stressedTrades": 9
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 10.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.76782215,
+      "eligible": false,
+      "minimumInstrumentTrades": 3,
+      "primaryMedianReturnPct": -0.26961961,
+      "stressedMedianReturnPct": -0.32933022,
+      "worstDrawdownPct": 0.67548924,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.00818871,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.02973081,
+          "stressedTrades": 3
+        },
+        "ETH": {
+          "primaryReturnPct": -0.54742793,
+          "primaryTrades": 6,
+          "stressedReturnPct": -0.62892964,
+          "stressedTrades": 6
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 50.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.80343955,
+      "eligible": false,
+      "minimumInstrumentTrades": 1,
+      "primaryMedianReturnPct": -0.28807665,
+      "stressedMedianReturnPct": -0.35378294,
+      "worstDrawdownPct": 0.64631986,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.1359019,
+          "primaryTrades": 1,
+          "stressedReturnPct": -0.14985172,
+          "stressedTrades": 1
+        },
+        "ETH": {
+          "primaryReturnPct": -0.4402514,
+          "primaryTrades": 9,
+          "stressedReturnPct": -0.55771415,
+          "stressedTrades": 9
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 50.0,
+        "take_profit_bps": 25.0,
+        "stop_loss_bps": 50.0,
+        "max_hold_bars": 12,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -0.83258904,
+      "eligible": false,
+      "minimumInstrumentTrades": 4,
+      "primaryMedianReturnPct": -0.26750311,
+      "stressedMedianReturnPct": -0.39186082,
+      "worstDrawdownPct": 0.69290045,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.04372719,
+          "primaryTrades": 4,
+          "stressedReturnPct": -0.09566043,
+          "stressedTrades": 4
+        },
+        "ETH": {
+          "primaryReturnPct": -0.49127903,
+          "primaryTrades": 15,
+          "stressedReturnPct": -0.68806121,
+          "stressedTrades": 15
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 0.0,
+        "take_profit_bps": 60.0,
+        "stop_loss_bps": 120.0,
+        "max_hold_bars": 48,
+        "max_gex_age_hours": 3.0
+      },
+      "score": -0.8383233,
+      "eligible": false,
+      "minimumInstrumentTrades": 3,
+      "primaryMedianReturnPct": -0.30551359,
+      "stressedMedianReturnPct": -0.36620116,
+      "worstDrawdownPct": 0.6664342,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": -0.04058163,
+          "primaryTrades": 3,
+          "stressedReturnPct": -0.08047655,
+          "stressedTrades": 3
+        },
+        "ETH": {
+          "primaryReturnPct": -0.57044555,
+          "primaryTrades": 6,
+          "stressedReturnPct": -0.65192577,
+          "stressedTrades": 6
+        }
+      }
+    },
+    {
+      "params": {
+        "wall_offset_bps": 50.0,
+        "take_profit_bps": 40.0,
+        "stop_loss_bps": 80.0,
+        "max_hold_bars": 24,
+        "max_gex_age_hours": 6.0
+      },
+      "score": -0.98308734,
+      "eligible": false,
+      "minimumInstrumentTrades": 3,
+      "primaryMedianReturnPct": -0.31939533,
+      "stressedMedianReturnPct": -0.43766085,
+      "worstDrawdownPct": 0.90412466,
+      "instrumentResults": {
+        "BTC": {
+          "primaryReturnPct": 0.04042987,
+          "primaryTrades": 3,
+          "stressedReturnPct": 0.00043826,
+          "stressedTrades": 3
+        },
+        "ETH": {
+          "primaryReturnPct": -0.67922053,
+          "primaryTrades": 15,
+          "stressedReturnPct": -0.87575996,
+          "stressedTrades": 15
+        }
+      }
+    }
+  ],
+  "familyOosAudit": {
+    "warning": "Validation/test family inspection is descriptive only. It is not used to replace the training-selected parameters.",
+    "candidateCount": 36,
+    "trainingEligibleCandidateCount": 8,
+    "eligibleWithBothOosActivity": 3,
+    "eligibleValidationPositiveMedianCount": 3,
+    "eligibleTestPositiveMedianCount": 0,
+    "eligiblePositiveInBothCount": 0,
+    "allTestPositiveMedianCount": 4,
+    "rows": [
+      {
+        "params": {
+          "wall_offset_bps": 0.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": true,
+        "validation": {
+          "medianReturnPct": -0.02870409,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.04305904,
+            "ETH": -0.10046721
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 3
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.15421467,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.08401764,
+            "ETH": -0.39244698
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 4
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 10.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": true,
+        "validation": {
+          "medianReturnPct": -0.0369645,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": 0.04201,
+            "ETH": -0.115939
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.16535187,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.33070374
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 5
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 10.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": true,
+        "validation": {
+          "medianReturnPct": -0.01815458,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": 0.01815857,
+            "ETH": -0.05446773
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.35513005,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.7102601
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 5
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 0.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": true,
+        "validation": {
+          "medianReturnPct": 0.02461641,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.08400892,
+            "ETH": -0.0347761
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 2
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.13332451,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.11291854,
+            "ETH": -0.37956756
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 3
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 25.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": true,
+        "validation": {
+          "medianReturnPct": -0.00480677,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.00961353
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.15708159,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.02289416,
+            "ETH": -0.29126903
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 9
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 25.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": true,
+        "validation": {
+          "medianReturnPct": -0.01223422,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.02446844
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.17909478,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.02289416,
+            "ETH": -0.33529539
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 8
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 10.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": true,
+        "validation": {
+          "medianReturnPct": 0.02877813,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": 0.112024,
+            "ETH": -0.05446773
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.22084985,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.4416997
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 4
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 0.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": true,
+        "validation": {
+          "medianReturnPct": 0.01393251,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.00169321,
+            "ETH": 0.02955824
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.07973375,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.1529429,
+            "ETH": -0.3124104
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 3
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 50.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.01286569,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.02573139
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": 0.0456132,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.0912264
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 8
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 10.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.00890613,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.01781226,
+            "ETH": 0.0
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 0
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.13173767,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.26347534
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 4
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 10.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.00890613,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.01781226,
+            "ETH": 0.0
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 0
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.16171137,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.32342274
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 4
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 0.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.01093909,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": 0.00104859,
+            "ETH": 0.0208296
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.12020331,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.03630049,
+            "ETH": -0.27670712
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 3
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 0.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.00821414,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.00216593,
+            "ETH": 0.01859421
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.13932879,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.03518366,
+            "ETH": -0.31384123
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 3
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 10.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.00890613,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.01781226,
+            "ETH": 0.0
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 0
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.15653583,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.31307166
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 4
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 0.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.00821414,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.00216593,
+            "ETH": 0.01859421
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.1442197,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.03518366,
+            "ETH": -0.32362306
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 3
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 25.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.0,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.0
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 0
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.03792094,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.02289416,
+            "ETH": -0.05294772
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 6
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 50.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.0,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.0
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 0
+          }
+        },
+        "test": {
+          "medianReturnPct": 0.01787254,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.03574508
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 5
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 50.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.01233,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.02466001
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.0180754,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.03615079
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 8
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 50.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.0,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.0
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 0
+          }
+        },
+        "test": {
+          "medianReturnPct": 0.03185896,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.06371792
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 4
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 25.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.0,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.0
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 0
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.03609353,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.02289416,
+            "ETH": -0.0492929
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 6
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 10.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": -0.01868813,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": 0.01815857,
+            "ETH": -0.05553483
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.3380959,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.67619181
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 5
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 10.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": -0.0369645,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": 0.04201,
+            "ETH": -0.115939
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.16535187,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.33070374
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 5
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 25.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.0,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.0
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 0
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.00182125,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.02289416,
+            "ETH": 0.01925166
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 4
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 0.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": -0.02870409,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.04305904,
+            "ETH": -0.10046721
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 3
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.15421467,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.08401764,
+            "ETH": -0.39244698
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 4
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 25.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": -0.01276857,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.02553713
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.20224491,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.02289416,
+            "ETH": -0.38159566
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 8
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 25.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": -0.01276857,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.02553713
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.22982986,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.02289416,
+            "ETH": -0.43676557
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 5
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 25.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": -0.01276857,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.02553713
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.15708159,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.02289416,
+            "ETH": -0.29126903
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 9
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 50.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 1.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.0,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.0
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 0
+          }
+        },
+        "test": {
+          "medianReturnPct": 0.01186462,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.02372923
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 4
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 50.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.020995,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.04199
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.07611268,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.15222536
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 10
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 0.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.02408319,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.08400892,
+            "ETH": -0.03584255
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 2
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.13332451,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.11291854,
+            "ETH": -0.37956756
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 3
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 25.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": -0.01223422,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.02446844
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.17584743,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.02289416,
+            "ETH": -0.32880071
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 5
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 10.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.02824458,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": 0.112024,
+            "ETH": -0.05553483
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.18953222,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.37906443
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 4
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 50.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.01233,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.02466001
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.165358,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.330716
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 8
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 50.0,
+          "take_profit_bps": 25.0,
+          "stop_loss_bps": 50.0,
+          "max_hold_bars": 12,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.020995,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.04199
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.07900315,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.1580063
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 15
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 0.0,
+          "take_profit_bps": 60.0,
+          "stop_loss_bps": 120.0,
+          "max_hold_bars": 48,
+          "max_gex_age_hours": 3.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.01393251,
+          "minimumInstrumentTrades": 1,
+          "instrumentReturns": {
+            "BTC": -0.00169321,
+            "ETH": 0.02955824
+          },
+          "instrumentTrades": {
+            "BTC": 1,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.06543686,
+          "minimumInstrumentTrades": 2,
+          "instrumentReturns": {
+            "BTC": 0.12379606,
+            "ETH": -0.25466978
+          },
+          "instrumentTrades": {
+            "BTC": 2,
+            "ETH": 3
+          }
+        }
+      },
+      {
+        "params": {
+          "wall_offset_bps": 50.0,
+          "take_profit_bps": 40.0,
+          "stop_loss_bps": 80.0,
+          "max_hold_bars": 24,
+          "max_gex_age_hours": 6.0
+        },
+        "trainingEligible": false,
+        "validation": {
+          "medianReturnPct": 0.01286569,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": 0.02573139
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 1
+          }
+        },
+        "test": {
+          "medianReturnPct": -0.12359001,
+          "minimumInstrumentTrades": 0,
+          "instrumentReturns": {
+            "BTC": 0.0,
+            "ETH": -0.24718002
+          },
+          "instrumentTrades": {
+            "BTC": 0,
+            "ETH": 12
+          }
+        }
+      }
+    ]
+  },
+  "rows": [
+    {
+      "underlying": "BTC",
+      "instId": "BTC-USDT-SWAP",
+      "segment": "train",
+      "variant": "primary",
+      "startingEquity": 100000.0,
+      "finalEquity": 99820.6203505,
+      "returnPct": -0.17937965,
+      "maxDrawdownPct": 0.20926191,
+      "tradeCount": 5,
+      "longTrades": 3,
+      "shortTrades": 2,
+      "winRatePct": 40.0,
+      "profitFactor": 0.25204508,
+      "expectancyBps": -3.5879046,
+      "makerEntries": 5,
+      "targetExits": 1,
+      "riskExits": 4,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 709,
+      "positiveGammaBars": 346,
+      "quoteBars": 254,
+      "eligibleQuoteBars": 254,
+      "singlePinQuoteBars": 0,
+      "bothSidesTouched": 0,
+      "candleCount": 2056
+    },
+    {
+      "underlying": "BTC",
+      "instId": "BTC-USDT-SWAP",
+      "segment": "validation",
+      "variant": "primary",
+      "startingEquity": 100000.0,
+      "finalEquity": 100043.05903507,
+      "returnPct": 0.04305904,
+      "maxDrawdownPct": 0.01952756,
+      "tradeCount": 2,
+      "longTrades": 0,
+      "shortTrades": 2,
+      "winRatePct": 100.0,
+      "profitFactor": 999.0,
+      "expectancyBps": 2.1529295,
+      "makerEntries": 2,
+      "targetExits": 1,
+      "riskExits": 1,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 715,
+      "positiveGammaBars": 65,
+      "quoteBars": 43,
+      "eligibleQuoteBars": 43,
+      "singlePinQuoteBars": 0,
+      "bothSidesTouched": 0,
+      "candleCount": 1028
+    },
+    {
+      "underlying": "BTC",
+      "instId": "BTC-USDT-SWAP",
+      "segment": "test",
+      "variant": "primary",
+      "startingEquity": 100000.0,
+      "finalEquity": 100084.01764,
+      "returnPct": 0.08401764,
+      "maxDrawdownPct": 0.00987488,
+      "tradeCount": 2,
+      "longTrades": 1,
+      "shortTrades": 1,
+      "winRatePct": 100.0,
+      "profitFactor": 999.0,
+      "expectancyBps": 4.2,
+      "makerEntries": 2,
+      "targetExits": 2,
+      "riskExits": 0,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 533,
+      "positiveGammaBars": 358,
+      "quoteBars": 347,
+      "eligibleQuoteBars": 347,
+      "singlePinQuoteBars": 0,
+      "bothSidesTouched": 0,
+      "candleCount": 1029
+    },
+    {
+      "underlying": "BTC",
+      "instId": "BTC-USDT-SWAP",
+      "segment": "test",
+      "variant": "cost_stress",
+      "startingEquity": 100000.0,
+      "finalEquity": 100060.00899999,
+      "returnPct": 0.060009,
+      "maxDrawdownPct": 0.01465625,
+      "tradeCount": 2,
+      "longTrades": 1,
+      "shortTrades": 1,
+      "winRatePct": 100.0,
+      "profitFactor": 999.0,
+      "expectancyBps": 3.0,
+      "makerEntries": 2,
+      "targetExits": 2,
+      "riskExits": 0,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 533,
+      "positiveGammaBars": 358,
+      "quoteBars": 347,
+      "eligibleQuoteBars": 347,
+      "singlePinQuoteBars": 0,
+      "bothSidesTouched": 0,
+      "candleCount": 1029
+    },
+    {
+      "underlying": "BTC",
+      "instId": "BTC-USDT-SWAP",
+      "segment": "test",
+      "variant": "one_bar_latency",
+      "startingEquity": 100000.0,
+      "finalEquity": 100084.01764,
+      "returnPct": 0.08401764,
+      "maxDrawdownPct": 0.00987488,
+      "tradeCount": 2,
+      "longTrades": 1,
+      "shortTrades": 1,
+      "winRatePct": 100.0,
+      "profitFactor": 999.0,
+      "expectancyBps": 4.2,
+      "makerEntries": 2,
+      "targetExits": 2,
+      "riskExits": 0,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 528,
+      "positiveGammaBars": 354,
+      "quoteBars": 343,
+      "eligibleQuoteBars": 343,
+      "singlePinQuoteBars": 1,
+      "bothSidesTouched": 0,
+      "candleCount": 1029
+    },
+    {
+      "underlying": "BTC",
+      "instId": "BTC-USDT-SWAP",
+      "segment": "full",
+      "variant": "primary",
+      "startingEquity": 100000.0,
+      "finalEquity": 99947.50518816,
+      "returnPct": -0.05249481,
+      "maxDrawdownPct": 0.20926191,
+      "tradeCount": 9,
+      "longTrades": 4,
+      "shortTrades": 5,
+      "winRatePct": 66.666667,
+      "profitFactor": 0.78179215,
+      "expectancyBps": -0.58151822,
+      "makerEntries": 9,
+      "targetExits": 4,
+      "riskExits": 5,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 1957,
+      "positiveGammaBars": 769,
+      "quoteBars": 644,
+      "eligibleQuoteBars": 644,
+      "singlePinQuoteBars": 0,
+      "bothSidesTouched": 0,
+      "candleCount": 4113
+    },
+    {
+      "underlying": "ETH",
+      "instId": "ETH-USDT-SWAP",
+      "segment": "train",
+      "variant": "primary",
+      "startingEquity": 100000.0,
+      "finalEquity": 99813.40486936,
+      "returnPct": -0.18659513,
+      "maxDrawdownPct": 0.36822458,
+      "tradeCount": 13,
+      "longTrades": 11,
+      "shortTrades": 2,
+      "winRatePct": 61.538462,
+      "profitFactor": 0.64311517,
+      "expectancyBps": -1.43394285,
+      "makerEntries": 13,
+      "targetExits": 8,
+      "riskExits": 5,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 709,
+      "positiveGammaBars": 514,
+      "quoteBars": 326,
+      "eligibleQuoteBars": 326,
+      "singlePinQuoteBars": 231,
+      "bothSidesTouched": 0,
+      "candleCount": 2056
+    },
+    {
+      "underlying": "ETH",
+      "instId": "ETH-USDT-SWAP",
+      "segment": "validation",
+      "variant": "primary",
+      "startingEquity": 100000.0,
+      "finalEquity": 99899.53278908,
+      "returnPct": -0.10046721,
+      "maxDrawdownPct": 0.13794185,
+      "tradeCount": 3,
+      "longTrades": 2,
+      "shortTrades": 1,
+      "winRatePct": 33.333333,
+      "profitFactor": 0.17175122,
+      "expectancyBps": -3.34827133,
+      "makerEntries": 3,
+      "targetExits": 0,
+      "riskExits": 3,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 715,
+      "positiveGammaBars": 89,
+      "quoteBars": 57,
+      "eligibleQuoteBars": 57,
+      "singlePinQuoteBars": 21,
+      "bothSidesTouched": 0,
+      "candleCount": 1028
+    },
+    {
+      "underlying": "ETH",
+      "instId": "ETH-USDT-SWAP",
+      "segment": "test",
+      "variant": "primary",
+      "startingEquity": 100000.0,
+      "finalEquity": 99607.55301973,
+      "returnPct": -0.39244698,
+      "maxDrawdownPct": 0.39244698,
+      "tradeCount": 4,
+      "longTrades": 1,
+      "shortTrades": 3,
+      "winRatePct": 0.0,
+      "profitFactor": 0.0,
+      "expectancyBps": -9.82517,
+      "makerEntries": 4,
+      "targetExits": 0,
+      "riskExits": 4,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 533,
+      "positiveGammaBars": 524,
+      "quoteBars": 478,
+      "eligibleQuoteBars": 478,
+      "singlePinQuoteBars": 291,
+      "bothSidesTouched": 0,
+      "candleCount": 1029
+    },
+    {
+      "underlying": "ETH",
+      "instId": "ETH-USDT-SWAP",
+      "segment": "test",
+      "variant": "cost_stress",
+      "startingEquity": 100000.0,
+      "finalEquity": 99551.61711227,
+      "returnPct": -0.44838289,
+      "maxDrawdownPct": 0.44838289,
+      "tradeCount": 4,
+      "longTrades": 1,
+      "shortTrades": 3,
+      "winRatePct": 0.0,
+      "profitFactor": 0.0,
+      "expectancyBps": -11.22799325,
+      "makerEntries": 4,
+      "targetExits": 0,
+      "riskExits": 4,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 533,
+      "positiveGammaBars": 524,
+      "quoteBars": 478,
+      "eligibleQuoteBars": 478,
+      "singlePinQuoteBars": 291,
+      "bothSidesTouched": 0,
+      "candleCount": 1029
+    },
+    {
+      "underlying": "ETH",
+      "instId": "ETH-USDT-SWAP",
+      "segment": "test",
+      "variant": "one_bar_latency",
+      "startingEquity": 100000.0,
+      "finalEquity": 99607.55301973,
+      "returnPct": -0.39244698,
+      "maxDrawdownPct": 0.39244698,
+      "tradeCount": 4,
+      "longTrades": 1,
+      "shortTrades": 3,
+      "winRatePct": 0.0,
+      "profitFactor": 0.0,
+      "expectancyBps": -9.82517,
+      "makerEntries": 4,
+      "targetExits": 0,
+      "riskExits": 4,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 528,
+      "positiveGammaBars": 519,
+      "quoteBars": 472,
+      "eligibleQuoteBars": 472,
+      "singlePinQuoteBars": 287,
+      "bothSidesTouched": 0,
+      "candleCount": 1029
+    },
+    {
+      "underlying": "ETH",
+      "instId": "ETH-USDT-SWAP",
+      "segment": "full",
+      "variant": "primary",
+      "startingEquity": 100000.0,
+      "finalEquity": 99321.80397688,
+      "returnPct": -0.67819602,
+      "maxDrawdownPct": 0.6888589,
+      "tradeCount": 20,
+      "longTrades": 14,
+      "shortTrades": 6,
+      "winRatePct": 45.0,
+      "profitFactor": 0.3441479,
+      "expectancyBps": -3.39933755,
+      "makerEntries": 20,
+      "targetExits": 8,
+      "riskExits": 12,
+      "staleExits": 0,
+      "regimeExits": 0,
+      "wallMoveExits": 0,
+      "freshGexBars": 1957,
+      "positiveGammaBars": 1127,
+      "quoteBars": 861,
+      "eligibleQuoteBars": 861,
+      "singlePinQuoteBars": 543,
+      "bothSidesTouched": 0,
+      "candleCount": 4113
+    }
+  ],
+  "aggregates": [
+    {
+      "segment": "full",
+      "variant": "primary",
+      "instruments": 2,
+      "medianReturnPct": -0.36534542,
+      "worstReturnPct": -0.67819602,
+      "worstDrawdownPct": 0.6888589,
+      "totalTrades": 29,
+      "minimumInstrumentTrades": 9,
+      "positiveInstruments": 0,
+      "minimumProfitFactor": 0.3441479
+    },
+    {
+      "segment": "test",
+      "variant": "cost_stress",
+      "instruments": 2,
+      "medianReturnPct": -0.19418694,
+      "worstReturnPct": -0.44838289,
+      "worstDrawdownPct": 0.44838289,
+      "totalTrades": 6,
+      "minimumInstrumentTrades": 2,
+      "positiveInstruments": 1,
+      "minimumProfitFactor": 0.0
+    },
+    {
+      "segment": "test",
+      "variant": "one_bar_latency",
+      "instruments": 2,
+      "medianReturnPct": -0.15421467,
+      "worstReturnPct": -0.39244698,
+      "worstDrawdownPct": 0.39244698,
+      "totalTrades": 6,
+      "minimumInstrumentTrades": 2,
+      "positiveInstruments": 1,
+      "minimumProfitFactor": 0.0
+    },
+    {
+      "segment": "test",
+      "variant": "primary",
+      "instruments": 2,
+      "medianReturnPct": -0.15421467,
+      "worstReturnPct": -0.39244698,
+      "worstDrawdownPct": 0.39244698,
+      "totalTrades": 6,
+      "minimumInstrumentTrades": 2,
+      "positiveInstruments": 1,
+      "minimumProfitFactor": 0.0
+    },
+    {
+      "segment": "train",
+      "variant": "primary",
+      "instruments": 2,
+      "medianReturnPct": -0.18298739,
+      "worstReturnPct": -0.18659513,
+      "worstDrawdownPct": 0.36822458,
+      "totalTrades": 18,
+      "minimumInstrumentTrades": 5,
+      "positiveInstruments": 0,
+      "minimumProfitFactor": 0.25204508
+    },
+    {
+      "segment": "validation",
+      "variant": "primary",
+      "instruments": 2,
+      "medianReturnPct": -0.02870409,
+      "worstReturnPct": -0.10046721,
+      "worstDrawdownPct": 0.13794185,
+      "totalTrades": 5,
+      "minimumInstrumentTrades": 2,
+      "positiveInstruments": 1,
+      "minimumProfitFactor": 0.17175122
+    }
+  ],
+  "tradeDetails": {
+    "BTC:train:primary": [
+      {
+        "entryTs": "2026-07-26T22:00:00+00:00",
+        "exitTs": "2026-07-26T22:30:00+00:00",
+        "side": "short",
+        "entry": 65000.0,
+        "exit": 65331.5325,
+        "quantity": 0.307692307692,
+        "barsHeld": 6,
+        "reason": "stop_loss",
+        "netPnl": -116.061005,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-07-26T18:50:25+00:00"
+      },
+      {
+        "entryTs": "2026-07-27T06:00:00+00:00",
+        "exitTs": "2026-07-27T07:00:00+00:00",
+        "side": "short",
+        "entry": 65500.0,
+        "exit": 65393.73872,
+        "quantity": 0.304989126702,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": 18.4409878,
+        "returnPct": 0.01846242,
+        "entryEventTs": "2026-07-27T05:06:59+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T18:25:00+00:00",
+        "exitTs": "2026-07-29T18:30:00+00:00",
+        "side": "long",
+        "entry": 64000.0,
+        "exit": 64160.0,
+        "quantity": 0.312194937446,
+        "barsHeld": 1,
+        "reason": "take_profit",
+        "netPnl": 41.94900935,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-29T18:01:07+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T19:25:00+00:00",
+        "exitTs": "2026-07-29T19:45:00+00:00",
+        "side": "long",
+        "entry": 64000.0,
+        "exit": 63673.632,
+        "quantity": 0.3123260281,
+        "barsHeld": 4,
+        "reason": "stop_loss",
+        "netPnl": -115.87446059,
+        "returnPct": -0.11593901,
+        "entryEventTs": "2026-07-29T18:01:07+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T22:20:00+00:00",
+        "exitTs": "2026-07-29T23:20:00+00:00",
+        "side": "long",
+        "entry": 64000.0,
+        "exit": 64019.69739,
+        "quantity": 0.311963920411,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": -7.83418107,
+        "returnPct": -0.00784764,
+        "entryEventTs": "2026-07-29T18:01:07+00:00"
+      }
+    ],
+    "BTC:validation:primary": [
+      {
+        "entryTs": "2026-08-02T04:20:00+00:00",
+        "exitTs": "2026-08-02T05:20:00+00:00",
+        "side": "short",
+        "entry": 63500.0,
+        "exit": 63452.24459,
+        "quantity": 0.314960629921,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": 1.04859455,
+        "returnPct": 0.00104859,
+        "entryEventTs": "2026-08-02T04:17:01+00:00"
+      },
+      {
+        "entryTs": "2026-08-02T07:40:00+00:00",
+        "exitTs": "2026-08-02T08:30:00+00:00",
+        "side": "short",
+        "entry": 63500.0,
+        "exit": 63341.25,
+        "quantity": 0.314963932581,
+        "barsHeld": 10,
+        "reason": "take_profit",
+        "netPnl": 42.01044051,
+        "returnPct": 0.04201,
+        "entryEventTs": "2026-08-02T06:27:17+00:00"
+      }
+    ],
+    "BTC:test:primary": [
+      {
+        "entryTs": "2026-08-05T07:40:00+00:00",
+        "exitTs": "2026-08-05T08:00:00+00:00",
+        "side": "long",
+        "entry": 64000.0,
+        "exit": 64160.0,
+        "quantity": 0.3125,
+        "barsHeld": 4,
+        "reason": "take_profit",
+        "netPnl": 41.99,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-08-05T07:10:26+00:00"
+      },
+      {
+        "entryTs": "2026-08-05T20:20:00+00:00",
+        "exitTs": "2026-08-05T20:55:00+00:00",
+        "side": "short",
+        "entry": 65000.0,
+        "exit": 64837.5,
+        "quantity": 0.307821507692,
+        "barsHeld": 7,
+        "reason": "take_profit",
+        "netPnl": 42.02764,
+        "returnPct": 0.04201,
+        "entryEventTs": "2026-08-05T19:22:44+00:00"
+      }
+    ],
+    "BTC:full:primary": [
+      {
+        "entryTs": "2026-07-26T22:00:00+00:00",
+        "exitTs": "2026-07-26T22:30:00+00:00",
+        "side": "short",
+        "entry": 65000.0,
+        "exit": 65331.5325,
+        "quantity": 0.307692307692,
+        "barsHeld": 6,
+        "reason": "stop_loss",
+        "netPnl": -116.061005,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-07-26T18:50:25+00:00"
+      },
+      {
+        "entryTs": "2026-07-27T06:00:00+00:00",
+        "exitTs": "2026-07-27T07:00:00+00:00",
+        "side": "short",
+        "entry": 65500.0,
+        "exit": 65393.73872,
+        "quantity": 0.304989126702,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": 18.4409878,
+        "returnPct": 0.01846242,
+        "entryEventTs": "2026-07-27T05:06:59+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T18:25:00+00:00",
+        "exitTs": "2026-07-29T18:30:00+00:00",
+        "side": "long",
+        "entry": 64000.0,
+        "exit": 64160.0,
+        "quantity": 0.312194937446,
+        "barsHeld": 1,
+        "reason": "take_profit",
+        "netPnl": 41.94900935,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-29T18:01:07+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T19:25:00+00:00",
+        "exitTs": "2026-07-29T19:45:00+00:00",
+        "side": "long",
+        "entry": 64000.0,
+        "exit": 63673.632,
+        "quantity": 0.3123260281,
+        "barsHeld": 4,
+        "reason": "stop_loss",
+        "netPnl": -115.87446059,
+        "returnPct": -0.11593901,
+        "entryEventTs": "2026-07-29T18:01:07+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T22:20:00+00:00",
+        "exitTs": "2026-07-29T23:20:00+00:00",
+        "side": "long",
+        "entry": 64000.0,
+        "exit": 64019.69739,
+        "quantity": 0.311963920411,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": -7.83418107,
+        "returnPct": -0.00784764,
+        "entryEventTs": "2026-07-29T18:01:07+00:00"
+      },
+      {
+        "entryTs": "2026-08-02T04:20:00+00:00",
+        "exitTs": "2026-08-02T05:20:00+00:00",
+        "side": "short",
+        "entry": 63500.0,
+        "exit": 63452.24459,
+        "quantity": 0.314395654647,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": 1.04671359,
+        "returnPct": 0.00104859,
+        "entryEventTs": "2026-08-02T04:17:01+00:00"
+      },
+      {
+        "entryTs": "2026-08-02T07:40:00+00:00",
+        "exitTs": "2026-08-02T08:30:00+00:00",
+        "side": "short",
+        "entry": 63500.0,
+        "exit": 63341.25,
+        "quantity": 0.314398951383,
+        "barsHeld": 10,
+        "reason": "take_profit",
+        "netPnl": 41.93508233,
+        "returnPct": 0.04201,
+        "entryEventTs": "2026-08-02T06:27:17+00:00"
+      },
+      {
+        "entryTs": "2026-08-05T07:40:00+00:00",
+        "exitTs": "2026-08-05T08:00:00+00:00",
+        "side": "long",
+        "entry": 64000.0,
+        "exit": 64160.0,
+        "quantity": 0.312073756708,
+        "barsHeld": 4,
+        "reason": "take_profit",
+        "netPnl": 41.93272654,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-08-05T07:10:26+00:00"
+      },
+      {
+        "entryTs": "2026-08-05T20:20:00+00:00",
+        "exitTs": "2026-08-05T20:55:00+00:00",
+        "side": "short",
+        "entry": 65000.0,
+        "exit": 64837.5,
+        "quantity": 0.307401645763,
+        "barsHeld": 7,
+        "reason": "take_profit",
+        "netPnl": 41.9703152,
+        "returnPct": 0.04201,
+        "entryEventTs": "2026-08-05T19:22:44+00:00"
+      }
+    ],
+    "ETH:train:primary": [
+      {
+        "entryTs": "2026-07-26T15:00:00+00:00",
+        "exitTs": "2026-07-26T15:35:00+00:00",
+        "side": "short",
+        "entry": 1900.0,
+        "exit": 1909.69095,
+        "quantity": 10.526315789474,
+        "barsHeld": 7,
+        "reason": "stop_loss",
+        "netPnl": -116.061005,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-07-26T13:15:11+00:00"
+      },
+      {
+        "entryTs": "2026-07-27T12:20:00+00:00",
+        "exitTs": "2026-07-27T12:45:00+00:00",
+        "side": "long",
+        "entry": 1950.0,
+        "exit": 1954.875,
+        "quantity": 10.24450656359,
+        "barsHeld": 5,
+        "reason": "take_profit",
+        "netPnl": 41.94126598,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-27T09:19:14+00:00"
+      },
+      {
+        "entryTs": "2026-07-27T13:30:00+00:00",
+        "exitTs": "2026-07-27T13:35:00+00:00",
+        "side": "long",
+        "entry": 1950.0,
+        "exit": 1954.875,
+        "quantity": 10.248808231896,
+        "barsHeld": 1,
+        "reason": "take_profit",
+        "netPnl": 41.95887712,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-27T09:19:14+00:00"
+      },
+      {
+        "entryTs": "2026-07-27T14:20:00+00:00",
+        "exitTs": "2026-07-27T14:25:00+00:00",
+        "side": "long",
+        "entry": 1950.0,
+        "exit": 1940.055975,
+        "quantity": 10.253111706472,
+        "barsHeld": 1,
+        "reason": "stop_loss",
+        "netPnl": -115.90171802,
+        "returnPct": -0.11593901,
+        "entryEventTs": "2026-07-27T14:13:01+00:00"
+      },
+      {
+        "entryTs": "2026-07-27T19:35:00+00:00",
+        "exitTs": "2026-07-27T20:35:00+00:00",
+        "side": "long",
+        "entry": 1950.0,
+        "exit": 1945.675413,
+        "quantity": 10.241224350778,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": -58.2461924,
+        "returnPct": -0.05833256,
+        "entryEventTs": "2026-07-27T16:50:18+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T18:30:00+00:00",
+        "exitTs": "2026-07-29T18:35:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.504599076599,
+        "barsHeld": 1,
+        "reason": "take_profit",
+        "netPnl": 41.90337095,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-29T18:01:08+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T19:25:00+00:00",
+        "exitTs": "2026-07-29T19:30:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.509009957751,
+        "barsHeld": 1,
+        "reason": "take_profit",
+        "netPnl": 41.92096617,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-29T18:01:08+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T19:35:00+00:00",
+        "exitTs": "2026-07-29T19:45:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1890.31095,
+        "quantity": 10.513422691033,
+        "barsHeld": 2,
+        "reason": "stop_loss",
+        "netPnl": -115.79699776,
+        "returnPct": -0.115939,
+        "entryEventTs": "2026-07-29T18:01:08+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T22:00:00+00:00",
+        "exitTs": "2026-07-29T22:10:00+00:00",
+        "side": "short",
+        "entry": 1900.0,
+        "exit": 1909.69095,
+        "quantity": 10.501233533373,
+        "barsHeld": 2,
+        "reason": "stop_loss",
+        "netPnl": -115.78445317,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-07-29T18:01:08+00:00"
+      },
+      {
+        "entryTs": "2026-07-30T05:00:00+00:00",
+        "exitTs": "2026-07-30T05:30:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.489045696197,
+        "barsHeld": 6,
+        "reason": "take_profit",
+        "netPnl": 41.84132773,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-30T03:35:44+00:00"
+      },
+      {
+        "entryTs": "2026-07-30T06:45:00+00:00",
+        "exitTs": "2026-07-30T07:00:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.493450046485,
+        "barsHeld": 3,
+        "reason": "take_profit",
+        "netPnl": 41.85889691,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-30T03:35:44+00:00"
+      },
+      {
+        "entryTs": "2026-07-30T07:35:00+00:00",
+        "exitTs": "2026-07-30T07:40:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.497856246159,
+        "barsHeld": 1,
+        "reason": "take_profit",
+        "netPnl": 41.87647346,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-30T03:35:44+00:00"
+      },
+      {
+        "entryTs": "2026-07-30T08:00:00+00:00",
+        "exitTs": "2026-07-30T08:10:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.502264295997,
+        "barsHeld": 2,
+        "reason": "take_profit",
+        "netPnl": 41.89405739,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-30T03:35:44+00:00"
+      }
+    ],
+    "ETH:validation:primary": [
+      {
+        "entryTs": "2026-08-02T04:20:00+00:00",
+        "exitTs": "2026-08-02T05:20:00+00:00",
+        "side": "short",
+        "entry": 1880.0,
+        "exit": 1876.727654,
+        "quantity": 10.63829787234,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": 20.82959759,
+        "returnPct": 0.0208296,
+        "entryEventTs": "2026-08-02T04:17:02+00:00"
+      },
+      {
+        "entryTs": "2026-08-02T05:35:00+00:00",
+        "exitTs": "2026-08-02T06:35:00+00:00",
+        "side": "long",
+        "entry": 1875.0,
+        "exit": 1875.8124,
+        "quantity": 10.668888490409,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": -5.33984484,
+        "returnPct": -0.00533873,
+        "entryEventTs": "2026-08-02T04:30:28+00:00"
+      },
+      {
+        "entryTs": "2026-08-02T07:55:00+00:00",
+        "exitTs": "2026-08-02T08:35:00+00:00",
+        "side": "long",
+        "entry": 1875.0,
+        "exit": 1865.4384375,
+        "quantity": 10.66831890696,
+        "barsHeld": 8,
+        "reason": "stop_loss",
+        "netPnl": -115.95696367,
+        "returnPct": -0.11593901,
+        "entryEventTs": "2026-08-02T06:27:18+00:00"
+      }
+    ],
+    "ETH:test:primary": [
+      {
+        "entryTs": "2026-08-05T17:35:00+00:00",
+        "exitTs": "2026-08-05T17:40:00+00:00",
+        "side": "short",
+        "entry": 1900.0,
+        "exit": 1909.69095,
+        "quantity": 10.526315789474,
+        "barsHeld": 1,
+        "reason": "stop_loss",
+        "netPnl": -116.061005,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-08-05T16:55:59+00:00"
+      },
+      {
+        "entryTs": "2026-08-06T02:15:00+00:00",
+        "exitTs": "2026-08-06T03:15:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1897.070274,
+        "quantity": 10.514098841579,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": -44.77177849,
+        "returnPct": -0.0448238,
+        "entryEventTs": "2026-08-06T02:13:20+00:00"
+      },
+      {
+        "entryTs": "2026-08-06T04:15:00+00:00",
+        "exitTs": "2026-08-06T05:05:00+00:00",
+        "side": "short",
+        "entry": 1900.0,
+        "exit": 1909.69095,
+        "quantity": 10.509386022791,
+        "barsHeld": 10,
+        "reason": "stop_loss",
+        "netPnl": -115.87434086,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-08-06T02:13:20+00:00"
+      },
+      {
+        "entryTs": "2026-08-06T13:35:00+00:00",
+        "exitTs": "2026-08-06T13:50:00+00:00",
+        "side": "short",
+        "entry": 1900.0,
+        "exit": 1909.69095,
+        "quantity": 10.497188723753,
+        "barsHeld": 3,
+        "reason": "stop_loss",
+        "netPnl": -115.73985593,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-08-06T13:10:43+00:00"
+      }
+    ],
+    "ETH:full:primary": [
+      {
+        "entryTs": "2026-07-26T15:00:00+00:00",
+        "exitTs": "2026-07-26T15:35:00+00:00",
+        "side": "short",
+        "entry": 1900.0,
+        "exit": 1909.69095,
+        "quantity": 10.526315789474,
+        "barsHeld": 7,
+        "reason": "stop_loss",
+        "netPnl": -116.061005,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-07-26T13:15:11+00:00"
+      },
+      {
+        "entryTs": "2026-07-27T12:20:00+00:00",
+        "exitTs": "2026-07-27T12:45:00+00:00",
+        "side": "long",
+        "entry": 1950.0,
+        "exit": 1954.875,
+        "quantity": 10.24450656359,
+        "barsHeld": 5,
+        "reason": "take_profit",
+        "netPnl": 41.94126598,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-27T09:19:14+00:00"
+      },
+      {
+        "entryTs": "2026-07-27T13:30:00+00:00",
+        "exitTs": "2026-07-27T13:35:00+00:00",
+        "side": "long",
+        "entry": 1950.0,
+        "exit": 1954.875,
+        "quantity": 10.248808231896,
+        "barsHeld": 1,
+        "reason": "take_profit",
+        "netPnl": 41.95887712,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-27T09:19:14+00:00"
+      },
+      {
+        "entryTs": "2026-07-27T14:20:00+00:00",
+        "exitTs": "2026-07-27T14:25:00+00:00",
+        "side": "long",
+        "entry": 1950.0,
+        "exit": 1940.055975,
+        "quantity": 10.253111706472,
+        "barsHeld": 1,
+        "reason": "stop_loss",
+        "netPnl": -115.90171802,
+        "returnPct": -0.11593901,
+        "entryEventTs": "2026-07-27T14:13:01+00:00"
+      },
+      {
+        "entryTs": "2026-07-27T19:35:00+00:00",
+        "exitTs": "2026-07-27T20:35:00+00:00",
+        "side": "long",
+        "entry": 1950.0,
+        "exit": 1945.675413,
+        "quantity": 10.241224350778,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": -58.2461924,
+        "returnPct": -0.05833256,
+        "entryEventTs": "2026-07-27T16:50:18+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T18:30:00+00:00",
+        "exitTs": "2026-07-29T18:35:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.504599076599,
+        "barsHeld": 1,
+        "reason": "take_profit",
+        "netPnl": 41.90337095,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-29T18:01:08+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T19:25:00+00:00",
+        "exitTs": "2026-07-29T19:30:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.509009957751,
+        "barsHeld": 1,
+        "reason": "take_profit",
+        "netPnl": 41.92096617,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-29T18:01:08+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T19:35:00+00:00",
+        "exitTs": "2026-07-29T19:45:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1890.31095,
+        "quantity": 10.513422691033,
+        "barsHeld": 2,
+        "reason": "stop_loss",
+        "netPnl": -115.79699776,
+        "returnPct": -0.115939,
+        "entryEventTs": "2026-07-29T18:01:08+00:00"
+      },
+      {
+        "entryTs": "2026-07-29T22:00:00+00:00",
+        "exitTs": "2026-07-29T22:10:00+00:00",
+        "side": "short",
+        "entry": 1900.0,
+        "exit": 1909.69095,
+        "quantity": 10.501233533373,
+        "barsHeld": 2,
+        "reason": "stop_loss",
+        "netPnl": -115.78445317,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-07-29T18:01:08+00:00"
+      },
+      {
+        "entryTs": "2026-07-30T05:00:00+00:00",
+        "exitTs": "2026-07-30T05:30:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.489045696197,
+        "barsHeld": 6,
+        "reason": "take_profit",
+        "netPnl": 41.84132773,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-30T03:35:44+00:00"
+      },
+      {
+        "entryTs": "2026-07-30T06:45:00+00:00",
+        "exitTs": "2026-07-30T07:00:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.493450046485,
+        "barsHeld": 3,
+        "reason": "take_profit",
+        "netPnl": 41.85889691,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-30T03:35:44+00:00"
+      },
+      {
+        "entryTs": "2026-07-30T07:35:00+00:00",
+        "exitTs": "2026-07-30T07:40:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.497856246159,
+        "barsHeld": 1,
+        "reason": "take_profit",
+        "netPnl": 41.87647346,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-30T03:35:44+00:00"
+      },
+      {
+        "entryTs": "2026-07-30T08:00:00+00:00",
+        "exitTs": "2026-07-30T08:10:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1904.75,
+        "quantity": 10.502264295997,
+        "barsHeld": 2,
+        "reason": "take_profit",
+        "netPnl": 41.89405739,
+        "returnPct": 0.04199,
+        "entryEventTs": "2026-07-30T03:35:44+00:00"
+      },
+      {
+        "entryTs": "2026-08-02T04:20:00+00:00",
+        "exitTs": "2026-08-02T05:20:00+00:00",
+        "side": "short",
+        "entry": 1880.0,
+        "exit": 1876.727654,
+        "quantity": 10.618447326528,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": 20.79073057,
+        "returnPct": 0.0208296,
+        "entryEventTs": "2026-08-02T04:17:02+00:00"
+      },
+      {
+        "entryTs": "2026-08-02T05:35:00+00:00",
+        "exitTs": "2026-08-02T06:35:00+00:00",
+        "side": "long",
+        "entry": 1875.0,
+        "exit": 1875.8124,
+        "quantity": 10.648980863993,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": -5.32988095,
+        "returnPct": -0.00533873,
+        "entryEventTs": "2026-08-02T04:30:28+00:00"
+      },
+      {
+        "entryTs": "2026-08-02T07:55:00+00:00",
+        "exitTs": "2026-08-02T08:35:00+00:00",
+        "side": "long",
+        "entry": 1875.0,
+        "exit": 1865.4384375,
+        "quantity": 10.648412343359,
+        "barsHeld": 8,
+        "reason": "stop_loss",
+        "netPnl": -115.74059362,
+        "returnPct": -0.11593901,
+        "entryEventTs": "2026-08-02T06:27:18+00:00"
+      },
+      {
+        "entryTs": "2026-08-05T17:35:00+00:00",
+        "exitTs": "2026-08-05T17:40:00+00:00",
+        "side": "short",
+        "entry": 1900.0,
+        "exit": 1909.69095,
+        "quantity": 10.496118434249,
+        "barsHeld": 1,
+        "reason": "stop_loss",
+        "netPnl": -115.72805514,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-08-05T16:55:59+00:00"
+      },
+      {
+        "entryTs": "2026-08-06T02:15:00+00:00",
+        "exitTs": "2026-08-06T03:15:00+00:00",
+        "side": "long",
+        "entry": 1900.0,
+        "exit": 1897.070274,
+        "quantity": 10.483936533709,
+        "barsHeld": 12,
+        "reason": "time_stop",
+        "netPnl": -44.6433395,
+        "returnPct": -0.0448238,
+        "entryEventTs": "2026-08-06T02:13:20+00:00"
+      },
+      {
+        "entryTs": "2026-08-06T04:15:00+00:00",
+        "exitTs": "2026-08-06T05:05:00+00:00",
+        "side": "short",
+        "entry": 1900.0,
+        "exit": 1909.69095,
+        "quantity": 10.479237234813,
+        "barsHeld": 10,
+        "reason": "stop_loss",
+        "netPnl": -115.54192649,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-08-06T02:13:20+00:00"
+      },
+      {
+        "entryTs": "2026-08-06T13:35:00+00:00",
+        "exitTs": "2026-08-06T13:50:00+00:00",
+        "side": "short",
+        "entry": 1900.0,
+        "exit": 1909.69095,
+        "quantity": 10.467074926762,
+        "barsHeld": 3,
+        "reason": "stop_loss",
+        "netPnl": -115.40782736,
+        "returnPct": -0.116061,
+        "entryEventTs": "2026-08-06T13:10:43+00:00"
+      }
+    ]
+  },
+  "decision": {
+    "status": "research_only",
+    "quantitativeGatePassed": false,
+    "gates": {
+      "trainingTradeCountEligible": true,
+      "validationMedianPositive": false,
+      "testMedianPositive": false,
+      "bothTestInstrumentsPositive": false,
+      "bothTestProfitFactorsAboveOne": false,
+      "testCostStressPositive": false,
+      "testLatencyPositive": false,
+      "minimumThreeTestTradesPerInstrument": false
+    },
+    "minimumTrainingTradesPerInstrument": 5,
+    "barFillLimitation": "5m OHLC cannot establish queue priority, cancellation latency, or whether a trade-through occurred after the resting order became active",
+    "deploymentAllowed": false
+  }
+}
